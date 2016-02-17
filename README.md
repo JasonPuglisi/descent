@@ -1,73 +1,59 @@
 # Last.fm Now
 
-Last.fm is a now playing display for Last.fm. It was inspiried by the old
-`last.fm/user/<user>/now` pages that no longer exist. It shows cover art, track
-title, track artist, and weather. Because it can. It can also control Hue
-lights in a really hacky way. Because it can.
+Last.fm Now is a simple now playing display for Last.fm. It shows song metadata
+in addition to local weather.
 
-# User Pages
+The app can also change Phillips Hue light colors to match the album art of the
+current song.
 
-To see what a user is listening to, navigate to `/now/<username>`. A fully
-functional version of this code is hosted at `https://wagnaria.xyz/now`. An
-example URL, for my page, is:
+## Usage
 
-[wagnaria.xyz/now/ijason\_](https://wagnaria.xyz/now/ijason_)
+Last.fm Now can be run on any server, and it listens on port 3000 by default.
+You use a proper web server such as NGINX to forward outside traffic to the
+app. The app operates completely under the `/now` location.
 
-# Weather
+The app is hosted officially at [wagnaria.xyz/now](https://wagnaria.xyz/now).
 
-Weather is powered by [Forecast API](https://developer.forecast.io/). It is
-rate-limited, so you'll need your own API key from there. You get 1,000 free
-calls a day, signing up for an account is really the only trouble. Set this
-key as your `FORECAST_KEY` environment variable, so Last.fm Now can read it
-automatically.
+## Weather
 
-To enable weather display, simply allow the website to use your location. If
-your web browser lacks HTML5 geolocation features, it won't work. Sorry. If
-your web browser has HTML5 geolocation features, it still may not work. Sorry.
-Blame HTML. It's not my fault, I swear.
+Weather is powered by the [Forecast API](https://developer.forecast.io/),
+which requires a personal API key if you're hosting the app yourself. You
+should set this API key to the `FORECAST_KEY` environment variable.
 
-# Phillips Hue Control
+To enable weather display, you must allow the app to access your location. This
+feature relies on HTML5 geolocation, so it will work in most modern browsers.
 
-This is pretty hacky and I really don't feel like writing up instructions on
-how to do it (because I don't even remember myself), but I'm going to do it
-anyway. I found these instructions on some website a while ago, but I think
-I found a different website writing them this time. It's this one:
-https://docs.apitools.com/blog/2015/02/25/hacking-apitools-during-the-3scale-internal-hackathon.html
+Note that the HTML5 geolocation API may be unresponsive at times, and there is
+currently no way to ensure 100% reliability.
 
-1. Get your bridge ID. Visit `https://www.meethue.com/api/nupnp` on your
-   bridge's local network, which should give you what you need. The IP address
-   doesn't matter.
+## Phillips Hue Control
 
-2. Visit `www.meethue.com/en-US/api/gettoken?devicename=lastfm_now&appid=hueapp&deviceid=<BRIDGE_ID>`.
-   Of course, replace `<BRIDGE_ID>` with the ID you found above. Login with
-   your Hue account and authorize the "app".
+To enable Phillips Hue control, follow the instructions below. Light colors
+will be set according to the three most prominent album art colors. If more
+than three lights are detected, the colors will be reused.
 
-3. This should redirect you to a URL that doesn't work. Copy the last part of
-   that URL (after `/login/`). This is your authorization key. Hold onto it!
+1. Visit https://www.meethue.com/api/nupnp on the network that your bridge is
+   connected to. Note the bridge ID.
 
-4. So now we have a bridge ID and an authorization key. We're ready to make
-   magic happen! I was too lazy to create an interface, so we need to set some
-   cookies to let Last.fm Now control your Hue lights. Luckily, the now playing
-   page includes a cookie library for convenience. You'll have to open up the
-   JavaScript console in your browser for the next few steps.
+2. Visit `www.meethue.com/en-US/api/gettoken?devicename=lastfm_now&appid=hueapp&deviceid=<BRIDGE_ID>`
+   where <BRIDGE_ID> is the identifier you located in the previous step.
 
-5. Set your bridge ID with
-   `Cookie.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`. I set the
-   cookie expiration to 1000 days, but you can change it.
+3. Log in with your Phillips Hue account and authorize the application.
 
-6. Set your authorization key with
-   `Cookie.set('hueAuthorizationKey', '<AUTH_KEY>', { expires: 1000})`.
+4. Upon redirection, note the last part of the URL in your browser (after
+   `/login/`). This is the access token.
 
-7. Finally, set tell the app you're ready to get your Hue on by running
-   `Cookie.set('hueEnabled', 'true', { expires: 1000 })`. Woo, we're done!
+5. On one of Last.fm Now's pages, open the JavaScript console in your web
+   browser and issue the following command to set your bridge ID:
+   `Cookie.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`
 
-8. You should now notice your lights changing according to the album art
-   colors, just like the music metadata text does. That is of course unless I
-   hammer this poor guy's color analysis servers to a point where they stop
-   responding. Or if he gets tired of my shit. Either way.
+6. Similar to the previous step, issue the following command to set your access
+   token: `Cookie.set('hueAuthorizationKey', '<ACCESS_TOKEN>', { expires: 1000 })`
 
-By default, the most prominent three colors of the album art will be fetched.
-The first two are used for the title and artist text, respectively, and all
-three are used for lights. That's assuming you have at least three lights. If
-you have more, those three colors will be repeated.
+7. Similar to the previous step, issue the following command to enable Phillips
+   Hue control: `Cookie.set('hueEnabled', 'true', { expires: 1000 })`
+
+The app should now be able to control your Phillips Hue lights from any
+network. To disable the feature, run teh last command again, but change `true`
+to `false`.
 
