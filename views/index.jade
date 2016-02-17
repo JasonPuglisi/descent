@@ -1,0 +1,19 @@
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    title= title
+    link(href='/now/static/stylesheets/style.css', rel='stylesheet')
+  body
+    #container
+      h1#title= title
+      form#userInput(method='post')
+        h2 My Last.fm username is&nbsp;
+          input#username(name='username', type='text', size='15')
+          | &nbsp;
+          a(href='#' onclick='submit(); return false;')
+            i.actionIcon(class='fa fa-chevron-right')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js')
+    script(src='/now/static/javascripts/index.js')
+

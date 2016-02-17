@@ -8,6 +8,19 @@ app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/now/static/', express.static('public'));
 
+app.get('/now', function(req, res) {
+  res.render('index', { title: 'Last.fm Now' });
+});
+
+app.post('/now', function(req, res) {
+  var username = req.body.username;
+  if (username) {
+    res.redirect('/now/' + username);
+  } else {
+    res.redirect('/now');
+  }
+});
+
 app.get('/now/:user', function(req, res) {
   res.render('now', { title: 'Now Playing', user: req.params.user });
 });

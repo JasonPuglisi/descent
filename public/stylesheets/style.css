@@ -1,9 +1,38 @@
 @import 'https://fonts.googleapis.com/css?family=Open+Sans:300';
+@import 'https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css';
 
 body {
   background-color: #212121;
   font-family: 'Open Sans Light', 'Open Sans', Verdana, Arial, sans-serif;
+  color: #f6f5f7;
+}
+
+.actionIcon {
+  color: #f6f5f7;
+  opacity: 0.2;
+
+  transition: opacity 0.2s linear;
+}
+
+.actionIcon:hover {
+  opacity: 1;
+}
+
+#container {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  text-align: center;
+
+  transform: translate(-50%, -80%);
+}
+
+#container #username {
+  background-color: transparent;
+  border-style: none none solid none;
+  border-color: #f6f5f7;
+  font-size: 1em;
   color: #f6f5f7;
 }
 

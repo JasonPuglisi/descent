@@ -1,0 +1,4 @@
+function submit() {
+  $('#userInput').submit();
+}
+
