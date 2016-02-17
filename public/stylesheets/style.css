@@ -8,6 +8,14 @@ body {
   color: #f6f5f7;
 }
 
+h1 {
+  font-size: 2.0em;
+}
+
+h2 {
+  font-size: 1.6em;
+}
+
 .actionIcon {
   color: #f6f5f7;
   opacity: 0.2;
@@ -81,12 +89,10 @@ body {
 
 #music #title, #weather #summary {
   margin: 0;
-  font-size: 2.0em;
 }
 
 #music #artist, #weather #conditions  {
   margin: 0.2em 0 0 0;
-  font-size: 1.6em;
 }
 
 #music #title, #music #artist {
