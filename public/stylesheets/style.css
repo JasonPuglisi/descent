@@ -116,3 +116,10 @@ body {
   }
 }
 
+::selection {
+  background: #e0d5ff;
+}
+::-moz-selection {
+  background: #e0d5ff;
+}
+
