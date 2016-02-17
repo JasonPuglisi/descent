@@ -5,7 +5,7 @@ var request = require('request');
 var app = express();
 
 var defaultUsernames = ['iJason_', 'jefferyd', 'foreverautumn', 'robinlisle',
-  'ben-xo', 'good_bone', 'pellitero'];
+  'ben-xo', 'good_bone', 'pellitero', 'Nesquen'];
 
 app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,6 +20,10 @@ app.get('/now', function(req, res) {
 
 app.post('/now', function(req, res) {
   var username = req.body.username || req.body.defaultUsername;
+
+  if (username.length > 20) {
+    username = username.substring(0, 20);
+  }
   res.redirect('/now/' + username);
 });
 
