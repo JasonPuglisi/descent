@@ -39,9 +39,15 @@ h2 {
 #container #username {
   background-color: transparent;
   border-style: none none solid none;
+  border-width: 2px;
+  border-radius: 0;
   border-color: #f6f5f7;
   font-size: 1em;
   color: #f6f5f7;
+}
+
+#container #userInput #userInputGroup {
+  white-space: nowrap;
 }
 
 #background {
