@@ -9,8 +9,8 @@ current song.
 ## Usage
 
 Last.fm Now can be run on any server, and it listens on port 3000 by default.
-You use a proper web server such as NGINX to forward outside traffic to the
-app. The app operates completely under the `/now` location.
+You should use a proper web server such as NGINX to forward outside traffic to
+the app. The app operates completely under the `/now` location.
 
 The app is hosted officially at [wagnaria.xyz/now](https://wagnaria.xyz/now).
 
@@ -36,7 +36,7 @@ than three lights are detected, the colors will be reused.
    connected to. Note the bridge ID.
 
 2. Visit `www.meethue.com/en-US/api/gettoken?devicename=lastfm_now&appid=hueapp&deviceid=<BRIDGE_ID>`
-   where <BRIDGE_ID> is the identifier you located in the previous step.
+   where `<BRIDGE_ID>` is the identifier you located in the previous step.
 
 3. Log in with your Phillips Hue account and authorize the application.
 
@@ -48,12 +48,14 @@ than three lights are detected, the colors will be reused.
    `Cookie.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`
 
 6. Similar to the previous step, issue the following command to set your access
-   token: `Cookie.set('hueAuthorizationKey', '<ACCESS_TOKEN>', { expires: 1000 })`
+   token: `Cookie.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 1000 })`
 
 7. Similar to the previous step, issue the following command to enable Phillips
    Hue control: `Cookie.set('hueEnabled', 'true', { expires: 1000 })`
 
 The app should now be able to control your Phillips Hue lights from any
-network. To disable the feature, run teh last command again, but change `true`
-to `false`.
+network. To disable the feature, run the last command again, but change `true`
+to `false`. By default, these settings will persist for 1000 days. To change
+this, replace `1000` in the last three commands with the desired number of
+days.
 
