@@ -221,7 +221,7 @@ function updateWeather(coords, iconMap) {
   });
 
   setTimeout(function() {
-    weatherUpdate(url, iconMap);
+    updateWeather(coords, iconMap);
   }, 900000);
 }
 
