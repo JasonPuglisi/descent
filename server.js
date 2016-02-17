@@ -4,21 +4,23 @@ var request = require('request');
 
 var app = express();
 
+var defaultUsernames = ['iJason_', 'jefferyd', 'foreverautumn', 'robinlisle',
+  'ben-xo', 'good_bone', 'pellitero'];
+
 app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/now/static/', express.static('public'));
 
 app.get('/now', function(req, res) {
-  res.render('index', { title: 'Last.fm Now' });
+  var usernameIndex = Math.floor(Math.random() * defaultUsernames.length);
+  var username = defaultUsernames[usernameIndex];
+
+  res.render('index', { title: 'Last.fm Now', username: username });
 });
 
 app.post('/now', function(req, res) {
-  var username = req.body.username;
-  if (username) {
-    res.redirect('/now/' + username);
-  } else {
-    res.redirect('/now');
-  }
+  var username = req.body.username || req.body.defaultUsername;
+  res.redirect('/now/' + username);
 });
 
 app.get('/now/:user', function(req, res) {
