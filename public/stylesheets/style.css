@@ -1,0 +1,89 @@
+@import 'https://fonts.googleapis.com/css?family=Open+Sans:300';
+@import 'https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css';
+
+body {
+  background-color: #212121;
+  font-family: 'Open Sans Light', 'Open Sans', Verdana, Arial, sans-serif;
+  color: #f6f5f7;
+}
+
+#background {
+  position: fixed;
+  left: -10%;
+  top: -10%;
+  width: 120%;
+  height: 120%;
+  background-color: #212121;
+  background-size: cover;
+  background-position: center;
+
+  filter: blur(15px);
+  transition: background-image 0.6s linear;
+}
+
+#mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  opacity: 0.65;
+}
+
+#music, #weather {
+  position: absolute;
+  right: 3em;
+  padding-left: 3em;
+  text-align: right;
+}
+
+#music {
+  bottom: 2em;
+}
+
+#weather {
+  top: 2em;
+}
+
+#music #user, #weather {
+  display: none;
+}
+
+#music #title, #weather #summary {
+  margin: 0;
+  font-size: 2.0em;
+}
+
+#music #artist, #weather #conditions  {
+  margin: 0.2em 0 0 0;
+  font-size: 1.6em;
+}
+
+#music #title, #music #artist {
+  transition: color 0.25s linear;
+}
+
+#music #cover {
+  margin-bottom: 1em;
+  width: 15vw;
+}
+
+@media (max-width: 1080px) {
+  #music #cover {
+    width: 22vw;
+  }
+}
+
+@media (max-width: 720px) {
+  #music #cover {
+    width: 29vw;
+  }
+}
+
+@media (max-width: 480px) {
+  #music #cover {
+    width: 36vw;
+  }
+}
+
