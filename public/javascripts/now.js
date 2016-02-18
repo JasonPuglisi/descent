@@ -69,7 +69,9 @@ function updateLastfm(url) {
 
 function updateLastfmMetadata(cover, title, artist, link) {
   if (cover) {
-    lastfmCover.src = cover;
+    if (lastfmCover.src !== cover) {
+      lastfmCover.src = cover;
+    }
   } else {
     updateLastfmCover();
   }
@@ -251,13 +253,15 @@ function initHelp() {
   window.musicPlaying = false;
   window.weatherEnabled = false;
 
-  setTimeout(toggleHelp, 3600, false);
+  setTimeout(function() {
+    toggleHelp(null, false);
+  }, 3600);
 }
 
 function processKey(event) {
-  var key = event.key.toLowerCase();
+  var key = event.keyCode;
   switch (key) {
-    case 'w':
+    case 87:
       if (weatherEnabled) {
         toggleCookie('weatherOn');
         toggleWeather();
@@ -265,7 +269,7 @@ function processKey(event) {
         toggleWeather(null, false);
       }
       break;
-    case 'e':
+    case 69:
       if (musicPlaying) {
         toggleCookie('extendedOn');
         toggleExtended();
@@ -273,8 +277,8 @@ function processKey(event) {
         toggleExtended(null, false);
       }
       break;
-    case 'h':
-      toggleHelp();
+    case 72:
+      toggleHelp(null);
       break;
   }
 }

@@ -25,15 +25,14 @@ html(lang='en')
         span.unit
     #music
       h2#userLine.hide
+        a#songLink(href='', target='_blank').hide
+          i(class='fa fa-lastfm')
+        | &nbsp;
         a#userLink(href='http://last.fm/user/#{user}', target='_blank')
           span#user #{user}
         | &nbsp; is listening to
       img#cover
-      h1#titleLine
-        a#songLink(href='', target='_blank').hide
-          i(class='fa fa-lastfm')
-        | &nbsp;
-        span#title
+      h1#title
       h2#artist
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js')

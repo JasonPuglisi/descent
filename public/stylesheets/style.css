@@ -104,7 +104,7 @@ a:hover {
   top: 2em;
 }
 
-#music #titleLine, #weather #summary {
+#music #title, #weather #summary {
   margin: 0;
 }
 
