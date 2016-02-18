@@ -1,4 +1,5 @@
-html
+doctype html
+html(lang='en')
   head
     meta(charset='utf-8')
     meta(name='viewport', content='width=device-width, initial-scale=1')
@@ -8,7 +9,9 @@ html
   body
     #background
     #mask
-    #weather
+    #help
+      | [w] weather<br>[e] extended info<br>[h] help
+    #weather.hide
       h2#summary
       h1#conditions
         i#icon
@@ -16,14 +19,21 @@ html
         span#temperature
         | &deg;
         span.unit
-        | &nbsp/ Feels like&nbsp;
+        | &nbsp;/ Feels like&nbsp;
         span#apparentTemperature
         | &deg;
         span.unit
     #music
-      span#user #{user}
+      h2#userLine.hide
+        a#userLink(href='http://last.fm/user/#{user}', target='_blank')
+          span#user #{user}
+        | &nbsp; is listening to
       img#cover
-      h1#title
+      h1#titleLine
+        a#songLink(href='', target='_blank').hide
+          i(class='fa fa-lastfm')
+        | &nbsp;
+        span#title
       h2#artist
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js')

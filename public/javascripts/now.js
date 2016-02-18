@@ -18,6 +18,7 @@ $(function() {
 
   initLastfm();
   initWeather();
+  initHelp();
 });
 
 function initLastfm() {
@@ -43,16 +44,20 @@ function updateLastfm(url) {
 
         playing = track['@attr'] && track['@attr'].nowplaying;
         if (playing) {
+          musicPlaying = true;
+
           var cover = track.image[track.image.length - 1]['#text'];
           var title = track.name;
           var artist = track.artist['#text'];
+          var link = track.url;
 
-          updateLastfmMetadata(cover, title, artist);
+          updateLastfmMetadata(cover, title, artist, link);
         }
       }
     }
 
     if (!playing) {
+      musicPlaying = false;
       updateLastfmMetadata();
     }
   });
@@ -62,7 +67,7 @@ function updateLastfm(url) {
   }, 3000);
 }
 
-function updateLastfmMetadata(cover, title, artist) {
+function updateLastfmMetadata(cover, title, artist, link) {
   if (cover) {
     lastfmCover.src = cover;
   } else {
@@ -71,6 +76,17 @@ function updateLastfmMetadata(cover, title, artist) {
 
   $('#music #title').text(title || '');
   $('#music #artist').text(artist || 'Nothing in the air...');
+  $('#music #songLink').attr('href', link);
+
+  if (musicPlaying) {
+    document.title = '"' + title + '" by ' + artist;
+    if (checkCookie('extendedOn')) {
+      toggleExtended(null, true);
+    }
+  } else {
+    document.title = 'Last.fm Now';
+    toggleExtended(null, false);
+  }
 }
 
 function updateLastfmCover(cover) {
@@ -217,11 +233,86 @@ function updateWeather(coords, iconMap) {
     $('#weather #conditions .unit').text(unit);
     $('#weather #conditions #icon').removeClass($(this).attr('class')).
       addClass(icon);
-    $('#weather').fadeIn(1500);
+
+    weatherEnabled = true;
+    if (checkCookie('weatherOn')) {
+      toggleWeather(fadeTime * 2);
+    }
   });
 
   setTimeout(function() {
     updateWeather(coords, iconMap);
   }, 900000);
+}
+
+function initHelp() {
+  window.onkeydown = processKey;
+  window.fadeTime = 750;
+  window.musicPlaying = false;
+  window.weatherEnabled = false;
+
+  setTimeout(toggleHelp, 3600, false);
+}
+
+function processKey(event) {
+  var key = event.key.toLowerCase();
+  switch (key) {
+    case 'w':
+      if (weatherEnabled) {
+        toggleCookie('weatherOn');
+        toggleWeather();
+      } else {
+        toggleWeather(null, false);
+      }
+      break;
+    case 'e':
+      if (musicPlaying) {
+        toggleCookie('extendedOn');
+        toggleExtended();
+      } else {
+        toggleExtended(null, false);
+      }
+      break;
+    case 'h':
+      toggleHelp();
+      break;
+  }
+}
+
+function toggleWeather(duration, force) {
+  toggleDisplay('#weather', duration, force);
+}
+
+function toggleExtended(duration, force) {
+  var elements = ['#userLine', '#songLink'];
+  for(var i in elements) {
+    toggleDisplay(elements[i], duration, force);
+  }
+}
+
+function toggleHelp(duration, force) {
+  toggleDisplay('#help', duration, force);
+}
+
+function toggleDisplay(element, duration, force) {
+  var show = force !== undefined ? force : !$(element).is(':visible');
+
+  if (show) {
+    $(element).fadeIn(duration || fadeTime);
+  } else {
+    $(element).fadeOut(duration || fadeTime);
+  }
+}
+
+function toggleCookie(name) {
+  if (checkCookie(name)) {
+    Cookies.set(name, 'false', { expires: 365 });
+  } else {
+    Cookies.set(name, 'true', { expires: 365 });
+  }
+}
+
+function checkCookie(name) {
+  return Cookies.get(name) === 'true';
 }
 

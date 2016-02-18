@@ -1,10 +1,10 @@
-@import 'https://fonts.googleapis.com/css?family=Open+Sans:300';
+@import 'https://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:300';
 @import 'https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css';
 
 body {
   background-color: #212121;
-  font-family: 'Open Sans Light', 'Open Sans', Verdana, Arial, sans-serif;
+  font-family: 'Open Sans Light', 'Open Sans', Arial, sans-serif;
   color: #f6f5f7;
 }
 
@@ -16,15 +16,21 @@ h2 {
   font-size: 1.6em;
 }
 
-.actionIcon {
+a {
+  text-decoration: none;
   color: #f6f5f7;
-  opacity: .2;
+  opacity: .8;
 
   transition: opacity .2s linear;
 }
 
-.actionIcon:hover {
+a:hover {
+  text-decoration: none;
   opacity: 1;
+}
+
+.hide {
+  display: none;
 }
 
 #container {
@@ -74,14 +80,23 @@ h2 {
   opacity: .65;
 }
 
-#music, #weather {
+#help, #music, #weather {
   position: absolute;
+}
+
+#help {
+  left: 3em;
+  padding-right: 3em;
+  font-family: 'Source Code Pro Light', 'Source Code Pro', monospace;
+}
+
+#music, #weather {
   right: 3em;
   padding-left: 3em;
   text-align: right;
 }
 
-#music {
+#help, #music {
   bottom: 2em;
 }
 
@@ -89,11 +104,7 @@ h2 {
   top: 2em;
 }
 
-#music #user, #weather {
-  display: none;
-}
-
-#music #title, #weather #summary {
+#music #titleLine, #weather #summary {
   margin: 0;
 }
 

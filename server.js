@@ -28,7 +28,7 @@ app.post('/now', function(req, res) {
 });
 
 app.get('/now/:user', function(req, res) {
-  res.render('now', { title: 'Now Playing', user: req.params.user });
+  res.render('now', { title: 'Last.fm Now', user: req.params.user });
 });
 
 app.post('/now/colors', function(req, res) {
@@ -79,7 +79,6 @@ app.post('/now/hue/set', function(req, res) {
 
 app.post('/now/weather', function(req, res) {
   var key = process.env.FORECAST_KEY;
-  console.log(key);
   var url = 'https://api.forecast.io/forecast/' + key + '/' +
     req.body.latitude + ',' + req.body.longitude + '?units=auto';
 
