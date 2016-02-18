@@ -45,13 +45,13 @@ than three lights are detected, the colors will be reused.
 
 5. On one of Last.fm Now's pages, open the JavaScript console in your web
    browser and issue the following command to set your bridge ID:
-   `Cookie.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`
+   `Cookies.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`
 
 6. Similar to the previous step, issue the following command to set your access
-   token: `Cookie.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 1000 })`
+   token: `Cookies.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 1000 })`
 
 7. Similar to the previous step, issue the following command to enable Phillips
-   Hue control: `Cookie.set('hueEnabled', 'true', { expires: 1000 })`
+   Hue control: `Cookies.set('hueEnabled', 'true', { expires: 1000 })`
 
 The app should now be able to control your Phillips Hue lights from any
 network. To disable the feature, run the last command again, but change `true`
