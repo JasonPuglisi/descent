@@ -5,7 +5,7 @@ var request = require('request');
 var app = express();
 
 var defaultUsernames = ['iJason_', 'jefferyd', 'foreverautumn', 'robinlisle',
-  'ben-xo', 'good_bone', 'pellitero', 'Nesquen'];
+  'ben-xo', 'good_bone', 'pellitero', 'Nesquen', 'hjbardenhagen'];
 
 app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({ extended: true }));
