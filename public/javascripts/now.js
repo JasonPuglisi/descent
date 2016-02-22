@@ -24,6 +24,7 @@ $(function() {
 function initLastfm() {
   window.lastfmCoverPrevious = '';
   window.lastfmCover = new Image();
+  window.lastfmCoverRefresh = false;
 
   lastfmCover.onload = function() {
     updateLastfmCover(lastfmCover.src);
@@ -69,7 +70,8 @@ function updateLastfm(url) {
 
 function updateLastfmMetadata(cover, title, artist, link) {
   if (cover) {
-    if (lastfmCover.src !== cover) {
+    if (lastfmCover.src !== cover || lastfmCoverRefresh) {
+      lastfmCoverRefresh = false;
       lastfmCover.src = cover;
     }
   } else {
@@ -317,6 +319,8 @@ function toggleHue(force) {
 
   if (enable) {
     $(element).text('on');
+    lastfmCoverPrevious = '';
+    lastfmCoverRefresh = true;
   } else {
     $(element).text('off');
   }
