@@ -252,6 +252,15 @@ function initHelp() {
   window.fadeTime = 750;
   window.musicPlaying = false;
   window.weatherEnabled = false;
+  window.hueAllowed = Cookies.get('hueBridgeId') !== undefined &&
+    Cookies.get('hueAccessToken') !== undefined;
+
+  if (hueAllowed) {
+    if (checkCookie('hueEnabled')) {
+      $('#hueIndicator').text('on');
+    }
+    $('#hueHelp').show();
+  }
 
   setTimeout(function() {
     toggleHelp(null, false);
@@ -277,6 +286,14 @@ function processKey(event) {
         toggleExtended(null, false);
       }
       break;
+    case 76:
+      if (hueAllowed) {
+        toggleCookie('hueEnabled');
+        toggleHue();
+      } else {
+        toggleHue(false);
+      }
+      break;
     case 72:
       toggleHelp(null);
       break;
@@ -291,6 +308,17 @@ function toggleExtended(duration, force) {
   var elements = ['#userLine', '#songLink'];
   for(var i in elements) {
     toggleDisplay(elements[i], duration, force);
+  }
+}
+
+function toggleHue(force) {
+  var element = '#hueIndicator';
+  var enable = force !== undefined ? force : $(element).text() === 'off';
+
+  if (enable) {
+    $(element).text('on');
+  } else {
+    $(element).text('off');
   }
 }
 

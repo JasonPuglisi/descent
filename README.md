@@ -50,8 +50,10 @@ than three lights are detected, the colors will be reused.
 6. Similar to the previous step, issue the following command to set your access
    token: `Cookies.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 1000 })`
 
-7. Similar to the previous step, issue the following command to enable Phillips
-   Hue control: `Cookies.set('hueEnabled', 'true', { expires: 1000 })`
+7. Refresh the page, and use the `l` key to turn Phillips Hue control on.
+   Phillips Hue control status will be indicated in the help menu, which is
+   accessed using the `h` key. You can use the `l` key again to turn control
+   off.
 
 The app should now be able to control your Phillips Hue lights from any
 network. To disable the feature, run the last command again, but change `true`
