@@ -261,7 +261,7 @@ function initHelp() {
 function processKey(event) {
   var key = event.keyCode;
   switch (key) {
-    case 87:
+    case 70:
       if (weatherEnabled) {
         toggleCookie('weatherOn');
         toggleWeather();
