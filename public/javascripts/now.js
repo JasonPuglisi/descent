@@ -113,33 +113,43 @@ function updateLastfmCover(cover) {
 
 function updateColors(image) {
   if (image) {
+    reset = false;
+
     var url = urls.colorSummary;
     var body = 'image="' + image;
 
     $.post(url, body, function(data) {
-      var color1 = data[0].hex;
-      var color2 = data[1].hex;
-      var hueColors = [];
+      if (data[0] === undefined) {
+        resetColors();
+      } else {
+        var color1 = data[0].hex;
+        var color2 = data[1].hex;
+        var hueColors = [];
 
-      for (var i in data) {
-        var color = data[i];
-        hueColors.push({ x: color.xy[0], y: color.xy[1] });
+        for (var i in data) {
+          var color = data[i];
+          hueColors.push({ x: color.xy[0], y: color.xy[1] });
+        }
+
+        $('#music #title').css('color', color1);
+        $('#music #artist').css('color', color2);
+
+        updateHue(hueColors);
       }
-
-      $('#music #title').css('color', color1);
-      $('#music #artist').css('color', color2);
-
-      updateHue(hueColors);
     });
   } else {
-    var color1 = '#f6f5f7';
-    var color2 = color1;
-
-    $('#music #title').css('color', color1);
-    $('#music #artist').css('color', color2);
-
-    updateHue([{ x: (1 / 3), y: (1 / 3) }]);
+    resetColors();
   }
+}
+
+function resetColors() {
+  var color1 = '#f6f5f7';
+  var color2 = color1;
+
+  $('#music #title').css('color', color1);
+  $('#music #artist').css('color', color2);
+
+  updateHue([{ x: (1 / 3), y: (1 / 3) }]);
 }
 
 function updateHue(colors) {

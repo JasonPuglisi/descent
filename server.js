@@ -53,23 +53,27 @@ app.post('/now/colors', function(req, res) {
                           res.json(colors);
                         });
                       } else {
-                        console.log(err);
+                        res.json({});
                       }
                     });
                   } else {
                     console.log(err);
+                    res.json({});
                   }
                 });
               } else {
                 console.log(err);
+                res.json({});
               }
             });
           } else {
             console.log(err);
+            res.json({});
           }
         });
       } else {
         console.log(err);
+        res.json({});
       }
     });
   } else {
@@ -129,8 +133,7 @@ function handleColors(colors, callback) {
 
   for (var i = 0; i < colors.length; i++) {
     var color = colors[i];
-    color = color.brighten();
-    var hex = color.hex();
+    var hex = color.brighten(2).hex();
     color = color.gl();
 
     for (var j = 0; j < color.length; j++) {
