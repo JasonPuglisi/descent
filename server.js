@@ -1,6 +1,9 @@
 var bodyParser = require('body-parser');
 var express = require('express');
+var fs = require('fs');
+var getImageColors = require('get-image-colors');
 var request = require('request');
+var temp = require('temp').track();
 
 var app = express();
 
@@ -34,13 +37,37 @@ app.get('/now/:user', function(req, res) {
 app.post('/now/colors', function(req, res) {
   var image = parseUrl(req.body.image);
   if (image) {
-    var clusters = req.body.clusters;
-
-    var url = 'http://mkweb.bcgsc.ca/color-summarizer/?url=' + image +
-      '&num_clusters=' + clusters + '&json=1';
-    request(url, function(err, res2, body) {
+    request({ url: image, encoding: null }, function(err, res2, body) {
       if (!err && res2.statusCode == 200) {
-        res.json(JSON.parse(body));
+        var data = body;
+
+        temp.open({ prefix: 'lfmn-', suffix: '.png' }, function(err, info) {
+          if (!err) {
+            fs.writeFile(info.fd, data, function(err) {
+              if (!err) {
+                fs.close(info.fd, function(err) {
+                  if (!err) {
+                    getImageColors(info.path, function(err, colors) {
+                      if (!err) {
+                        handleColors(colors, function(colors) {
+                          res.json(colors);
+                        });
+                      } else {
+                        console.log(err);
+                      }
+                    });
+                  } else {
+                    console.log(err);
+                  }
+                });
+              } else {
+                console.log(err);
+              }
+            });
+          } else {
+            console.log(err);
+          }
+        });
       } else {
         console.log(err);
       }
@@ -95,5 +122,32 @@ app.listen(3000);
 
 function parseUrl(url) {
   return url.substring(1, url.length - 1);
+}
+
+function handleColors(colors, callback) {
+  var newColors = [];
+
+  for (var i = 0; i < colors.length; i++) {
+    var color = colors[i];
+    color = color.brighten();
+    var hex = color.hex();
+    color = color.gl();
+
+    for (var j = 0; j < color.length; j++) {
+      color[j] = color[j] > 0.04045 ?
+        Math.pow((color[j] + 0.055) / 1.055, 2.4) : color[j] / 12.92;
+    }
+
+    var x = color[0] * 0.664511 + color[1] * 0.154324 + color[2] * 0.162028;
+    var y = color[0] * 0.283881 + color[1] * 0.668433 + color[2] * 0.047685;
+    var z = color[0] * 0.000088 + color[1] * 0.072310 + color[2] * 0.986039;
+
+    var finalX = x / (x + y + z);
+    var finalY = y / (x + y + z);
+
+    newColors.push({ hex: hex, xy: [ finalX, finalY ] });
+  }
+
+  callback(newColors);
 }
 

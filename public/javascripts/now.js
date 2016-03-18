@@ -113,29 +113,17 @@ function updateLastfmCover(cover) {
 
 function updateColors(image) {
   if (image) {
-    var clusters = 3;
-
     var url = urls.colorSummary;
-    var body = 'image="' + image + '"&clusters=' + clusters;
+    var body = 'image="' + image;
 
     $.post(url, body, function(data) {
-      var clusters = data.clusters;
-
+      var color1 = data[0].hex;
+      var color2 = data[1].hex;
       var hueColors = [];
-      if (clusters) {
-        color1 = shadeBlend(0.35, clusters[0].hex[0]);
-        color2 = shadeBlend(0.35, clusters[1].hex[0]);
 
-        for (var i in clusters) {
-          var xyz = clusters[i].xyz;
-          var x = parseFloat(xyz[0]);
-          var y = parseFloat(xyz[1]);
-          var z = parseFloat(xyz[2]);
-
-          var hueX = x / (x + y + z);
-          var hueY = y / (x + y + z);
-          hueColors.push({ x: hueX, y: hueY });
-        }
+      for (var i in data) {
+        var color = data[i];
+        hueColors.push({ x: color.xy[0], y: color.xy[1] });
       }
 
       $('#music #title').css('color', color1);
@@ -144,7 +132,8 @@ function updateColors(image) {
       updateHue(hueColors);
     });
   } else {
-    color1 = color2 = '#f6f5f7';
+    var color1 = '#f6f5f7';
+    var color2 = color1;
 
     $('#music #title').css('color', color1);
     $('#music #artist').css('color', color2);
@@ -181,17 +170,6 @@ function updateHue(colors) {
         $.post(url, body);
       }
     });
-  }
-}
-
-function shadeBlend(p,c0,c1) {
-  var n=p<0?p*-1:p,u=Math.round,w=parseInt;
-  if(c0.length>7){
-    var f=c0.split(","),t=(c1?c1:p<0?"rgb(0,0,0)":"rgb(255,255,255)").split(","),R=w(f[0].slice(4)),G=w(f[1]),B=w(f[2]);
-    return "rgb("+(u((w(t[0].slice(4))-R)*n)+R)+","+(u((w(t[1])-G)*n)+G)+","+(u((w(t[2])-B)*n)+B)+")"
-  }else{
-    var f=w(c0.slice(1),16),t=w((c1?c1:p<0?"#000000":"#FFFFFF").slice(1),16),R1=f>>16,G1=f>>8&0x00FF,B1=f&0x0000FF;
-    return "#"+(0x1000000+(u(((t>>16)-R1)*n)+R1)*0x10000+(u(((t>>8&0x00FF)-G1)*n)+G1)*0x100+(u(((t&0x0000FF)-B1)*n)+B1)).toString(16).slice(1)
   }
 }
 
