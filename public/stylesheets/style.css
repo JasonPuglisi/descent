@@ -90,6 +90,10 @@ a:hover {
   font-family: 'Source Code Pro', monospace;
 }
 
+#credits {
+  padding-left: .2em;
+}
+
 #music, #weather {
   right: 3em;
   padding-left: 3em;
