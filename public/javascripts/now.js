@@ -7,7 +7,7 @@ $(function() {
   window.urls = {
     lastfmTracks: 'https://ws.audioscrobbler.com/2.0/?method=' +
       'user.getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
-    colorSummary: '/now/colors',
+    cover: document.location + '/cover?url=',
     hueInfo: '/now/hue/info',
     hueSet: '/now/hue/set',
     hueAction: 'https://www.meethue.com/api/sendmessage?token=%TOKEN%',
@@ -70,11 +70,13 @@ function updateLastfm(url) {
 
 function updateLastfmMetadata(cover, title, artist, link) {
   if (cover) {
-    if (lastfmCover.src !== cover || lastfmCoverRefresh) {
+    if (lastfmCover.src.substring(urls.cover.length) !== cover ||
+        lastfmCoverRefresh) {
       lastfmCoverRefresh = false;
-      lastfmCover.src = cover;
+      lastfmCover.src = urls.cover + cover;
     }
   } else {
+    delete lastfmCover.src;
     updateLastfmCover();
   }
 
@@ -107,36 +109,43 @@ function updateLastfmCover(cover) {
       $('#music #cover').hide();
     }
 
-    updateColors(cover);
+    updateColors(!cover);
   }
 }
 
-function updateColors(image) {
-  if (image) {
-    reset = false;
+function updateColors(reset) {
+  if (!reset) {
+    var colorThief = new ColorThief();
+    var colors = colorThief.getPalette(lastfmCover, 2);
 
-    var url = urls.colorSummary;
-    var body = 'image="' + image;
+    var hueColors = [];
+    for (var i in colors) {
+      var color = colors[i];
+      colors[i] = chroma(color).brighten(2).hex();
 
-    $.post(url, body, function(data) {
-      if (data[0] === undefined) {
-        resetColors();
-      } else {
-        var color1 = data[0].hex;
-        var color2 = data[1].hex;
-        var hueColors = [];
-
-        for (var i in data) {
-          var color = data[i];
-          hueColors.push({ x: color.xy[0], y: color.xy[1] });
-        }
-
-        $('#music #title').css('color', color1);
-        $('#music #artist').css('color', color2);
-
-        updateHue(hueColors);
+      color = chroma(color).gl();
+      for (var j in color) {
+        color[j] = color[j] > 0.04045 ?
+          Math.pow((color[j] + 0.055) / 1.055, 2.4) : color[j] / 12.92;
       }
-    });
+
+      var x = color[0] * 0.664511 + color[1] * 0.154324 + color[2] * 0.162028;
+      var y = color[0] * 0.283881 + color[1] * 0.668433 + color[2] * 0.047685;
+      var z = color[0] * 0.000088 + color[1] * 0.072310 + color[2] * 0.986039;
+
+      var finalX = x / (x + y + z);
+      var finalY = y / (x + y + z);
+
+      hueColors.push({ x: finalX, y: finalY });
+    }
+
+    var color1 = colors[0];
+    var color2 = colors[1];
+
+    $('#music #title').css('color', color1);
+    $('#music #artist').css('color', color2);
+
+    updateHue(hueColors);
   } else {
     resetColors();
   }
@@ -166,7 +175,7 @@ function updateHue(colors) {
 
       var url = urls.hueSet;
       for (var i = 1; i <= lights; i++) {
-        var color = colors[i % colors.length];
+        var color = colors[(i - 1) % colors.length];
 
         var cmdUrl = urls.hueAction.replace('%TOKEN%', accessToken);
         var slug = 'lights/' + i + '/state';
