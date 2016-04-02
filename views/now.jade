@@ -10,12 +10,6 @@ html(lang='en')
     #background
     #mask
     #help
-      | [f] forecast<br>
-      | [e] extended info<br>
-      span#hueHelp.hide [l] lights (
-        span#hueIndicator off
-        | )<br>
-      | [h] help<br><br>
       #credits
         a(href='https://github.com/JasonPuglisi/lastfm-now', target='_blank')
           i(class='fa fa-github')
@@ -24,6 +18,13 @@ html(lang='en')
         a(href='https://www.reddit.com/r/lastfm/comments/46ax64', target='_blank')
           i(class='fa fa-reddit')
           | &nbsp;discussion
+        | <br><br>
+      | [f] forecast<br>
+      | [e] extended info<br>
+      span#hueHelp.hide [l] lights (
+        span#hueIndicator off
+        | )<br>
+      | [h] help
     #weather.hide
       h2#summary
       h1#conditions
