@@ -236,7 +236,7 @@ function updateWeather(coords, iconMap) {
       addClass(icon);
 
     weatherEnabled = true;
-    if (checkCookie('weatherOn')) {
+    if (checkCookie('weatherOn') || !cookieExists('weatherOn')) {
       toggleWeather(fadeTime * 2);
     }
   });
@@ -347,5 +347,9 @@ function toggleCookie(name) {
 
 function checkCookie(name) {
   return Cookies.get(name) === 'true';
+}
+
+function cookieExists(name) {
+  return Cookies.get(name) !== undefined;
 }
 
