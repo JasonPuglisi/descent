@@ -121,7 +121,8 @@ function updateColors(reset) {
     var hueColors = [];
     for (var i in colors) {
       var color = colors[i];
-      colors[i] = chroma(color).brighten(2).hex();
+      var brightenFactor = 3 * (1 - chroma(color).luminance());
+      colors[i] = chroma(color).brighten(brightenFactor).hex();
 
       color = chroma(color).gl();
       for (var j in color) {
