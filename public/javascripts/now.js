@@ -238,13 +238,13 @@ function updateWeather(coords, iconMap) {
 
     weatherEnabled = true;
     if (checkCookie('weatherOn') || !cookieExists('weatherOn')) {
-      toggleWeather(fadeTime * 2);
+      toggleWeather(fadeTime * 2, true);
     }
   });
 
   setTimeout(function() {
     updateWeather(coords, iconMap);
-  }, 900000);
+  }, 600000);
 }
 
 function initHelp() {
@@ -332,9 +332,9 @@ function toggleDisplay(element, duration, force) {
   var show = force !== undefined ? force : !$(element).is(':visible');
 
   if (show) {
-    $(element).fadeIn(duration || fadeTime);
+    $(element).fadeIn(duration || fadeTime, 'linear');
   } else {
-    $(element).fadeOut(duration || fadeTime);
+    $(element).fadeOut(duration || fadeTime, 'linear');
   }
 }
 
