@@ -108,6 +108,11 @@ a:hover {
   top: 2em;
 }
 
+#apparent {
+  font-size: 0.75em;
+  color: #d7d7d7;
+}
+
 #music #title, #weather #summary {
   margin: 0;
 }
