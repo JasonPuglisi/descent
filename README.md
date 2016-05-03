@@ -9,8 +9,9 @@ current song.
 ## Usage
 
 Last.fm Now can be run on any server, and it listens on port 3000 by default.
-You should use a proper web server such as NGINX to forward outside traffic to
-the app. The app operates completely under the `/now` location.
+You can change the listening port by setting it to the LFMN\_PORT environment
+variable. You should use a proper web server such as NGINX to forward outside
+traffic to the app. The app operates completely under the `/now` location.
 
 The app is hosted officially at [wagnaria.xyz/now](https://wagnaria.xyz/now).
 
