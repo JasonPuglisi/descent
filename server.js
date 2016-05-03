@@ -92,7 +92,7 @@ app.post('/now/weather', function(req, res) {
   });
 });
 
-app.listen(3000);
+app.listen(process.env.LFMN_PORT || 3000);
 
 function parseUrl(url) {
   return url.substring(1, url.length - 1);
