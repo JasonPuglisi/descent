@@ -91,6 +91,7 @@ function updateLastfmMetadata(cover, title, artist, link) {
     }
   } else {
     document.title = 'Last.fm Now';
+    lastfmCoverRefresh = true;
     toggleExtended(null, false);
   }
 }
