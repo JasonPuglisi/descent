@@ -13,12 +13,12 @@ html(lang='en')
         h2 My Last.fm username is&nbsp;
           span#userInputGroup
             input#username(name='username', type='text', size='15',
-              maxlength='20', placeholder='#{username}')
-            input(name='defaultUsername', type='hidden', value='#{username}')
+              maxlength='20', placeholder=`${username}`)
+            input(name='defaultUsername', type='hidden', value=`${username}`)
             | &nbsp;
             a(href='#' onclick='submit(); return false;')
               i(class='fa fa-chevron-right')
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.2/js.cookie.js')
     script(src='/now/static/javascripts/index.js')
 

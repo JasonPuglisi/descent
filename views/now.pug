@@ -44,14 +44,14 @@ html(lang='en')
         a#songLink(href='', target='_blank').hide
           i(class='fa fa-lastfm')
         | &nbsp;
-        a#userLink(href='http://last.fm/user/#{user}', target='_blank')
-          span#user #{user}
+        a#userLink(href=`http://last.fm/user/${user}`, target='_blank')
+          span#user= user
         | &nbsp;is listening to
       img#cover
       h1#title
       h2#artist
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.0/js.cookie.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.2/js.cookie.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.0.1/color-thief.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.1.1/chroma.min.js')
     script(src='/now/static/javascripts/now.js')

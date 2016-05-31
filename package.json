@@ -1,6 +1,6 @@
 {
   "name": "lastfm-now",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A now listening display for Last.fm.",
   "author": "Jason Puglisi <jason@puglisi.im>",
   "scripts": {
@@ -14,9 +14,9 @@
     "url": "https://github.com/JasonPuglisi/lastfm-now/issues"
   },
   "dependencies": {
-    "body-parser": "^1.15.0",
+    "body-parser": "^1.15.1",
     "express": "^4.13.4",
-    "jade": "^1.11.0",
+    "pug": "^2.0.0-alpha8",
     "request": "^2.72.0"
   },
   "private": true,
