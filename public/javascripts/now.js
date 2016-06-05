@@ -19,6 +19,12 @@ $(function() {
   initLastfm();
   initWeather();
   initHelp();
+
+  checkCursor();
+  $('body').on('ready click contextmenu mousemove', function(event) {
+    window.cursorTimeout = 3;
+    showCursor();
+  });
 });
 
 function initLastfm() {
@@ -353,5 +359,23 @@ function checkCookie(name) {
 
 function cookieExists(name) {
   return Cookies.get(name) !== undefined;
+}
+
+function checkCursor() {
+  if (window.cursorTimeout < 1) {
+    hideCursor();
+  } else {
+    window.cursorTimeout--;
+  }
+
+  setTimeout(checkCursor, 1000);
+}
+
+function hideCursor() {
+  $('body').css('cursor', 'none');
+}
+
+function showCursor() {
+  $('body').css('cursor', 'auto');
 }
 
