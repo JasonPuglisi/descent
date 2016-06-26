@@ -7,7 +7,7 @@ $(function() {
   window.urls = {
     lastfmTracks: 'https://ws.audioscrobbler.com/2.0/?method=' +
       'user.getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
-    cover: document.location + '/cover?url=',
+    cover: '//' + location.host + location.pathname + '/cover?url=',
     hueInfo: '/now/hue/info',
     hueSet: '/now/hue/set',
     hueAction: 'https://www.meethue.com/api/sendmessage?token=%TOKEN%',
@@ -28,6 +28,7 @@ $(function() {
 });
 
 function initLastfm() {
+  window.nobg = $('#background').data('nobg');
   window.lastfmCoverPrevious = '';
   window.lastfmCover = new Image();
   window.lastfmCoverRefresh = false;
@@ -107,7 +108,7 @@ function updateLastfmCover(cover) {
     lastfmCoverPrevious = cover;
 
     $('#background').css('background-image', 'url(' +
-      (cover ? cover : urls.blankImage) + ')');
+      (cover && !nobg ? cover : urls.blankImage) + ')');
 
     if (cover) {
       $('#music #cover').attr('src', cover);

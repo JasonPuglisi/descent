@@ -28,7 +28,8 @@ app.post('/now', function(req, res) {
 });
 
 app.get('/now/:user', function(req, res) {
-  res.render('now', { title: 'Last.fm Now', user: req.params.user });
+  res.render('now', { title: 'Last.fm Now', user: req.params.user,
+    nobg: req.query.nobg === 'true' });
 });
 
 app.get('/now/:user/cover', function(req, res) {

@@ -27,6 +27,11 @@ feature relies on HTML5 geolocation, so it will work in most modern browsers.
 Note that the HTML5 geolocation API may be unresponsive at times, and there is
 currently no way to ensure 100% reliability.
 
+## Background Display
+
+To hide the background image and keep a plain black background instead, append
+`?nobg=true` to the URL.
+
 ## Phillips Hue Control
 
 To enable Phillips Hue control, follow the instructions below. Light colors
