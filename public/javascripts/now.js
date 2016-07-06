@@ -29,12 +29,12 @@ $(function() {
 
 function initLastfm() {
   window.nobg = $('#background').data('nobg');
-  window.lastfmCoverPrevious = '';
-  window.lastfmCover = new Image();
-  window.lastfmCoverRefresh = false;
+  window.albumCoverPrevious = '';
+  window.albumCover = new Image();
+  window.albumCoverRefresh = false;
 
-  lastfmCover.onload = function() {
-    updateLastfmCover(lastfmCover.src);
+  albumCover.onload = function() {
+    updateAlbumCover(albumCover.src);
   };
 
   var url = urls.lastfmTracks.replace('%USER%', apis.lastfmUser).
@@ -77,14 +77,14 @@ function updateLastfm(url) {
 
 function updateLastfmMetadata(cover, title, artist, link) {
   if (cover) {
-    if (lastfmCover.src.substring(urls.cover.length) !== cover ||
-        lastfmCoverRefresh) {
-      lastfmCoverRefresh = false;
-      lastfmCover.src = urls.cover + cover;
+    if (albumCover.src.substring(urls.cover.length) !== cover ||
+        albumCoverRefresh) {
+      albumCoverRefresh = false;
+      albumCover.src = urls.cover + cover;
     }
   } else {
-    delete lastfmCover.src;
-    updateLastfmCover();
+    delete albumCover.src;
+    updateAlbumCover();
   }
 
   $('#music #title').text(title || '');
@@ -98,14 +98,14 @@ function updateLastfmMetadata(cover, title, artist, link) {
     }
   } else {
     document.title = 'Last.fm Now';
-    lastfmCoverRefresh = true;
+    albumCoverRefresh = true;
     toggleExtended(null, false);
   }
 }
 
-function updateLastfmCover(cover) {
-  if (lastfmCoverPrevious != cover) {
-    lastfmCoverPrevious = cover;
+function updateAlbumCover(cover) {
+  if (albumCoverPrevious != cover) {
+    albumCoverPrevious = cover;
 
     $('#background').css('background-image', 'url(' +
       (cover && !nobg ? cover : urls.blankImage) + ')');
@@ -124,7 +124,7 @@ function updateLastfmCover(cover) {
 function updateColors(reset) {
   if (!reset) {
     var colorThief = new ColorThief();
-    var colors = colorThief.getPalette(lastfmCover, 2);
+    var colors = colorThief.getPalette(albumCover, 2);
 
     var hueColors = [];
     for (var i in colors) {
@@ -325,8 +325,8 @@ function toggleHue(force) {
 
   if (enable) {
     $(element).text('on');
-    lastfmCoverPrevious = '';
-    lastfmCoverRefresh = true;
+    albumCoverPrevious = '';
+    albumCoverRefresh = true;
   } else {
     $(element).text('off');
   }
