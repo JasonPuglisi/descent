@@ -8,6 +8,7 @@ $(function() {
     lastfmTracks: 'https://ws.audioscrobbler.com/2.0/?method=' +
       'user.getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
     cover: '//' + location.host + location.pathname + '/cover?url=',
+    spotifyCover: 'https://api.spotify.com/v1/search?type=track&limit=1&q=',
     hueInfo: '/now/hue/info',
     hueSet: '/now/hue/set',
     hueAction: 'https://www.meethue.com/api/sendmessage?token=%TOKEN%',
@@ -29,7 +30,11 @@ $(function() {
 
 function initLastfm() {
   window.nobg = $('#background').data('nobg');
-  window.albumCoverPrevious = '';
+  window.trackPrevious = {
+    title: '',
+    artist: '',
+    cover: ''
+  };
   window.albumCover = new Image();
   window.albumCoverRefresh = false;
 
@@ -83,8 +88,22 @@ function updateLastfmMetadata(cover, title, artist, link) {
       albumCover.src = urls.cover + cover;
     }
   } else {
-    delete albumCover.src;
-    updateAlbumCover();
+    if (trackPrevious.title !== title || trackPrevious.artist !== artist) {
+      trackPrevious.title = title;
+      trackPrevious.artist = artist;
+      $.get(urls.spotifyCover + artist + ' - ' + title, function(data) {
+        if (data.tracks.total > 0) {
+          cover = data.tracks.items[0].album.images[0].url;
+          if (albumCover.src.substring(urls.cover.length) !== cover ||
+            albumCoverRefresh) {
+            albumCoverRefresh = false;
+            albumCover.src = urls.cover + cover;
+          }
+        } else {
+          resetAlbumCover();
+        }
+      }).fail(resetAlbumCover);
+    }
   }
 
   $('#music #title').text(title || '');
@@ -103,9 +122,14 @@ function updateLastfmMetadata(cover, title, artist, link) {
   }
 }
 
+function resetAlbumCover() {
+  delete albumCover.src;
+  updateAlbumCover();
+}
+
 function updateAlbumCover(cover) {
-  if (albumCoverPrevious != cover) {
-    albumCoverPrevious = cover;
+  if (trackPrevious.cover !== cover) {
+    trackPrevious.cover = cover;
 
     $('#background').css('background-image', 'url(' +
       (cover && !nobg ? cover : urls.blankImage) + ')');
@@ -325,7 +349,7 @@ function toggleHue(force) {
 
   if (enable) {
     $(element).text('on');
-    albumCoverPrevious = '';
+    trackPrevious.cover = '';
     albumCoverRefresh = true;
   } else {
     $(element).text('off');
