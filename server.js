@@ -32,23 +32,6 @@ app.get('/now/:user', function(req, res) {
     nobg: req.query.nobg === 'true' });
 });
 
-app.get('/now/:user/cover', function(req, res) {
-  if (req.query.url) {
-    request({ url: req.query.url, encoding: null },
-        function (err, res2, body) {
-      if (!err && res2.statusCode == 200) {
-        res.send(body);
-      } else {
-        console.log('Error getting cover: ', err);
-        res.send();
-      }
-    });
-  } else {
-    console.log('Error getting cover: No url specified');
-    res.send();
-  }
-});
-
 app.post('/now/hue/info', function(req, res) {
   var accessToken = req.body.accessToken;
   var bridgeId = req.body.bridgeId;
@@ -80,17 +63,22 @@ app.post('/now/hue/set', function(req, res) {
 
 app.post('/now/weather', function(req, res) {
   var key = process.env.FORECAST_KEY;
-  var url = 'https://api.forecast.io/forecast/' + key + '/' +
-    req.body.latitude + ',' + req.body.longitude + '?units=auto';
+  if (key) {
+    var url = 'https://api.forecast.io/forecast/' + key + '/' +
+      req.body.latitude + ',' + req.body.longitude + '?units=auto';
 
-  request(url, function(err, res2, body) {
-    if (!err && res2.statusCode == 200) {
-      res.json(JSON.parse(body));
-    } else {
-      console.log('Error getting Forecast: ', err);
-      res.send();
-    }
-  });
+    request(url, function(err, res2, body) {
+      if (!err && res2.statusCode == 200) {
+        res.json(JSON.parse(body));
+      } else {
+        console.log('Error getting Forecast: ', err);
+        res.send();
+      }
+    });
+  } else {
+    console.log('Error getting Forecast: No API key');
+    res.send();
+  }
 });
 
 app.listen(process.env.LFMN_PORT || 3000);

@@ -51,10 +51,10 @@ than three lights are detected, the colors will be reused.
 
 5. On one of Last.fm Now's pages, open the JavaScript console in your web
    browser and issue the following command to set your bridge ID:
-   `Cookies.set('hueBridgeId', '<BRIDGE_ID>', { expires: 1000 })`
+   `Cookies.set('hueBridgeId', '<BRIDGE_ID>', { expires: 3650 })`
 
 6. Similar to the previous step, issue the following command to set your access
-   token: `Cookies.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 1000 })`
+   token: `Cookies.set('hueAccessToken', '<ACCESS_TOKEN>', { expires: 3650 })`
 
 7. Refresh the page, and use the `l` key to turn Phillips Hue control on.
    Phillips Hue control status will be indicated in the help menu, which is
