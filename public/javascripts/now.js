@@ -38,7 +38,8 @@ $(function() {
         weather: false,
         hue: false,
       },
-      nobg: false
+      nobg: false,
+      cover: new Image()
     },
     track: {
       current: {
@@ -247,16 +248,20 @@ function updateCover() {
   // Determine cover image url
   var url = resources.images.cover || resources.images.blank;
 
-  // Apply cover image to background
-  $('#background').css('background-image', 'url(' + url + ')');
+  // Load image before setting it in visible places
+  resources.state.cover.onload = function() {
+    // Apply cover image to background
+    $('#background').css('background-image', 'url(' + url + ')');
 
-  // Apply cover image to preview if it exists
-  if (hasCover()) {
-    $('#music #cover').attr('src', url);
-    $('#music #cover').show();
-  } else {
-    $('#music #cover').hide();
-  }
+    // Apply cover image to preview if it exists
+    if (hasCover()) {
+      $('#music #cover').attr('src', url);
+      $('#music #cover').show();
+    } else {
+      $('#music #cover').hide();
+    }
+  };
+  resources.state.cover.src = url;
 }
 
 /* Color functions */
