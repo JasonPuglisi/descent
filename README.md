@@ -62,7 +62,7 @@ than three lights are detected, the colors will be reused.
    off.
 
 The app should now be able to control your Phillips Hue lights from any
-network. By default, these settings will persist for 1000 days. To change this,
-replace `1000` in the commands of steps 5 and 6 with the desired number of
+network. By default, these settings will persist for 3650 days. To change this,
+replace `3560` in the commands of steps 5 and 6 with the desired number of
 days.
 
