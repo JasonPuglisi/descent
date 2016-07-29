@@ -242,12 +242,14 @@ function fetchCover() {
 
 function setCover(cover) {
   // Set cover image
+  $('#music #cover')[0].crossOrigin = null;
   resources.images.cover = cover;
   updateCover();
 }
 
 function resetCover() {
   // Clear/reset cover image
+  $('#music #cover')[0].crossOrigin = 'Anonymous';
   resources.images.cover = '';
   updateCover();
 }
@@ -444,7 +446,6 @@ function updateHue() {
 
 function initMetadata() {
   // Update preview image properties
-  $('#music #cover')[0].crossOrigin = 'Anonymous';
   $('#music #cover')[0].onload = fetchColors;
 
   // Start metadata fetch loop
