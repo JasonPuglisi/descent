@@ -242,14 +242,14 @@ function fetchCover() {
 
 function setCover(cover) {
   // Set cover image
-  $('#music #cover')[0].crossOrigin = null;
+  $('#music #cover')[0].crossOrigin = 'Anonymous';
   resources.images.cover = cover;
   updateCover();
 }
 
 function resetCover() {
   // Clear/reset cover image
-  $('#music #cover')[0].crossOrigin = 'Anonymous';
+  $('#music #cover')[0].crossOrigin = null;
   resources.images.cover = '';
   updateCover();
 }
