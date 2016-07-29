@@ -17,7 +17,8 @@ $(function() {
     urls: {
       lastfm: {
         recent: 'https://ws.audioscrobbler.com/2.0/?method=user.' +
-          'getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json'
+          'getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
+        cover: '//' + location.host + location.pathname + '/cover?url='
       },
       spotify: {
         query: 'https://api.spotify.com/v1/search?q=%QUERY%&type=track&limit=1'
@@ -45,7 +46,8 @@ $(function() {
       current: {
         artist: '',
         title: '',
-        link: ''
+        link: '',
+        cover: ''
       },
       previous: {
         artist: '',
@@ -214,18 +216,24 @@ function fetchCover() {
   if (nowPlaying() && !resources.state.nobg) {
     // If music is playing, check if track has changed
     if (newTrack()) {
-      // If track has changed, query Spotify for cover image
-      var query = resources.track.current.artist + ' - ' +
-        resources.track.current.title;
-      var url = insertVars(resources.urls.spotify.query, { QUERY: query });
-      $.get(url, function(data) {
-        // Set cover image if one is found
-        if (data.tracks.total > 0) {
-          setCover(data.tracks.items[0].album.images[0].url);
-        } else {
-          resetCover();
-        }
-      }).fail(resetCover);
+      // If track has changed, check for cover from Last.fm
+      if (resources.track.current.cover) {
+        // Set cover from Last.fm
+        setCover(resources.urls.lastfm.cover + resources.track.current.cover);
+      } else {
+        // Set cover from Spotify
+        var query = resources.track.current.artist + ' - ' +
+          resources.track.current.title;
+        var url = insertVars(resources.urls.spotify.query, { QUERY: query });
+        $.get(url, function(data) {
+          // Set cover image if one is found
+          if (data.tracks.total > 0) {
+            setCover(data.tracks.items[0].album.images[0].url);
+          } else {
+            resetCover();
+          }
+        }).fail(resetCover);
+      }
     }
   } else {
     resetCover();
@@ -255,13 +263,11 @@ function updateCover() {
 
     // Apply cover image to preview if it exists
     if (hasCover()) {
-      $('#music #cover').attr('src', url);
       $('#music #cover').show();
     } else {
       $('#music #cover').hide();
     }
-
-    fetchColors();
+    $('#music #cover').attr('src', url);
   };
   resources.state.cover.src = url;
 }
@@ -384,7 +390,6 @@ function updateColors() {
   if (hasCover()) {
     // Update color arrays with determined values
     hexColors = resources.colors.hex;
-    hueColors = resources.colors.hue;
   } else {
     // Update color arrays with default values
     hexColors = [ '#f6f5f7', '#f6f5f7' ];
@@ -440,6 +445,7 @@ function updateHue() {
 function initMetadata() {
   // Update preview image properties
   $('#music #cover')[0].crossOrigin = 'Anonymous';
+  $('#music #cover')[0].onload = fetchColors;
 
   // Start metadata fetch loop
   fetchMetadata();
@@ -457,8 +463,9 @@ function fetchMetadata() {
         var artist = track.artist['#text'];
         var title = track.name;
         var link = track.url;
+        var cover = track.image[track.image.length - 1]['#text'];
 
-        setMetadata(artist, title, link);
+        setMetadata(artist, title, link, cover);
       } else {
         resetMetadata();
       }
@@ -473,11 +480,12 @@ function fetchMetadata() {
   }, 3000);
 }
 
-function setMetadata(artist, title, link) {
+function setMetadata(artist, title, link, cover) {
   // Set track metadata
   resources.track.current.artist = artist;
   resources.track.current.title = title;
   resources.track.current.link = link;
+  resources.track.current.cover = cover ? cover : '';
   updateMetadata();
 }
 
@@ -486,6 +494,7 @@ function resetMetadata() {
   resources.track.current.artist = '';
   resources.track.current.title = '';
   resources.track.current.link = '';
+  resources.track.current.cover = '';
   updateMetadata();
 }
 

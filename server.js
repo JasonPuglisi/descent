@@ -32,6 +32,30 @@ app.get('/now/:user', function(req, res) {
     nobg: req.query.nobg === 'true' });
 });
 
+app.get('/now/:user/cover', function(req, res) {
+  if (req.query.url) {
+    var regex = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
+    var matched = req.query.url.match(regex);
+    if (matched) {
+      request({ url: req.query.url, encoding: null },
+          function(err, res2, body) {
+        if (!err && res2.statusCode == 200) {
+          res.send(body);
+        } else {
+          console.log('Error getting cover: ', err);
+          res.send();
+        }
+      });
+    } else {
+      console.log('Error getting cover: Invalid URL ' + req.query.url);
+      res.send();
+    }
+  } else {
+    console.log('Error getting cover: No URL specified');
+    res.send();
+  }
+});
+
 app.post('/now/hue/info', function(req, res) {
   var accessToken = req.body.accessToken;
   var bridgeId = req.body.bridgeId;
