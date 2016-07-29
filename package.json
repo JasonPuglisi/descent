@@ -1,6 +1,6 @@
 {
   "name": "lastfm-now",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A now listening display for Last.fm.",
   "author": "Jason Puglisi <jason@puglisi.im>",
   "scripts": {

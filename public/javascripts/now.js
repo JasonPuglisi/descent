@@ -260,6 +260,8 @@ function updateCover() {
     } else {
       $('#music #cover').hide();
     }
+
+    fetchColors();
   };
   resources.state.cover.src = url;
 }
@@ -387,6 +389,9 @@ function updateColors() {
     // Update color arrays with default values
     hexColors = [ '#f6f5f7', '#f6f5f7' ];
     hueColors = [ { x: (1 / 3), y: (1 / 3) } ];
+
+    resources.colors.hex = hexColors;
+    resources.colors.hue = hueColors;
   }
 
   // Update text colors
@@ -435,7 +440,6 @@ function updateHue() {
 function initMetadata() {
   // Update preview image properties
   $('#music #cover')[0].crossOrigin = 'Anonymous';
-  $('#music #cover')[0].onload = fetchColors;
 
   // Start metadata fetch loop
   fetchMetadata();
