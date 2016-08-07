@@ -213,7 +213,7 @@ function toggleHue(on) {
 /* Cover functions */
 
 function fetchCover() {
-  if (nowPlaying() && !resources.state.nobg) {
+  if (nowPlaying()) {
     // If music is playing, check if track has changed
     if (newTrack()) {
       // If track has changed, check for cover from Last.fm
@@ -261,7 +261,9 @@ function updateCover() {
   // Load image before setting it in visible places
   resources.state.cover.onload = function() {
     // Apply cover image to background
-    $('#background').css('background-image', 'url(' + url + ')');
+    if (!resources.state.nobg) {
+      $('#background').css('background-image', 'url(' + url + ')');
+    }
 
     // Apply cover image to preview if it exists
     if (hasCover()) {
