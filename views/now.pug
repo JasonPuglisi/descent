@@ -41,13 +41,13 @@ html(lang='en')
           span.unit
     #music
       h2#userLine.hide
-        a#songLink(href='', target='_blank').hide
-          i(class='fa fa-lastfm')
-        | &nbsp;
         a#userLink(href=`http://last.fm/user/${user}`, target='_blank')
+          i(class='fa fa-lastfm')
+          | &nbsp;
           span#user= user
         | &nbsp;is listening to
-      img#cover
+      a#songLink(href='', target='_blank')
+        img#cover
       h1#title
       h2#artist
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js')

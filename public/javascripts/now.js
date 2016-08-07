@@ -149,7 +149,7 @@ function processKey(event) {
         toggleCookie('extendedOn');
         showE = undefined;
       }
-      toggleDisplay([ '#userLine', '#songLink' ], showE);
+      toggleDisplay('#userLine', showE);
       break;
     // Handle F to toggle weather/forecast
     case 70:
@@ -516,11 +516,11 @@ function updateMetadata() {
   if (nowPlaying()) {
     document.title = '"' + title + '" by ' + artist;
     if (cookieEnabled('extendedOn')) {
-      toggleDisplay([ '#userLine', '#songLink' ], true);
+      toggleDisplay('#userLine', true);
     }
   } else {
     document.title = 'Last.fm Now';
-    toggleDisplay([ '#userLine', '#songLink' ], false);
+    toggleDisplay('#userLine', false);
   }
 
   // Update cover image

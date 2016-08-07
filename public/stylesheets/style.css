@@ -20,7 +20,7 @@ h2 {
   font-size: 1.6em;
 }
 
-a {
+a:not(#songLink) {
   text-decoration: none;
   color: #f6f5f7;
   opacity: .8;
