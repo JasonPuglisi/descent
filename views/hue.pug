@@ -1,0 +1,47 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    title= title
+    link(href='/now/static/stylesheets/style.css', rel='stylesheet')
+    link(href='/now/static/favicon.ico', rel='icon')
+  body
+    .container
+      h1#title= title
+      h2
+        ol
+          li Visit 
+            a(href='https://www.meethue.com/api/nupnp', target='_blank')
+              | this link
+            |  and copy the value for 
+            span.code id
+            |  
+            span.nowrap here: 
+              input.hue-bridge-id(type='text', size='16', maxlength='16')
+          li.hue-step-two.hide Visit 
+            a.hue-token-link(href='', target='_blank')
+              | this link
+            | , log into your Hue account, click yes, and come back here
+          li.hue-step-three.hide You have either been brought to a page that 
+            | says 
+            span.code Congratulations!
+            |  or to a page with an invalid URL. If the former, find the button
+            | that says 
+            span.code Back to the app
+            |  and right click it to copy the address it's linking to. If the 
+            | later, you've been redirected to that page automatically, so 
+            | copy the URL in your browser's address bar. Then paste what 
+            | you've copied 
+            span.nowrap here: 
+              input.hue-token(type='text', size='16', maxlength='128')
+            .hue-token-error.hide It seems your URL is invalid. Make sure it 
+              | starts with 
+              span.code phhueapp://
+          li.hue-step-four.hide You're all done! Now, just hit 
+            span.code l
+            |  on your now playing page to toggle light changing on and off.
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.2/js.cookie.js')
+    script(src='/now/static/javascripts/hue.js')
+

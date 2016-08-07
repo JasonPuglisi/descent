@@ -56,6 +56,10 @@ app.get('/now/:user/cover', function(req, res) {
   }
 });
 
+app.get('/now/:user/hue', function(req, res) {
+  res.render('hue', { title: 'Last.fm Now Hue Setup', user: req.params.user });
+});
+
 app.post('/now/hue/info', function(req, res) {
   var accessToken = req.body.accessToken;
   var bridgeId = req.body.bridgeId;

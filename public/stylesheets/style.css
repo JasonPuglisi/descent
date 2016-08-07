@@ -28,13 +28,35 @@ a:not(#songLink) {
   transition: opacity .2s linear;
 }
 
-a:hover {
+a:not(#songLink):hover {
   text-decoration: none;
   opacity: 1;
 }
 
 .hide {
   display: none;
+}
+
+.code {
+  font-family: 'Source Code Pro', monospace;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.container {
+  margin: 2em;
+}
+
+input[type=text] {
+  background-color: transparent;
+  border-style: none none solid none;
+  border-width: 1px;
+  border-radius: 0;
+  border-color: #f6f5f7;
+  font-size: 1em;
+  color: #f6f5f7;
 }
 
 #container {
@@ -44,6 +66,10 @@ a:hover {
   text-align: center;
 
   transform: translate(-50%, -80%);
+}
+
+#hueContainer {
+  position: fixed;
 }
 
 #container #username {
