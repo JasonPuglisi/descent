@@ -27,12 +27,7 @@ app.post('/now', function(req, res) {
   res.redirect('/now/' + username);
 });
 
-app.get('/now/:user', function(req, res) {
-  res.render('now', { title: 'Last.fm Now', user: req.params.user,
-    nobg: req.query.nobg === 'true' });
-});
-
-app.get('/now/:user/cover', function(req, res) {
+app.get('/now/app/cover', function(req, res) {
   if (req.query.url) {
     var regex = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
     var matched = req.query.url.match(regex);
@@ -56,40 +51,7 @@ app.get('/now/:user/cover', function(req, res) {
   }
 });
 
-app.get('/now/:user/hue', function(req, res) {
-  res.render('hue', { title: 'Last.fm Now Hue Setup', user: req.params.user });
-});
-
-app.post('/now/hue/info', function(req, res) {
-  var accessToken = req.body.accessToken;
-  var bridgeId = req.body.bridgeId;
-
-  var url = 'https://www.meethue.com/api/getbridge?token=' + accessToken +
-    '&bridgeid=' + bridgeId;
-  request(url, function(err, res2, body) {
-    if (!err && res2.statusCode == 200) {
-      res.json(JSON.parse(body));
-    } else {
-      console.log('Error getting Hue: ', err);
-      res.send();
-    }
-  });
-});
-
-app.post('/now/hue/set', function(req, res) {
-  var url = parseUrl(req.body.url);
-  var body = { form: { clipmessage: req.body.clipmessage } };
-  request.post(url, body, function(err, res2, body) {
-    if (!err && res2.statusCode == 200) {
-      res.json(JSON.parse(body));
-    } else {
-      console.log('Error setting Hue: ', err);
-      res.send();
-    }
-  });
-});
-
-app.post('/now/weather', function(req, res) {
+app.post('/now/app/weather', function(req, res) {
   var key = process.env.FORECAST_KEY;
   if (key) {
     var url = 'https://api.forecast.io/forecast/' + key + '/' +
@@ -107,6 +69,44 @@ app.post('/now/weather', function(req, res) {
     console.log('Error getting Forecast: No API key');
     res.send();
   }
+});
+
+app.get('/now/app/hue', function(req, res) {
+  res.render('hue', { title: 'Last.fm Now Hue Setup', user: req.params.user });
+});
+
+app.post('/now/app/hue/info', function(req, res) {
+  var accessToken = req.body.accessToken;
+  var bridgeId = req.body.bridgeId;
+
+  var url = 'https://www.meethue.com/api/getbridge?token=' + accessToken +
+    '&bridgeid=' + bridgeId;
+  request(url, function(err, res2, body) {
+    if (!err && res2.statusCode == 200) {
+      res.json(JSON.parse(body));
+    } else {
+      console.log('Error getting Hue: ', err);
+      res.send();
+    }
+  });
+});
+
+app.post('/now/app/hue/set', function(req, res) {
+  var url = parseUrl(req.body.url);
+  var body = { form: { clipmessage: req.body.clipmessage } };
+  request.post(url, body, function(err, res2, body) {
+    if (!err && res2.statusCode == 200) {
+      res.json(JSON.parse(body));
+    } else {
+      console.log('Error setting Hue: ', err);
+      res.send();
+    }
+  });
+});
+
+app.get('/now/:user', function(req, res) {
+  res.render('now', { title: 'Last.fm Now', user: req.params.user,
+    nobg: req.query.nobg === 'true' });
 });
 
 app.listen(process.env.LFMN_PORT || 3000);

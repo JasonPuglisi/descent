@@ -1,7 +1,21 @@
 $(function() {
+  window.lastUrl = '';
+
   $('.hue-bridge-id').on('paste focusout', function() {
+    resetHue();
+
     setTimeout(processHueBridgeId, 10);
   });
+
+  if (Cookies.get('hueBridgeId') && Cookies.get('hueAccessToken')) {
+    $('.hue-step-two, .hue-step-three').show();
+
+    getHueGroups();
+  }
+
+  if (Cookies.get('hueGroups')) {
+    $('.hue-step-five').show();
+  }
 });
 
 function processHueBridgeId() {
@@ -22,7 +36,14 @@ function processHueTokenLinkClick() {
   $('.hue-step-three').show();
 
   $('.hue-token').on('paste focusout', function() {
-    setTimeout(processHueToken, 10);
+    setTimeout(function() {
+      if (lastUrl != $('.hue-token').val()) {
+        resetHueGroups();
+
+        lastUrl = $('.hue-token').val();
+        processHueToken();
+      }
+    }, 10);
   });
 }
 
@@ -39,8 +60,72 @@ function processHueToken() {
 
       Cookies.set('hueAccessToken', token, { expires: 3650 });
 
-      $('.hue-step-four').show();
+      getHueGroups();
     }
   }
 }
 
+function getHueGroups() {
+  $('.hue-step-four').show();
+
+  var url = '/now/app/hue/info';
+  var body = 'accessToken=' + Cookies.get('hueAccessToken') + '&bridgeId=' +
+    Cookies.get('hueBridgeId');
+  $.post(url, body, function(data) {
+    $('.hue-groups-loading').hide();
+
+    var groups = data.groups;
+    var selectedGroups = (Cookies.get('hueGroups') || '').split(',');
+    for (var i in groups) {
+      var name = groups[i].name;
+      var className = 'hue-group';
+      if (selectedGroups.indexOf(i) != -1) {
+        className += ' selected';
+      }
+      $('.hue-groups').append('<div class="' + className + '" id="hue-group-' +
+        i + '">' + name + '</div>');
+    }
+
+    $('.hue-group').on('click', function() {
+      var e = $(this);
+      if (!e.hasClass('selected')) {
+        e.addClass('selected');
+      } else {
+        e.removeClass('selected');
+      }
+
+      var selectedGroups = [];
+      $('.hue-group.selected').each(function() {
+        selectedGroups.push(this.id.substring('hue-group-'.length));
+      });
+
+      if (selectedGroups.length > 0) {
+        $('.hue-step-five').show();
+        Cookies.set('hueGroups', selectedGroups.join(','), { expires: 3650 });
+      } else {
+        $('.hue-step-five').hide();
+        Cookies.remove('hueGroups');
+        Cookies.remove('hueEnabled');
+      }
+    });
+  });
+}
+
+function resetHue() {
+  $('.hue-step-two, .hue-step-three, .hue-step-four').hide();
+
+  Cookies.remove('hueBridgeId');
+  Cookies.remove('hueAccessToken');
+
+  lastUrl = '';
+
+  resetHueGroups();
+}
+
+function resetHueGroups() {
+  $('.hue-step-five').hide();
+  $('.hue-groups-loading').show();
+  $('.hue-groups').empty();
+  Cookies.remove('hueGroups');
+  Cookies.remove('hueEnabled');
+}

@@ -11,7 +11,7 @@ html(lang='en')
       h1#title= title
       h2
         ol
-          li Visit 
+          li Make sure you're on the same network as your Hue Bridge. Visit 
             a(href='https://www.meethue.com/api/nupnp', target='_blank')
               | this link
             |  and copy the value for 
@@ -22,7 +22,7 @@ html(lang='en')
           li.hue-step-two.hide Visit 
             a.hue-token-link(href='', target='_blank')
               | this link
-            | , log into your Hue account, click yes, and come back here
+            | , log into your Hue account, click yes, and come back here.
           li.hue-step-three.hide You have either been brought to a page that 
             | says 
             span.code Congratulations!
@@ -38,9 +38,17 @@ html(lang='en')
             .hue-token-error.hide It seems your URL is invalid. Make sure it 
               | starts with 
               span.code phhueapp://
-          li.hue-step-four.hide You're all done! Now, just hit 
+          li.hue-step-four.hide Select one or more rooms to control
+            div.hue-groups-loading
+              i(class='fa fa-circle-o-notch fa-spin')
+              |   Loading...
+            div.hue-groups
+          li.hue-step-five.hide You're all done! Now, just hit 
             span.code l
-            |  on your now playing page to toggle light changing on and off.
+            |  on your now playing page to toggle light control on and off.
+            | You can come back to this page at any time to update the groups
+            | you're using or switch to a different Hue bridge (just start over
+            | from step one).
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js')
     script(src='/now/static/javascripts/hue.js')

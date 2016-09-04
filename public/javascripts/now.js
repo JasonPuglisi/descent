@@ -18,18 +18,18 @@ $(function() {
       lastfm: {
         recent: 'https://ws.audioscrobbler.com/2.0/?method=user.' +
           'getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
-        cover: '//' + location.host + location.pathname + '/cover?url='
+        cover: '/now/app/cover?url='
       },
       spotify: {
         query: 'https://api.spotify.com/v1/search?q=%QUERY%&type=track&limit=1'
       },
       hue: {
         action: 'https://www.meethue.com/api/sendmessage?token=%TOKEN%',
-        info: '/now/hue/info',
-        set: '/now/hue/set'
+        info: '/now/app/hue/info',
+        set: '/now/app/hue/set'
       },
       forecast: {
-        query: '/now/weather'
+        query: '/now/app/weather'
       }
     },
     state: {
@@ -113,7 +113,7 @@ function hideCursor() {
 function initMenu() {
   // Update globals
   resources.state.features.hue = cookieExists('hueBridgeId') &&
-    cookieExists('hueAccessToken');
+    cookieExists('hueAccessToken') && cookieExists('hueGroups');
   resources.state.nobg = $('#background').data('nobg');
 
   // Set function for key presses
@@ -422,17 +422,28 @@ function updateHue() {
     var url = resources.urls.hue.info;
     var body = 'accessToken=' + accessToken + '&bridgeId=' + bridgeId;
     $.post(url, body, function(data) {
-      // Loop through lights and colors
-      var lights = Object.keys(data.lights).length;
+      // Loop through lights and colors for selected groups
+      var groups = data.groups;
+      var selectedGroups = Cookies.get('hueGroups').split(',');    
+      var lights = [];
+      for (var i in selectedGroups) {
+        var group = groups[selectedGroups[i]];
+        for (var j in group.lights) {
+          lights.push(parseInt(group.lights[j]));
+        }
+      }
+
       var url = resources.urls.hue.set;
       var colors = resources.colors.hue;
-      for (var i = 1; i <= lights; i++) {
-        var color = colors[(i - 1) % colors.length];
+      var colorIteration = 0;
+      for (var k in lights) {
+        var color = colors[colorIteration % colors.length];
+        colorIteration++;
 
         // Prepare and send update message for each Hue light
         var cmdUrl = insertVars(resources.urls.hue.action, { TOKEN:
           accessToken });
-        var slug = 'lights/' + i + '/state';
+        var slug = 'lights/' + lights[k] + '/state';
         var method = 'PUT';
         var cmdBody = '{"xy": [' + color.x + ',' + color.y + ']}';
         var body = 'clipmessage={bridgeId: "' + bridgeId +
