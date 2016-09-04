@@ -34,8 +34,8 @@ To hide the background image and keep a plain black background instead, append
 
 ## Phillips Hue Control
 
-To enable Phillips Hue control, append `/hue` to the URL and follow setup
+To enable Phillips Hue control, visit
+[`/now/app/hue`](https://wagnaria.xyz/now/app/hue) and follow the setup
 instructions. Light colors will be set according to the three most prominent
-album art colors. If more than three lights are detected, the colors will be
+album art colors. If more than three lights are selected, the colors will be
 reused.
-
