@@ -17,9 +17,12 @@ The app is hosted officially at [wagnaria.xyz/now](https://wagnaria.xyz/now).
 
 ## Weather
 
-Weather is powered by the [Forecast API](https://developer.forecast.io/),
-which requires a personal API key if you're hosting the app yourself. You
-should set this API key to the `FORECAST_KEY` environment variable.
+Weather is powered by the [Dark Sky API](https://darksky.net/dev/), which
+requires a personal API key if you're hosting the app yourself. You should set
+this API key to the `DARK_SKY_KEY` environment variable. Note that Dark Sky
+API used to be branded as Forecast API. This application previously accepted
+the `FORECAST_KEY` environment variable, and will continue to do so, but
+`DARK_SKY_KEY` will be given priority.
 
 To enable weather display, you must allow the app to access your location. This
 feature relies on HTML5 geolocation, so it will work in most modern browsers.

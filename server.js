@@ -52,9 +52,9 @@ app.get('/now/app/cover', function(req, res) {
 });
 
 app.post('/now/app/weather', function(req, res) {
-  var key = process.env.FORECAST_KEY;
+  var key = process.env.DARK_SKY_KEY || process.env.FORECAST_KEY;
   if (key) {
-    var url = 'https://api.forecast.io/forecast/' + key + '/' +
+    var url = 'https://api.darksky.net/forecast/' + key + '/' +
       req.body.latitude + ',' + req.body.longitude + '?units=auto';
 
     request(url, function(err, res2, body) {
