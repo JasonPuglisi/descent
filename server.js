@@ -52,23 +52,27 @@ app.get('/now/app/cover', function(req, res) {
 });
 
 app.post('/now/app/weather', function(req, res) {
-  var key = process.env.DARK_SKY_KEY || process.env.FORECAST_KEY;
-  if (key) {
-    var url = 'https://api.darksky.net/forecast/' + key + '/' +
-      req.body.latitude + ',' + req.body.longitude + '?units=auto';
-
-    request(url, function(err, res2, body) {
-      if (!err && res2.statusCode == 200) {
-        res.json(JSON.parse(body));
-      } else {
-        console.log('Error getting Forecast: ', err);
-        res.send();
+  getForecastDarkSky(req.body.latitude, req.body.longitude, function(err,
+    data) {
+    if (!err) {
+      res.json(data);
+      res.send();
+    } else {
+      if (err !== 'No API key') {
+        console.log('Error getting DarkSky forecast: ', err);
       }
-    });
-  } else {
-    console.log('Error getting Forecast: No API key');
-    res.send();
-  }
+      getForecastOpenweathermap(req.body.latitude, req.body.longitude,
+      function(err, data) {
+        if (!err) {
+          res.json(data);
+          res.send();
+        } else {
+          console.log('Error getting OpenWeatherMap forecast: ', err);
+          res.send();
+        }
+      });
+    }
+  });
 });
 
 app.get('/now/app/hue', function(req, res) {
@@ -115,3 +119,42 @@ function parseUrl(url) {
   return url.substring(1, url.length - 1);
 }
 
+function getForecastDarkSky(latitude, longitude, callback) {
+  var key = process.env.DARK_SKY_KEY || process.env.FORECAST_KEY;
+  if (key) {
+    var url = 'https://api.darksky.net/forecast/' + key + '/' + latitude +
+      ',' + longitude + '?units=auto';
+
+    request(url, function(err, res, body) {
+      if (!err && res.statusCode == 200) {
+        var data = JSON.parse(body);
+        data.apiType = 'darksky';
+        callback(null, data);
+      } else {
+        callback('Invalid response: ' + err);
+      }
+    });
+  } else {
+    callback('No API key');
+  }
+}
+
+function getForecastOpenweathermap(latitude, longitude, callback) {
+  var key = process.env.OPENWEATHERMAP_KEY;
+  if (key) {
+    var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
+      latitude + '&lon=' + longitude + '&units=imperial' + '&appid=' + key;
+
+    request(url, function(err, res, body) {
+      if (!err && res.statusCode == 200) {
+        var data = JSON.parse(body);
+        data.apiType = 'openweathermap';
+        callback(null, data);
+      } else {
+        callback('Invalid response: ' + err);
+      }
+    });
+  } else {
+    callback('No API key');
+  }
+}

@@ -13,12 +13,17 @@ Navigate to [`/now`](https://wagnaria.xyz/now) to use the web app.
 
 ### Weather
 
-Weather is powered by the [Dark Sky API](https://darksky.net/dev/), which
-requires a personal API key if you're hosting the app yourself. You should set
-this API key to the `DARK_SKY_KEY` environment variable. Note that Dark Sky
+Weather is powered by the [Dark Sky API](https://darksky.net/dev/), or the
+[OpenWeatherMap API](https://openweathermap.org/api)–both of which require a
+personal API key if you're hosting the app yourself. For Dark Sky, you should
+set this API key to the `DARK_SKY_KEY` environment variable. Note that Dark Sky
 API used to be branded as Forecast API. This application previously accepted
 the `FORECAST_KEY` environment variable, and will continue to do so, but
-`DARK_SKY_KEY` will be given priority.
+`DARK_SKY_KEY` will be given priority. For OpenWeatherMap, you should set this
+API key to the `OPENWEATHERMAP_KEY` environment variable.
+
+The officially-hosted version of this web app uses the OpenWeatherMap API to
+keep it free.
 
 To enable weather display, you must allow the app to access your location. This
 feature relies on HTML5 geolocation, so it will work in most modern browsers.

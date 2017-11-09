@@ -424,7 +424,7 @@ function updateHue() {
     $.post(url, body, function(data) {
       // Loop through lights and colors for selected groups
       var groups = data.groups;
-      var selectedGroups = Cookies.get('hueGroups').split(',');    
+      var selectedGroups = Cookies.get('hueGroups').split(',');
       var lights = [];
       for (var i in selectedGroups) {
         var group = groups[selectedGroups[i]];
@@ -559,7 +559,25 @@ function initWeather() {
         'partly-cloudy-night': 'night-alt-cloudy',
         'hail': 'hail',
         'thunderstorm': 'thunderstorm',
-        'tornado': 'tornado'
+        'tornado': 'tornado',
+        '01d': 'day-sunny',
+        '01n': 'night-clear',
+        '02d': 'day-cloudy',
+        '02n': 'night-cloudy',
+        '03d': 'cloud',
+        '03n': 'cloud',
+        '04d': 'cloudy',
+        '04n': 'cloudy',
+        '09d': 'rain',
+        '09n': 'rain',
+        '10d': 'day-rain',
+        '10n': 'night-rain',
+        '11d': 'thunderstorm',
+        '11n': 'thunderstorm',
+        '13d': 'snow',
+        '13n': 'snow',
+        '50d': 'windy',
+        '50n': 'windy'
       };
 
       // Start weather refresh loop
@@ -577,11 +595,21 @@ function updateWeather(coords, iconMap) {
     resources.state.features.weather = true;
 
     // Set weather data
-    var summary = data.minutely.summary;
-    var temperature = Math.round(data.currently.temperature);
-    var apparentTemperature = Math.round(data.currently.apparentTemperature);
-    var unit = data.flags.units == 'us' ? 'F' : 'C';
-    var icon = 'wi wi-' + iconMap[data.currently.icon];
+    var summary, temperature, apparentTemperature, unit, icon;
+    if (data.apiType == 'darksky') {
+      summary = data.minutely.summary;
+      temperature = Math.round(data.currently.temperature);
+      apparentTemperature = Math.round(data.currently.apparentTemperature);
+      unit = data.flags.units == 'us' ? 'F' : 'C';
+      icon = 'wi wi-' + iconMap[data.currently.icon];
+    } else {
+      summary = data.weather[0].description;
+      summary = summary.substring(0, 1).toUpperCase() + summary.substring(1);
+      temperature = Math.round(data.main.temp);
+      apparentTemperature = null;
+      unit = 'F';
+      icon = 'wi wi-' + iconMap[data.weather[0].icon];
+    }
 
     // Update weather data
     $('#weather #summary').text(summary);
@@ -593,6 +621,9 @@ function updateWeather(coords, iconMap) {
 
     // Display weather text as appropriate
     if (cookieEnabled('weatherOn') || !cookieExists('weatherOn')) {
+      if (!apparentTemperature) {
+        $('#apparent').hide();
+      }
       toggleDisplay('#weather', true);
     }
   });
