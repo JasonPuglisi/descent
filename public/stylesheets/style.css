@@ -1,5 +1,5 @@
 @import 'https://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400';
-@import 'https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css';
+@import 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css';
 
 body {
@@ -215,4 +215,3 @@ input[type=text] {
 ::-moz-selection {
   background: #e0d5ff;
 }
-
