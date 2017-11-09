@@ -72,21 +72,21 @@ function getHueGroups() {
   var body = 'accessToken=' + Cookies.get('hueAccessToken') + '&bridgeId=' +
     Cookies.get('hueBridgeId');
   $.post(url, body, function(data) {
-    $('.hue-groups-loading').hide();
+    $('.select-groups-loading').hide();
 
     var groups = data.groups;
     var selectedGroups = (Cookies.get('hueGroups') || '').split(',');
     for (var i in groups) {
       var name = groups[i].name;
-      var className = 'hue-group';
+      var className = 'select-group';
       if (selectedGroups.indexOf(i) != -1) {
         className += ' selected';
       }
-      $('.hue-groups').append('<div class="' + className + '" id="hue-group-' +
+      $('.select-groups').append('<div class="' + className + '" id="select-group-' +
         i + '">' + name + '</div>');
     }
 
-    $('.hue-group').on('click', function() {
+    $('.select-group').on('click', function() {
       var e = $(this);
       if (!e.hasClass('selected')) {
         e.addClass('selected');
@@ -95,8 +95,8 @@ function getHueGroups() {
       }
 
       var selectedGroups = [];
-      $('.hue-group.selected').each(function() {
-        selectedGroups.push(this.id.substring('hue-group-'.length));
+      $('.select-group.selected').each(function() {
+        selectedGroups.push(this.id.substring('select-group-'.length));
       });
 
       if (selectedGroups.length > 0) {
@@ -124,8 +124,8 @@ function resetHue() {
 
 function resetHueGroups() {
   $('.hue-step-five').hide();
-  $('.hue-groups-loading').show();
-  $('.hue-groups').empty();
+  $('.select-groups-loading').show();
+  $('.select-groups').empty();
   Cookies.remove('hueGroups');
   Cookies.remove('hueEnabled');
 }

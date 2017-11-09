@@ -1,6 +1,5 @@
 @import 'https://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400';
 @import 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css';
-@import 'https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css';
 
 body {
   background-color: #212121;
@@ -59,7 +58,7 @@ input[type=text] {
   color: #f6f5f7;
 }
 
-.hue-group {
+.select-group {
   cursor: pointer;
   display: inline-block;
   margin: 5px 10px 5px 0;
@@ -77,16 +76,16 @@ input[type=text] {
   user-select: none;
 }
 
-.hue-group:hover, .hue-group:active {
+.select-group:hover, .select-group:active {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
-.hue-group.selected {
+.select-group.selected {
   background-color: #e0d5ff;
   color: #212121;
 }
 
-.hue-groups-loading {
+.select-groups-loading {
   margin: 5px 0 5px 0;
 }
 

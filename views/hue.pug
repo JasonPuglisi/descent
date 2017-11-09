@@ -40,17 +40,21 @@ html(lang='en')
               | starts with 
               span.code phhueapp://
           li.hue-step-four.hide Select one or more rooms to control
-            div.hue-groups-loading
+            div.select-groups-loading
               i(class='fa fa-circle-o-notch fa-spin')
               |   Loading...
-            div.hue-groups
+            div.select-groups
           li.hue-step-five.hide You're all done! Now, just hit 
             span.code l
             |  on your now playing page to toggle light control on and off.
             | You can come back to this page at any time to update the groups
             | you're using or switch to a different Hue bridge (just start over
             | from step one).
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js')
+      a(href='/now')
+        | [home]
+      | 
+      a(href='/now/app/config')
+        | [settings]
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
     script(src='/now/static/javascripts/hue.js')
-

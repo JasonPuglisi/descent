@@ -5,4 +5,3 @@ $(function() {
 function submit() {
   $('#userInput').submit();
 }
-

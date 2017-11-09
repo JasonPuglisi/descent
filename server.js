@@ -75,8 +75,12 @@ app.post('/now/app/weather', function(req, res) {
   });
 });
 
+app.get('/now/app/config', function(req, res) {
+  res.render('config', { title: 'Last.fm Now Configuration' });
+});
+
 app.get('/now/app/hue', function(req, res) {
-  res.render('hue', { title: 'Last.fm Now Hue Setup', user: req.params.user });
+  res.render('hue', { title: 'Last.fm Now Hue Setup' });
 });
 
 app.post('/now/app/hue/info', function(req, res) {
