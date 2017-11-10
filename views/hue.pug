@@ -12,39 +12,26 @@ html(lang='en')
       h1#title= title
       h2
         ol
-          li Make sure you're on the same network as your Hue Bridge. Visit 
-            a(href='https://www.meethue.com/api/nupnp', target='_blank')
-              | this link
-            |  and copy the value for 
-            span.code id
-            |  
-            span.nowrap here: 
-              input.hue-bridge-id(type='text', size='16', maxlength='16')
-          li.hue-step-two.hide Visit 
-            a.hue-token-link(href='', target='_blank')
-              | this link
-            | , log into your Hue account, click yes, and come back here.
-          li.hue-step-three.hide You have either been brought to a page that 
-            | says 
-            span.code Congratulations!
-            |  or to a page with an invalid URL. If the former, find the button
-            | that says 
-            span.code Back to the app
-            |  and right click it to copy the address it's linking to. If the 
-            | later, you've been redirected to that page automatically, so 
-            | copy the URL in your browser's address bar. Then paste what 
-            | you've copied 
-            span.nowrap here: 
-              input.hue-token(type='text', size='16', maxlength='128')
-            .hue-token-error.hide It seems your URL is invalid. Make sure it 
-              | starts with 
-              span.code phhueapp://
-          li.hue-step-four.hide Select one or more rooms to control
-            div.select-groups-loading
+          li Scanning for Hue Bridges. Select the IP address of your bridge. 
+            | If you're not sure which one is right, try the first.
+            div.select-groups-loading#select-groups-loading-bridges
               i(class='fa fa-circle-o-notch fa-spin')
               |   Loading...
-            div.select-groups
-          li.hue-step-five.hide You're all done! Now, just hit 
+            div.select-groups#select-groups-bridges
+            span.hide#select-groups-bridges-error No bridges found. Make sure 
+              | you're on the same network as your bridge.
+          li.hide.hue-step#hue-step-button Press the link button on your Hue 
+            | Bridge and wait a few seconds to connect.
+            div.hide.select-groups-loading#select-groups-loading-connect
+              i(class='fa fa-circle-o-notch fa-spin')
+              |   Connecting...
+          li.hide.hue-step#hue-step-rooms Connected! Select one or more 
+            | rooms to control.
+            div.hide.select-groups-loading#select-groups-loading-rooms
+              i(class='fa fa-circle-o-notch fa-spin')
+              |   Loading...
+            div.select-groups#select-groups-rooms
+          li.hide.hue-step#hue-step-done You're all done! Now, just hit 
             span.code l
             |  on your now playing page to toggle light control on and off.
             | You can come back to this page at any time to update the groups

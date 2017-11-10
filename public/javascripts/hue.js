@@ -1,92 +1,99 @@
 $(function() {
-  window.lastUrl = '';
-
-  $('.hue-bridge-id').on('paste focusout', function() {
-    resetHue();
-
-    setTimeout(processHueBridgeId, 10);
-  });
-
-  if (Cookies.get('hueBridgeId') && Cookies.get('hueAccessToken')) {
-    $('.hue-step-two, .hue-step-three').show();
-
-    getHueGroups();
-  }
-
-  if (Cookies.get('hueGroups')) {
-    $('.hue-step-five').show();
-  }
+  discoverBridges();
 });
 
-function processHueBridgeId() {
-  var id = $('.hue-bridge-id').val();
+var connecting = false;
 
-  if (id) {
-    Cookies.set('hueBridgeId', id, { expires: 3650 });
+function discoverBridges() {
+  var bridgeFound = false;
+  $.get('https://www.meethue.com/api/nupnp', function(data) {
+    for (var i in data) {
+      var ip = data[i].internalipaddress;
+      if (ip) {
+        bridgeFound = true;
+        $('#select-groups-loading-bridges').hide();
+        $('#select-groups-bridges').append('<div class="select-group ' +
+          'group-bridges" id="select-group-bridge-' + ip.replace(/\./g, '_') +
+          '">' + ip + '</div>');
+      } else {
+        discoverBridgesError();
+      }
+    }
 
-    $('.hue-token-link').attr('href', 'http://www.meethue.com/en-US/api/' +
-      'gettoken?devicename=lastfm_now&appid=hueapp&deviceid=' + id);
-    $('.hue-token-link').click(processHueTokenLinkClick);
+    $('.select-group.group-bridges').click(function() {
+      $('.hue-step').hide();
+      Cookies.remove('hueIp');
+      Cookies.remove('hueUsername');
+      Cookies.remove('hueName');
+      Cookies.remove('hueRooms');
+      $('.select-group.group-bridges.selected').each(function() {
+        $(this).removeClass('selected');
+      });
+      $(this).addClass('selected');
+      connecting = true;
+      registerBridge(this.id.substring(this.id.lastIndexOf('-') + 1).replace(
+        /_/g, '.'));
+    });
 
-    $('.hue-step-two').show();
-  }
+    restoreState();
+  }).fail(discoverBridgesError);
 }
 
-function processHueTokenLinkClick() {
-  $('.hue-step-three').show();
+function discoverBridgesError() {
+  $('#select-groups-loading-bridges').hide();
+  $('#select-groups-bridges-error').show();
+}
 
-  $('.hue-token').on('paste focusout', function() {
-    setTimeout(function() {
-      if (lastUrl != $('.hue-token').val()) {
-        resetHueGroups();
-
-        lastUrl = $('.hue-token').val();
-        processHueToken();
+function registerBridge(ip) {
+  var url = 'http://' + ip + '/api';
+  var body = '{"devicetype": "lastfm_now#web_client"}';
+  $.post(url, body, function(data) {
+    $('#select-groups-loading-connect').show();
+    $('#hue-step-button').show();
+    if (data[0].error) {
+      if (connecting) {
+        setTimeout(registerBridge(ip), 5000);
       }
-    }, 10);
+    } else {
+      connecting = false;
+      $('#select-groups-loading-connect').hide();
+      $('#select-groups-loading-rooms').show();
+      $('#hue-step-rooms').show();
+      getBridge(ip, data[0].success.username);
+    }
   });
 }
 
-function processHueToken() {
-  var token = $('.hue-token').val();
+function getBridge(ip, username) {
+  var url = 'http://' + ip + '/api/' + username + '/config';
+  $.get(url, function(data) {
+    var name = data.name;
+    $('.select-group.group-bridges.selected').html(name);
 
-  if (token) {
-    if (token.indexOf('phhueapp://') !== 0) {
-      $('.hue-token-error').show();
-    } else {
-      $('.hue-token-error').hide();
-
-      token = token.substring(token.lastIndexOf('/') + 1);
-
-      Cookies.set('hueAccessToken', token, { expires: 3650 });
-
-      getHueGroups();
-    }
-  }
+    Cookies.set('hueIp', ip, { expires: 3650 });
+    Cookies.set('hueUsername', username, { expires: 3650 });
+    Cookies.set('hueName', name, { expires: 3650 });
+    getRooms(ip, username);
+  });
 }
 
-function getHueGroups() {
-  $('.hue-step-four').show();
-
-  var url = '/now/app/hue/info';
-  var body = 'accessToken=' + Cookies.get('hueAccessToken') + '&bridgeId=' +
-    Cookies.get('hueBridgeId');
-  $.post(url, body, function(data) {
-    $('.select-groups-loading').hide();
-
-    var groups = data.groups;
-    var selectedGroups = (Cookies.get('hueGroups') || '').split(',');
-    for (var i in groups) {
-      var name = groups[i].name;
-      var className = 'select-group';
-      if (selectedGroups.indexOf(i) != -1) {
-        className += ' selected';
-      }
-      $('.select-groups').append('<div class="' + className + '" id="select-group-' +
-        i + '">' + name + '</div>');
+function getRooms(ip, username) {
+  var url = 'http://' + ip + '/api/' + username + '/groups';
+  $.get(url, function(data) {
+    $('.group-rooms').each(function() {
+      $(this).remove();
+    });
+    $('#select-groups-loading-rooms').hide();
+    for (var i in data) {
+      var room = data[i];
+      var name = room.name;
+      $('#select-groups-rooms').append('<div class="select-group ' +
+        'group-rooms" id="select-group-rooms-' + i + '">' + name + '</div>');
     }
 
-    $('.select-group').on('click', function() {
+    restoreRooms();
+
+    $('.group-rooms').click(function() {
       var e = $(this);
       if (!e.hasClass('selected')) {
         e.addClass('selected');
@@ -94,38 +101,50 @@ function getHueGroups() {
         e.removeClass('selected');
       }
 
-      var selectedGroups = [];
-      $('.select-group.selected').each(function() {
-        selectedGroups.push(this.id.substring('select-group-'.length));
+      var selectedRooms = [];
+      $('.group-rooms.selected').each(function() {
+        selectedRooms.push(this.id.substring('select-group-rooms-'.length));
       });
 
-      if (selectedGroups.length > 0) {
-        $('.hue-step-five').show();
-        Cookies.set('hueGroups', selectedGroups.join(','), { expires: 3650 });
+      if (selectedRooms.length > 0) {
+        $('#hue-step-done').show();
+        Cookies.set('hueRooms', selectedRooms.join(','), { expires: 3650 });
       } else {
-        $('.hue-step-five').hide();
-        Cookies.remove('hueGroups');
+        $('#hue-step-done').hide();
+        Cookies.remove('hueRooms');
         Cookies.remove('hueEnabled');
       }
     });
   });
 }
 
-function resetHue() {
-  $('.hue-step-two, .hue-step-three, .hue-step-four').hide();
+function restoreState() {
+  var ip = Cookies.get('hueIp');
+  var username = Cookies.get('hueUsername');
+  var name = Cookies.get('hueName');
+  var rooms = Cookies.get('hueRooms');
 
-  Cookies.remove('hueBridgeId');
-  Cookies.remove('hueAccessToken');
+  if (ip !== undefined && username !== undefined && name !== undefined) {
+    $('#select-group-bridge-' + ip.replace(/\./g, '_')).html(name).addClass(
+      'selected');
+    $('#hue-step-button').show();
+    $('#hue-step-rooms').show();
 
-  lastUrl = '';
-
-  resetHueGroups();
+    getRooms(ip, username);
+  }
 }
 
-function resetHueGroups() {
-  $('.hue-step-five').hide();
-  $('.select-groups-loading').show();
-  $('.select-groups').empty();
-  Cookies.remove('hueGroups');
-  Cookies.remove('hueEnabled');
+function restoreRooms() {
+  var rooms = Cookies.get('hueRooms');
+
+  if (rooms !== undefined) {
+    rooms = rooms.split(',');
+    if (rooms.length > 0) {
+      for (var i in rooms) {
+        var room = rooms[i];
+        $('#select-group-rooms-' + rooms[i]).addClass('selected');
+      }
+      $('#hue-step-done').show();
+    }
+  }
 }
