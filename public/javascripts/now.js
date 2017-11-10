@@ -259,6 +259,7 @@ function fetchImages() {
     }
   } else {
     resetCover();
+    resetBackground();
   }
 }
 
@@ -562,6 +563,7 @@ function updateMetadata() {
   } else {
     document.title = 'Last.fm Now';
     toggleDisplay('#userLine', false);
+    resetBackground();
   }
 
   // Update cover and artist images
