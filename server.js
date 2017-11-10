@@ -83,35 +83,6 @@ app.get('/now/app/hue', function(req, res) {
   res.render('hue', { title: 'Last.fm Now Hue Setup' });
 });
 
-app.post('/now/app/hue/info', function(req, res) {
-  var accessToken = req.body.accessToken;
-  var bridgeId = req.body.bridgeId;
-
-  var url = 'https://www.meethue.com/api/getbridge?token=' + accessToken +
-    '&bridgeid=' + bridgeId;
-  request(url, function(err, res2, body) {
-    if (!err && res2.statusCode == 200) {
-      res.json(JSON.parse(body));
-    } else {
-      console.log('Error getting Hue: ', err);
-      res.send();
-    }
-  });
-});
-
-app.post('/now/app/hue/set', function(req, res) {
-  var url = parseUrl(req.body.url);
-  var body = { form: { clipmessage: req.body.clipmessage } };
-  request.post(url, body, function(err, res2, body) {
-    if (!err && res2.statusCode == 200) {
-      res.json(JSON.parse(body));
-    } else {
-      console.log('Error setting Hue: ', err);
-      res.send();
-    }
-  });
-});
-
 app.get('/now/:user', function(req, res) {
   res.render('now', { title: 'Last.fm Now', user: req.params.user,
     nobg: req.query.nobg === 'true' });

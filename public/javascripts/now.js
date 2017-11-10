@@ -27,9 +27,8 @@ $(function() {
         query: 'https://api.spotify.com/v1/search?q=%QUERY%&type=track&limit=1'
       },
       hue: {
-        action: 'https://www.meethue.com/api/sendmessage?token=%TOKEN%',
-        info: '/now/app/hue/info',
-        set: '/now/app/hue/set'
+        rooms: 'http://%IP%/api/%USERNAME%/groups',
+        set: 'http://%IP%/api/%USERNAME%/lights/%ID%/state'
       },
       forecast: {
         query: '/now/app/weather'
@@ -117,8 +116,8 @@ function hideCursor() {
 
 function initMenu() {
   // Update globals
-  resources.state.features.hue = cookieExists('hueBridgeId') &&
-    cookieExists('hueAccessToken') && cookieExists('hueGroups');
+  resources.state.features.hue = cookieExists('hueIp') &&
+    cookieExists('hueUsername') && cookieExists('hueRooms');
 
   // Set function for key presses
   window.onkeydown = processKey;
@@ -443,25 +442,23 @@ function updateHue() {
   // Make sure Hue functionality is enabled
   if (cookieEnabled('hueEnabled')) {
     // Set Hue credentials
-    var accessToken = Cookies.get('hueAccessToken');
-    var bridgeId = Cookies.get('hueBridgeId');
+    var ip = Cookies.get('hueIp');
+    var username = Cookies.get('hueUsername');
+    var rooms = Cookies.get('hueRooms').split(',');
 
     // Get light information from Hue
-    var url = resources.urls.hue.info;
-    var body = 'accessToken=' + accessToken + '&bridgeId=' + bridgeId;
-    $.post(url, body, function(data) {
+    var url = insertVars(resources.urls.hue.rooms, { IP: ip, USERNAME:
+      username });
+    $.get(url, function(data) {
       // Loop through lights and colors for selected groups
-      var groups = data.groups;
-      var selectedGroups = Cookies.get('hueGroups').split(',');
       var lights = [];
-      for (var i in selectedGroups) {
-        var group = groups[selectedGroups[i]];
-        for (var j in group.lights) {
-          lights.push(parseInt(group.lights[j]));
+      for (var i in rooms) {
+        var room = data[rooms[i]];
+        for (var j in room.lights) {
+          lights.push(parseInt(room.lights[j]));
         }
       }
 
-      var url = resources.urls.hue.set;
       var colors = resources.colors.hue;
       var colorIteration = 0;
       for (var k in lights) {
@@ -469,15 +466,14 @@ function updateHue() {
         colorIteration++;
 
         // Prepare and send update message for each Hue light
-        var cmdUrl = insertVars(resources.urls.hue.action, { TOKEN:
-          accessToken });
-        var slug = 'lights/' + lights[k] + '/state';
-        var method = 'PUT';
-        var cmdBody = '{"xy": [' + color.x + ',' + color.y + ']}';
-        var body = 'clipmessage={bridgeId: "' + bridgeId +
-          '", clipCommand: {url: "/api/0/' + slug + '", method: "' +
-          method + '", body: ' + cmdBody + '}}&url="' + cmdUrl + '"';
-        $.post(url, body);
+        var url = insertVars(resources.urls.hue.set, { IP: ip, USERNAME:
+          username, ID: lights[k] });
+        var body = '{"xy": [' + color.x + ',' + color.y + ']}';
+        $.ajax({
+          url: url,
+          type: 'PUT',
+          data: body
+        });
       }
     });
   }
