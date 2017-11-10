@@ -124,7 +124,7 @@ function parseUrl(url) {
 }
 
 function getForecastDarkSky(latitude, longitude, callback) {
-  var key = process.env.DARK_SKY_KEY || process.env.FORECAST_KEY;
+  var key = process.env.DARK_SKY_KEY;
   if (key) {
     var url = 'https://api.darksky.net/forecast/' + key + '/' + latitude +
       ',' + longitude + '?units=auto';

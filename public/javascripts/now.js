@@ -39,7 +39,6 @@ $(function() {
         weather: false,
         hue: false,
       },
-      nobg: false,
       cover: new Image()
     },
     track: {
@@ -114,7 +113,6 @@ function initMenu() {
   // Update globals
   resources.state.features.hue = cookieExists('hueBridgeId') &&
     cookieExists('hueAccessToken') && cookieExists('hueGroups');
-  resources.state.nobg = $('#background').data('nobg');
 
   // Set function for key presses
   window.onkeydown = processKey;
@@ -261,9 +259,7 @@ function updateCover() {
   // Load image before setting it in visible places
   resources.state.cover.onload = function() {
     // Apply cover image to background
-    if (!resources.state.nobg) {
-      $('#background').css('background-image', 'url(' + url + ')');
-    }
+    $('#background').css('background-image', 'url(' + url + ')');
 
     // Apply cover image to preview if it exists
     if (hasCover()) {

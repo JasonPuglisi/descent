@@ -14,24 +14,25 @@ Navigate to [`/now`](https://wagnaria.xyz/now) to use the web app.
 ### Weather
 
 Weather is powered by the [Dark Sky API](https://darksky.net/dev/), or the
-[OpenWeatherMap API](https://openweathermap.org/api)–both of which require a
-personal API key if you're hosting the app yourself. For Dark Sky, you should
-set this API key to the `DARK_SKY_KEY` environment variable. Note that Dark Sky
-API used to be branded as Forecast API. This application previously accepted
-the `FORECAST_KEY` environment variable, and will continue to do so, but
-`DARK_SKY_KEY` will be given priority. For OpenWeatherMap, you should set this
-API key to the `OPENWEATHERMAP_KEY` environment variable.
+[OpenWeatherMap API](https://openweathermap.org/api). For either, you will need
+to provide an API key. For Dark Sky, set your key as the `DARK_SKY_KEY`
+environment variable. For OpenWeatherMap, set your key as the
+`OPENWEATHERMAP_KEY` environment variable.
 
-The officially-hosted version of this web app uses the OpenWeatherMap API to
-keep it free.
+Dark Sky will take precedence, and OpenWeatherMap will be used if no Dark Sky
+API key is provided, or if a Dark Sky API request fails. Though the Dark Sky
+API provides a slightly more elegant display, the officially-hosted version of
+Last.fm Now uses the OpenWeatherMap API to keep it free.
 
 To enable weather display, you must allow the app to access your location. This
 feature relies on HTML5 geolocation, so it will work in most modern browsers.
 
-### Background Display
+### Configuration
 
-To hide the background image and keep a plain black background instead, append
-`?nobg=true` to the URL.
+To configure weather units or set the background type, visit
+[`/now/app/config`](https://wagnaria.xyz/now/app/config). While Dark Sky can
+automatically determine weather units, OpenWeatherMap cannot, so the app
+defaults to imperial units unless otherwise manually specified.
 
 ### Phillips Hue Control
 
