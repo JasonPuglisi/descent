@@ -133,7 +133,7 @@ function getForecastDarkSky(latitude, longitude, units, callback) {
     request(url, function(err, res, body) {
       if (!err && res.statusCode == 200) {
         var data = JSON.parse(body);
-        data.apiType = 'darksky';
+        data.apiType = 'darkSky';
         callback(null, data);
       } else {
         callback('Invalid response: ' + err);

@@ -12,13 +12,16 @@ $(function() {
     images: {
       blank: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///' +
         'yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      cover: ''
+      cover: '',
+      artist: ''
     },
     urls: {
       lastfm: {
         recent: 'https://ws.audioscrobbler.com/2.0/?method=user.' +
           'getrecenttracks&user=%USER%&api_key=%KEY%&limit=1&format=json',
-        cover: '/now/app/cover?url='
+        cover: '/now/app/cover?url=',
+        artist: 'https://ws.audioscrobbler.com/2.0/?method=artist.getinfo' +
+          '&mbid=%MBID%&api_key=%KEY%&format=json'
       },
       spotify: {
         query: 'https://api.spotify.com/v1/search?q=%QUERY%&type=track&limit=1'
@@ -39,11 +42,14 @@ $(function() {
         weather: false,
         hue: false,
       },
-      cover: new Image()
+      cover: new Image(),
+      background: cookieExists('background') ? Cookies.get('background') :
+        'album'
     },
     track: {
       current: {
         artist: '',
+        artistId: '',
         title: '',
         link: '',
         cover: ''
@@ -208,9 +214,9 @@ function toggleHue(on) {
   }
 }
 
-/* Cover functions */
+/* Cover and artist functions */
 
-function fetchCover() {
+function fetchImages() {
   if (nowPlaying()) {
     // If music is playing, check if track has changed
     if (newTrack()) {
@@ -231,6 +237,24 @@ function fetchCover() {
             resetCover();
           }
         }).fail(resetCover);
+      }
+
+      // If track has changed, and background is artist, get artist image from
+      // Last.fm
+      if (resources.state.background == 'artist') {
+        // Query Last.fm for artist information
+        var url2 = insertVars(resources.urls.lastfm.artist, { MBID:
+          resources.track.current.artistId, KEY:
+          resources.credentials.lastfm.key });
+        $.get(url2, function(data) {
+          if (data.artist) {
+            // Update background image
+            $('#background').css('background-image', 'url(' +
+            data.artist.image[data.artist.image.length - 1]['#text'] + ')');
+          } else {
+            resetBackground();
+          }
+        }).fail(resetBackground);
       }
     }
   } else {
@@ -258,8 +282,10 @@ function updateCover() {
 
   // Load image before setting it in visible places
   resources.state.cover.onload = function() {
-    // Apply cover image to background
-    $('#background').css('background-image', 'url(' + url + ')');
+    // Apply cover image to background if required
+    if (resources.state.background == 'album') {
+      $('#background').css('background-image', 'url(' + url + ')');
+    }
 
     // Apply cover image to preview if it exists
     if (hasCover()) {
@@ -270,6 +296,11 @@ function updateCover() {
     $('#music #cover').attr('src', url);
   };
   resources.state.cover.src = url;
+}
+
+function resetBackground() {
+  $('#background').css('background-image', 'url(' + resources.images.blank +
+    ')');
 }
 
 /* Color functions */
@@ -471,11 +502,12 @@ function fetchMetadata() {
       var track = data.recenttracks.track[0];
       if (track['@attr'] && track['@attr'].nowplaying) {
         var artist = track.artist['#text'];
+        var artistId = track.artist.mbid;
         var title = track.name;
         var link = track.url;
         var cover = track.image[track.image.length - 1]['#text'];
 
-        setMetadata(artist, title, link, cover);
+        setMetadata(artist, artistId, title, link, cover);
       } else {
         resetMetadata();
       }
@@ -490,9 +522,10 @@ function fetchMetadata() {
   }, 3000);
 }
 
-function setMetadata(artist, title, link, cover) {
+function setMetadata(artist, artistId, title, link, cover) {
   // Set track metadata
   resources.track.current.artist = artist;
+  resources.track.current.artistId = artistId;
   resources.track.current.title = title;
   resources.track.current.link = link;
   resources.track.current.cover = cover ? cover : '';
@@ -502,6 +535,7 @@ function setMetadata(artist, title, link, cover) {
 function resetMetadata() {
   // Clear/reset track metadata
   resources.track.current.artist = '';
+  resources.track.current.artistId = '';
   resources.track.current.title = '';
   resources.track.current.link = '';
   resources.track.current.cover = '';
@@ -530,8 +564,8 @@ function updateMetadata() {
     toggleDisplay('#userLine', false);
   }
 
-  // Update cover image
-  fetchCover();
+  // Update cover and artist images
+  fetchImages();
 }
 
 /* Weather functions */
@@ -595,7 +629,7 @@ function updateWeather(coords, iconMap) {
     // Set weather data
     var summary, temperature, apparentTemperature, unit, icon;
     unit = units == 'imperial' ? 'F' : 'C';
-    if (data.apiType == 'darksky') {
+    if (data.apiType == 'darkSky') {
       summary = data.minutely.summary;
       temperature = Math.round(data.currently.temperature);
       apparentTemperature = Math.round(data.currently.apparentTemperature);
