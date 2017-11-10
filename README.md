@@ -42,6 +42,11 @@ instructions. Light colors will be set according to the three most prominent
 album art colors. If more than three lights are selected, the colors will be
 reused.
 
+Since the Hue API can only be accessed via HTTP, if you are hosting this web
+app with HTTPS, users must instruct their web browsers to allow loading
+insecure (HTTP) content for the domain. Users are informed of this on the Hue
+settings page.
+
 ## Overview
 
 Fetches now playing song information from Last.fm and displays album artwork

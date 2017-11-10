@@ -13,7 +13,10 @@ html(lang='en')
       h2
         ol
           li Scanning for Hue Bridges. Select the IP address of your bridge. 
-            | If you're not sure which one is right, try the first.
+            | If you're not sure which one is right, try the first. Note that 
+            | due to restrictions of the Hue API, you must instruct your web 
+            | browser to allow loading insecure (HTTP) content on this secure 
+            | (HTTPS) domain.
             div.select-groups-loading#select-groups-loading-bridges
               i(class='fa fa-circle-o-notch fa-spin')
               |   Loading...
