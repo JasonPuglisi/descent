@@ -52,8 +52,8 @@ app.get('/now/app/cover', function(req, res) {
 });
 
 app.post('/now/app/weather', function(req, res) {
-  getForecastDarkSky(req.body.latitude, req.body.longitude, function(err,
-    data) {
+  getForecastDarkSky(req.body.latitude, req.body.longitude, req.body.units,
+    function(err, data) {
     if (!err) {
       res.json(data);
       res.send();
@@ -62,7 +62,7 @@ app.post('/now/app/weather', function(req, res) {
         console.log('Error getting DarkSky forecast: ', err);
       }
       getForecastOpenweathermap(req.body.latitude, req.body.longitude,
-      function(err, data) {
+        req.body.units, function(err, data) {
         if (!err) {
           res.json(data);
           res.send();
@@ -123,11 +123,12 @@ function parseUrl(url) {
   return url.substring(1, url.length - 1);
 }
 
-function getForecastDarkSky(latitude, longitude, callback) {
+function getForecastDarkSky(latitude, longitude, units, callback) {
   var key = process.env.DARK_SKY_KEY;
   if (key) {
+    units = units == 'imperial' ? 'us' : 'si';
     var url = 'https://api.darksky.net/forecast/' + key + '/' + latitude +
-      ',' + longitude + '?units=auto';
+      ',' + longitude + '?units=' + units;
 
     request(url, function(err, res, body) {
       if (!err && res.statusCode == 200) {
@@ -143,11 +144,11 @@ function getForecastDarkSky(latitude, longitude, callback) {
   }
 }
 
-function getForecastOpenweathermap(latitude, longitude, callback) {
+function getForecastOpenweathermap(latitude, longitude, units, callback) {
   var key = process.env.OPENWEATHERMAP_KEY;
   if (key) {
     var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
-      latitude + '&lon=' + longitude + '&units=imperial' + '&appid=' + key;
+      latitude + '&lon=' + longitude + '&units=' + units + '&appid=' + key;
 
     request(url, function(err, res, body) {
       if (!err && res.statusCode == 200) {

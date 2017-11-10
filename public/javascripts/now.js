@@ -585,25 +585,26 @@ function initWeather() {
 function updateWeather(coords, iconMap) {
   // Get weather from Forecast API (requested server-side)
   var url = resources.urls.forecast.query;
-  var body = 'latitude=' + coords.latitude + '&longitude=' + coords.longitude;
+  var units = cookieExists('units') ? Cookies.get('units') : 'imperial';
+  var body = 'latitude=' + coords.latitude + '&longitude=' + coords.longitude +
+    '&units=' + units;
   $.post(url, body, function(data) {
     // Set weather feature to enabled
     resources.state.features.weather = true;
 
     // Set weather data
     var summary, temperature, apparentTemperature, unit, icon;
+    unit = units == 'imperial' ? 'F' : 'C';
     if (data.apiType == 'darksky') {
       summary = data.minutely.summary;
       temperature = Math.round(data.currently.temperature);
       apparentTemperature = Math.round(data.currently.apparentTemperature);
-      unit = data.flags.units == 'us' ? 'F' : 'C';
       icon = 'wi wi-' + iconMap[data.currently.icon];
     } else {
-      summary = data.weather[0].description;
+      summary = data.weather[0].description + ' currently';
       summary = summary.substring(0, 1).toUpperCase() + summary.substring(1);
       temperature = Math.round(data.main.temp);
       apparentTemperature = null;
-      unit = 'F';
       icon = 'wi wi-' + iconMap[data.weather[0].icon];
     }
 
@@ -617,7 +618,9 @@ function updateWeather(coords, iconMap) {
 
     // Display weather text as appropriate
     if (cookieEnabled('weatherOn') || !cookieExists('weatherOn')) {
-      if (!apparentTemperature) {
+      if (apparentTemperature) {
+        $('#apparent').show();
+      } else {
         $('#apparent').hide();
       }
       toggleDisplay('#weather', true);
