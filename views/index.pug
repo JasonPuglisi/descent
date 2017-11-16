@@ -14,7 +14,7 @@ html(lang='en')
         h2 My Last.fm username is&nbsp;
           span#userInputGroup
             input#username(name='username', type='text', size='15',
-              maxlength='20', placeholder=`${username}`)
+              maxlength='20')
             input(name='defaultUsername', type='hidden', value=`${username}`)
             | &nbsp;
             a(href='#' onclick='submit(); return false;')

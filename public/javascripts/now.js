@@ -5,7 +5,7 @@ $(function() {
   window.resources = {
     credentials: {
       lastfm: {
-        user: $('#music #user').text().toLowerCase(),
+        user: $('#music #user').text(),
         key: 'c1797de6bf0b7e401b623118120cd9e1'
       }
     },
@@ -134,6 +134,10 @@ function initMenu() {
   setTimeout(function() {
     toggleDisplay('#help', false);
   }, 3600);
+
+  // Save current user to populate index input
+  Cookies.set('lastUser', resources.credentials.lastfm.user, { expires:
+    3650 });
 }
 
 function processKey(event) {
@@ -492,7 +496,8 @@ function initMetadata() {
 function fetchMetadata() {
   // Query Last.fm for recent track information
   var url = insertVars(resources.urls.lastfm.recent, { USER:
-    resources.credentials.lastfm.user, KEY: resources.credentials.lastfm.key });
+    resources.credentials.lastfm.user.toLowerCase(), KEY:
+    resources.credentials.lastfm.key });
   $.get(url, function(data) {
     if (data.recenttracks) {
       // Make sure the most recent track is still playing, and update metadata
