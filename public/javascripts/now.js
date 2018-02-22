@@ -43,7 +43,8 @@ $(function() {
       },
       cover: new Image(),
       background: cookieExists('background') ? Cookies.get('background') :
-        'album'
+        'album',
+      extendedInfo: ['#userLine', '#datetime']
     },
     track: {
       current: {
@@ -75,6 +76,7 @@ function init() {
   initMenu();
   initMetadata();
   initWeather();
+  initDatetime();
 }
 
 /* Cursor functions */
@@ -156,7 +158,7 @@ function processKey(event) {
         toggleCookie('extendedOn');
         showE = undefined;
       }
-      toggleDisplay('#userLine', showE);
+      toggleDisplay(resources.state.extendedInfo, showE);
       break;
     // Handle F to toggle weather/forecast
     case 70:
@@ -559,11 +561,11 @@ function updateMetadata() {
   if (nowPlaying()) {
     document.title = '"' + title + '" by ' + artist;
     if (cookieEnabled('extendedOn')) {
-      toggleDisplay('#userLine', true);
+      toggleDisplay(resources.state.extendedInfo, true);
     }
   } else {
     document.title = 'Last.fm Now';
-    toggleDisplay('#userLine', false);
+    toggleDisplay(resources.state.extendedInfo, false);
     resetBackground();
   }
 
@@ -668,6 +670,46 @@ function updateWeather(coords, iconMap) {
   setTimeout(function() {
     updateWeather(coords, iconMap);
   }, 600000);
+}
+
+/* Date and time functions */
+
+function initDatetime() {
+  updateDatetime();
+}
+
+function updateDatetime() {
+  $('#datetime #date').text(getCurrentDate());
+  $('#datetime #time').text(getCurrentTime());
+
+  setTimeout(function() {
+    updateDatetime();
+  }, 3000);
+}
+
+function getCurrentDate() {
+  var months = [
+    'January', 
+    'February', 
+    'March', 
+    'April', 
+    'May', 
+    'June', 
+    'July', 
+    'August', 
+    'September', 
+    'October', 
+    'November', 
+    'December'
+  ];
+  var date = new Date();
+  var month = months[date.getMonth()];
+  return month + ' ' + date.getDate() + ', ' + date.getFullYear();
+}
+
+function getCurrentTime() {
+  var date = new Date();
+  return date.getHours() + ':' + date.getMinutes();
 }
 
 /* Utility functions */
