@@ -176,15 +176,11 @@ input[type=text] {
   color: #d7d7d7;
 }
 
-#datetime #time {
-  font-size: 4em;
-}
-
-#music #title, #weather #summary, #datetime #date, #datetime #time {
+#music #title, #weather #summary, #datetime #date {
   margin: 0;
 }
 
-#music #artist, #weather #conditions {
+#music #artist, #weather #conditions, #datetime #time {
   margin: .2em 0 0 0;
 }
 
