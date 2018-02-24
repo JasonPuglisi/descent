@@ -140,13 +140,16 @@ input[type=text] {
   opacity: .65;
 }
 
-#help, #music, #weather {
+#help, #music, #weather, #datetime {
   position: absolute;
 }
 
-#help {
+#help, #datetime {
   left: 3em;
   padding-right: 3em;
+}
+
+#help {
   font-family: 'Source Code Pro', monospace;
 }
 
@@ -164,7 +167,7 @@ input[type=text] {
   bottom: 2em;
 }
 
-#weather {
+#weather, #datetime {
   top: 2em;
 }
 
@@ -173,11 +176,11 @@ input[type=text] {
   color: #d7d7d7;
 }
 
-#music #title, #weather #summary {
+#music #title, #weather #summary, #datetime #date {
   margin: 0;
 }
 
-#music #artist, #weather #conditions  {
+#music #artist, #weather #conditions, #datetime #time {
   margin: .2em 0 0 0;
 }
 

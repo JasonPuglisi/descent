@@ -75,6 +75,7 @@ function init() {
   initMenu();
   initMetadata();
   initWeather();
+  initDatetime();
 }
 
 /* Cursor functions */
@@ -141,6 +142,10 @@ function initMenu() {
 }
 
 function processKey(event) {
+  // Return if modifier key is held down
+  if (event.ctrlKey || event.metaKey)
+    return;
+
   // Get key pressed
   var key = event.keyCode;
 
@@ -175,6 +180,11 @@ function processKey(event) {
         on = undefined;
       }
       toggleHue(on);
+      break;
+    // Handle T to toggle date and time
+    case 84:
+      toggleCookie('datetimeEnabled');
+      toggleDisplay('#datetime');
       break;
   }
 }
@@ -668,6 +678,51 @@ function updateWeather(coords, iconMap) {
   setTimeout(function() {
     updateWeather(coords, iconMap);
   }, 600000);
+}
+
+/* Date and time functions */
+
+function initDatetime() {
+  setInterval(function() {
+    updateDatetime();
+  }, 1000);
+
+  if (cookieEnabled('datetimeEnabled'))
+    toggleDisplay('#datetime', true);
+}
+
+function updateDatetime() {
+  $('#datetime #date').text(getCurrentDate());
+  $('#datetime #time').text(getCurrentTime());
+}
+
+function getCurrentDate() {
+  var months = [
+    'January', 
+    'February', 
+    'March', 
+    'April', 
+    'May', 
+    'June', 
+    'July', 
+    'August', 
+    'September', 
+    'October', 
+    'November', 
+    'December'
+  ];
+  var date = new Date();
+  var month = months[date.getMonth()];
+  return month + ' ' + date.getDate() + ', ' + date.getFullYear();
+}
+
+function getCurrentTime() {
+  var date = new Date();
+  var hours = date.getHours().toString();
+  var minutes = date.getMinutes().toString();
+  if (hours.length == 1) hours = '0' + hours;
+  if (minutes.length == 1) minutes = '0' + minutes;
+  return hours + ':' + minutes;
 }
 
 /* Utility functions */

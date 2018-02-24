@@ -11,6 +11,9 @@ html(lang='en')
   body
     #background(data-nobg=`${nobg}`)
     #mask
+    #datetime.hide
+      h2#date
+      h1#time
     #help
       #credits
         a(href='https://github.com/JasonPuglisi/lastfm-now', target='_blank')
@@ -19,6 +22,7 @@ html(lang='en')
         | <br><br>
       | [f] forecast<br>
       | [e] extended info<br>
+      | [t] date and time<br>
       span#hueHelp.hide [l] lights (
         span#hueIndicator off
         | )<br>
