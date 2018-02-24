@@ -683,9 +683,10 @@ function updateWeather(coords, iconMap) {
 /* Date and time functions */
 
 function initDatetime() {
-  setInterval(function() {
-    updateDatetime();
-  }, 1000);
+  // Call the update once so the time fades in properly
+  updateDatetime();
+  
+  setInterval(updateDatetime, 1000);
 
   if (cookieEnabled('datetimeEnabled'))
     toggleDisplay('#datetime', true);
