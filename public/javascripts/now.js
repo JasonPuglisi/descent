@@ -181,6 +181,11 @@ function processKey(event) {
       }
       toggleHue(on);
       break;
+    // Handle T to toggle date and time
+    case 84:
+      toggleCookie('datetimeEnabled');
+      toggleDisplay('#datetime');
+      break;
   }
 }
 
@@ -681,6 +686,9 @@ function initDatetime() {
   setInterval(function() {
     updateDatetime();
   }, 1000);
+
+  if (cookieEnabled('datetimeEnabled'))
+    toggleDisplay('#datetime', true);
 }
 
 function updateDatetime() {
