@@ -1,15 +1,15 @@
-$(function() {
-  $('#username').focus();
+$(() => {
+  $('#user').focus();
 
-  var username = Cookies.get('lastUser');
-  if (username !== undefined) {
-    $('[name="defaultUsername"]').val(username);
-  } else {
-    username = $('[name="defaultUsername"]').val();
-  }
-  $('#username').attr('placeholder', username);
+  let user = Cookies.get('lastUser');
+  if (user !== undefined)
+    $('[name="defaultUser"]').val(user);
+  else
+    user = $('[name="defaultUser"]').val();
+
+  $('#user').attr('placeholder', user);
 });
 
-function submit() {
+function submitUser() {
   $('#userInput').submit();
 }

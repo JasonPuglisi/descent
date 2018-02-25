@@ -1,136 +1,194 @@
-var bodyParser = require('body-parser');
-var express = require('express');
-var request = require('request');
+const bodyParser = require('body-parser');
+const express = require('express');
+const request = require('request');
 
-var app = express();
-
-var defaultUsernames = ['iJason_', 'jefferyd', 'foreverautumn', 'robinlisle',
-  'ben-xo', 'good_bone', 'pellitero', 'Nesquen', 'hjbardenhagen'];
-
+let app = express();
 app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/now/static/', express.static('public'));
+app.use('/now/app/static/', express.static('public'));
 
-app.get('/now', function(req, res) {
-  var usernameIndex = Math.floor(Math.random() * defaultUsernames.length);
-  var username = defaultUsernames[usernameIndex];
+app.get('/now', (req, res) => {
+  let title = 'Last.fm Now';
+  let users = [
+    'iJason_',
+    'jefferyd',
+    'foreverautumn',
+    'robinlisle',
+    'ben-xo',
+    'good_bone',
+    'pellitero',
+    'Nesquen',
+    'hjbardenhagen'
+  ];
+  let user = users[Math.floor(Math.random() * users.length)];
 
-  res.render('index', { title: 'Last.fm Now', username: username });
+  res.render('index', { title, user });
 });
 
-app.post('/now', function(req, res) {
-  var username = req.body.username || req.body.defaultUsername;
+app.post('/now', (req, res) => {
+  let user = req.body.user || req.body.defaultUser;
 
-  if (username.length > 20) {
-    username = username.substring(0, 20);
-  }
-  res.redirect('/now/' + username);
+  res.redirect(`/now/${user}`);
 });
 
-app.get('/now/app/cover', function(req, res) {
-  if (req.query.url) {
-    var regex = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
-    var matched = req.query.url.match(regex);
-    if (matched) {
-      request({ url: req.query.url, encoding: null },
-          function(err, res2, body) {
-        if (!err && res2.statusCode == 200) {
-          res.send(body);
-        } else {
-          console.log('Error getting cover: ', err);
-          res.send();
-        }
-      });
-    } else {
-      console.log('Error getting cover: Invalid URL ' + req.query.url);
-      res.send();
-    }
-  } else {
+app.get('/now/:user', (req, res) => {
+  let title = 'Last.fm Now';
+  let user = req.params.user.substring(0, 20);
+
+  res.render('now', { title, user });
+});
+
+app.get('/now/app/config', (req, res) => {
+  let title = 'Last.fm Now Configuration';
+
+  res.render('config', { title });
+});
+
+app.get('/now/app/hue', (req, res) => {
+  let title = 'Last.fm Now Hue Setup';
+
+  res.render('hue', { title });
+});
+
+app.get('/now/app/cover', (req, res) => {
+  let url = req.query.url;
+  if (!url) {
     console.log('Error getting cover: No URL specified');
     res.send();
   }
-});
 
-app.post('/now/app/weather', function(req, res) {
-  getForecastDarkSky(req.body.latitude, req.body.longitude, req.body.units,
-    function(err, data) {
-    if (!err) {
-      res.json(data);
+  let pattern = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
+  if (!url.match(pattern)) {
+      console.log(`Error getting cover: Invalid URL - ${url}`);
       res.send();
-    } else {
-      if (err !== 'No API key') {
-        console.log('Error getting DarkSky forecast: ', err);
-      }
-      getForecastOpenweathermap(req.body.latitude, req.body.longitude,
-        req.body.units, function(err, data) {
-        if (!err) {
-          res.json(data);
-          res.send();
-        } else {
-          console.log('Error getting OpenWeatherMap forecast: ', err);
-          res.send();
-        }
-      });
+  }
+
+  request({ url, encoding: null }, (err, res2, body) => {
+    if (err || res2.statusCode != 200) {
+      console.log(`Error getting cover: Invalid response - ${err}`);
+      res.send();
     }
+
+    res.send(body);
   });
 });
 
-app.get('/now/app/config', function(req, res) {
-  res.render('config', { title: 'Last.fm Now Configuration' });
-});
+app.post('/now/app/weather', (req, res) => {
+  let lat = req.body.latitude;
+  let lon = req.body.longitude;
+  let units = req.body.units;
 
-app.get('/now/app/hue', function(req, res) {
-  res.render('hue', { title: 'Last.fm Now Hue Setup' });
-});
+  let dsKey = process.env.DARK_SKY_KEY;
+  let owmKey = process.env.OPENWEATHERMAP_KEY;
 
-app.get('/now/:user', function(req, res) {
-  res.render('now', { title: 'Last.fm Now', user: req.params.user,
-    nobg: req.query.nobg === 'true' });
+  if (dsKey)
+    getWeatherDarkSky(dsKey, lat, lon, units, (err, weather) => {
+      if (err)
+        console.log(`Error getting Dark Sky weather: ${err}`);
+
+      res.json(weather);
+    });
+  else if (owmKey)
+    getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
+      if (err)
+        console.log(`Error getting OpenWeatherMap weather: ${err}`);
+
+      res.json(weather);
+    });
+  else {
+    console.log('Error getting weather: No API key');
+    res.json(new Weather());
+  }
 });
 
 app.listen(process.env.LFMN_PORT || 3000);
 
-function parseUrl(url) {
-  return url.substring(1, url.length - 1);
-}
-
-function getForecastDarkSky(latitude, longitude, units, callback) {
-  var key = process.env.DARK_SKY_KEY;
-  if (key) {
-    units = units == 'imperial' ? 'us' : 'si';
-    var url = 'https://api.darksky.net/forecast/' + key + '/' + latitude +
-      ',' + longitude + '?units=' + units;
-
-    request(url, function(err, res, body) {
-      if (!err && res.statusCode == 200) {
-        var data = JSON.parse(body);
-        data.apiType = 'darkSky';
-        callback(null, data);
-      } else {
-        callback('Invalid response: ' + err);
-      }
-    });
-  } else {
-    callback('No API key');
+class Weather {
+  constructor(success) {
+    this.success = success === true;
   }
 }
 
-function getForecastOpenweathermap(latitude, longitude, units, callback) {
-  var key = process.env.OPENWEATHERMAP_KEY;
-  if (key) {
-    var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
-      latitude + '&lon=' + longitude + '&units=' + units + '&appid=' + key;
+function getWeatherDarkSky(key, lat, lon, units, callback) {
+  units = units === 'imperial' ? 'us' : 'si';
+  let url = `https://api.darksky.net/forecast/${key}/${lat},${lon}?units=${units}`;
 
-    request(url, function(err, res, body) {
-      if (!err && res.statusCode == 200) {
-        var data = JSON.parse(body);
-        data.apiType = 'openweathermap';
-        callback(null, data);
-      } else {
-        callback('Invalid response: ' + err);
-      }
-    });
-  } else {
-    callback('No API key');
-  }
+  request(url, (err, res, body) => {
+    if (err || res.statusCode != 200)
+      callback(`Invalid response: ${err}`, new Weather());
+
+    let data = JSON.parse(body);
+    let icons = {
+      'clear-day': 'day-sunny',
+      'clear-night': 'night-clear',
+      'rain': 'rain',
+      'snow': 'snow',
+      'sleet': 'sleet',
+      'wind': 'cloudy-gusts',
+      'fog': 'fog',
+      'cloudy': 'cloudy',
+      'partly-cloudy-day': 'day-cloudy',
+      'partly-cloudy-night': 'night-alt-cloudy',
+      'hail': 'hail',
+      'thunderstorm': 'thunderstorm',
+      'tornado': 'tornado'
+    };
+
+    let weather = new Weather(true);
+    weather.summary = data.minutely.summary;
+    weather.temperature = Math.round(data.currently.temperature);
+    weather.apparentTemperature = Math.round(data.currently.apparentTemperature);
+    weather.unit = units === 'us' ? 'F' : 'C';
+    weather.icon = icons[data.currently.icon];
+
+    callback(null, weather);
+  });
+}
+
+function getWeatherOpenweathermap(key, lat, lon, units, callback) {
+  var url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${key}`;
+
+  request(url, (err, res, body) => {
+    if (err || res.statusCode != 200)
+      callback(`Invalid response: ${err}`, new Weather());
+
+    let data = JSON.parse(body);
+    let icons = {
+      '01d': 'day-sunny',
+      '01n': 'night-clear',
+      '02d': 'day-cloudy',
+      '02n': 'night-cloudy',
+      '03d': 'cloud',
+      '03n': 'cloud',
+      '04d': 'cloudy',
+      '04n': 'cloudy',
+      '09d': 'rain',
+      '09n': 'rain',
+      '10d': 'day-rain',
+      '10n': 'night-rain',
+      '11d': 'thunderstorm',
+      '11n': 'thunderstorm',
+      '13d': 'snow',
+      '13n': 'snow',
+      '50d': 'windy',
+      '50n': 'windy'
+    };
+    let apparent;
+    if (units === 'imperial')
+      apparent = 35.74 + 0.6215 * data.main.temp - 35.75 * Math.pow(data.wind.speed, 0.16)
+        + 0.4275 * data.main.temp * Math.pow(data.wind.speed, 0.16);
+    else
+      apparent = 13.12 + 0.6215 * data.main.temp - 11.37 * Math.pow(data.wind.speed, 0.16)
+        + 0.3965 * data.main.temp * Math.pow(data.wind.speed, 0.16);
+
+    let weather = new Weather(true);
+    weather.summary = `${data.weather[0].description} currently`;
+    weather.summary = `${weather.summary.substring(0, 1).toUpperCase()}${weather.summary.substring(1)}`;
+    weather.temperature = Math.round(data.main.temp);
+    weather.apparentTemperature = Math.round(apparent);
+    weather.unit = units === 'imperial' ? 'F' : 'C';
+    weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
+
+    callback(null, weather);
+  });
 }

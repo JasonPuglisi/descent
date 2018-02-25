@@ -5,8 +5,8 @@ html(lang='en')
     meta(name='viewport', content='width=device-width, initial-scale=1')
     meta(name='mobile-web-app-capable', content='yes')
     title= title
-    link(href='/now/static/stylesheets/style.css', rel='stylesheet')
-    link(href='/now/static/favicon.ico', rel='icon')
+    link(href='/now/app/static/stylesheets/style.css', rel='stylesheet')
+    link(href='/now/app/static/favicon.ico', rel='icon')
   body
     .container
       h1#title= title
@@ -21,9 +21,9 @@ html(lang='en')
           div.select-group.group-bg#select-group-bg-none None
       a(href='/now')
         | [home]
-      | 
+      |
       a(href='/now/app/hue')
         | [hue settings]
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
-    script(src='/now/static/javascripts/config.js')
+    script(src='/now/app/static/javascripts/config.js')

@@ -102,7 +102,7 @@ input[type=text] {
   position: fixed;
 }
 
-#container #username {
+#container #user {
   background-color: transparent;
   border-style: none none solid none;
   border-width: 1px;
