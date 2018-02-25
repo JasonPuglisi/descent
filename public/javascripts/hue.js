@@ -46,7 +46,7 @@ function discoverBridgesError() {
 
 function registerBridge(ip) {
   var url = 'http://' + ip + '/api';
-  var body = '{"devicetype": "lastfm_now#web_client"}';
+  var body = '{"devicetype": "descent#web_client"}';
   $.post(url, body, function(data) {
     $('#select-groups-loading-connect').show();
     $('#hue-step-button').show();

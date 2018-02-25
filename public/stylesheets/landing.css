@@ -1,0 +1,54 @@
+@import 'https://fonts.googleapis.com/css?family=Noto+Serif|Oswald:700';
+
+body {
+  background-color: #35384a;
+}
+
+h1 {
+  font-family: 'Oswald', 'Open Sans', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 6.5em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+h2 {
+  font-family: 'Noto Serif', Georgia, serif;
+  margin-top: -0.2em;
+  margin-bottom: 2em;
+}
+
+#container {
+  position: fixed;
+  left: 45%;
+  top: 50%;
+  text-align: left;
+
+  transform: translate(-50%, -70%);
+}
+
+#container::before {
+  content: url('/now/app/static/images/bubbles.svg');
+
+  position: fixed;
+  z-index: -1;
+  top: -50%;
+  left: -20%;
+}
+
+#container #user {
+  border-width: 2px;
+}
+
+#container #user::placeholder {
+  color: #f6f5f7;
+  opacity: 0.3;
+}
+
+#links {
+  font-family: 'Source Code Pro', monospace;
+}
+
+#links a:not(:last-of-type) {
+  margin-right: 1em;
+}

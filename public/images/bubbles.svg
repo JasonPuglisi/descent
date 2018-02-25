@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="108px" height="225px" viewBox="0 0 108 225" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 48.2 (47327) - http://www.bohemiancoding.com/sketch -->
+    <title>bubbles</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Desktop-HD" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" transform="translate(-224.000000, -135.000000)">
+        <g id="bubbles" transform="translate(227.000000, 138.000000)" stroke="#FFFFFF">
+            <circle id="05" stroke-width="4" cx="76" cy="203" r="17"></circle>
+            <circle id="04" stroke-width="3" cx="93.5" cy="152.5" r="9.5"></circle>
+            <circle id="03" stroke-width="5" cx="33.5" cy="140.5" r="26.5"></circle>
+            <circle id="02" stroke-width="4" cx="75" cy="91" r="17"></circle>
+            <circle id="01" stroke-width="6" cx="32.5" cy="32.5" r="32.5"></circle>
+        </g>
+    </g>
+</svg>
