@@ -1,12 +1,12 @@
-# Last.fm Now
+# Descent
 
-Simple now playing display for Last.fm showing song metadata and local weather.
+Elegant now playing display for Last.fm showing song metadata and local weather.
 
 ## Usage
 
 Run `npm install` to install the dependencies and `npm start` to start the
 server. The server listens on port 3000 by default, but this can be changed
-by setting the LFMN_PORT environment variable. It's recommended to use a proxy
+by setting the DESCENT_PORT environment variable. It's recommended to use a proxy
 such as NGINX in front of the server.
 
 Navigate to [`/now`](https://wagnaria.xyz/now) to use the web app.
@@ -22,7 +22,7 @@ environment variable. For OpenWeatherMap, set your key as the
 Dark Sky will take precedence, and OpenWeatherMap will be used if no Dark Sky
 API key is provided, or if a Dark Sky API request fails. Though the Dark Sky
 API provides a slightly more elegant display, the officially-hosted version of
-Last.fm Now uses the OpenWeatherMap API to keep it free.
+Descent uses the OpenWeatherMap API to keep it free.
 
 To enable weather display, you must allow the app to access your location. This
 feature relies on HTML5 geolocation, so it will work in most modern browsers.

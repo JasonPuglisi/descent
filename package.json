@@ -1,17 +1,17 @@
 {
-  "name": "lastfm-now",
+  "name": "descent",
   "version": "1.5.0",
   "description": "A now listening display for Last.fm.",
-  "author": "Jason Puglisi <jason@puglisi.im>",
+  "author": "Jason Puglisi <hello@jasonpuglisi.com>",
   "scripts": {
     "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/JasonPuglisi/lastfm-now.git"
+    "url": "https://github.com/JasonPuglisi/descent.git"
   },
   "bugs": {
-    "url": "https://github.com/JasonPuglisi/lastfm-now/issues"
+    "url": "https://github.com/JasonPuglisi/descent/issues"
   },
   "dependencies": {
     "body-parser": "^1.18.2",

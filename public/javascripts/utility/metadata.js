@@ -76,7 +76,7 @@ function updateMetadata() {
     if (cookieEnabled('extendedOn'))
       toggleDisplay('#userLine', true);
   } else {
-    document.title = 'Last.fm Now';
+    document.title = 'Descent';
     toggleDisplay('#userLine', false);
     resetBackground();
   }

@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/now/app/static/', express.static('public'));
 
 app.get('/now', (req, res) => {
-  let title = 'Last.fm Now';
+  let title = 'Descent';
   let users = [
     'iJason_',
     'jefferyd',
@@ -32,20 +32,20 @@ app.post('/now', (req, res) => {
 });
 
 app.get('/now/:user', (req, res) => {
-  let title = 'Last.fm Now';
+  let title = 'Descent';
   let user = req.params.user.substring(0, 20);
 
   res.render('now', { title, user });
 });
 
 app.get('/now/app/config', (req, res) => {
-  let title = 'Last.fm Now Configuration';
+  let title = 'Descent Configuration';
 
   res.render('config', { title });
 });
 
 app.get('/now/app/hue', (req, res) => {
-  let title = 'Last.fm Now Hue Setup';
+  let title = 'Descent Hue Setup';
 
   res.render('hue', { title });
 });
@@ -101,7 +101,7 @@ app.post('/now/app/weather', (req, res) => {
   }
 });
 
-app.listen(process.env.LFMN_PORT || 3000);
+app.listen(process.env.DESCENT_PORT || 3000);
 
 class Weather {
   constructor(success) {
