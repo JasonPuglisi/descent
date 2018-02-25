@@ -9,7 +9,7 @@ server. The server listens on port 3000 by default, but this can be changed
 by setting the DESCENT_PORT environment variable. It's recommended to use a proxy
 such as NGINX in front of the server.
 
-Navigate to [`/now`](https://wagnaria.xyz/now) to use the web app.
+Navigate to [`/now`](https://descent.live/now) to use the web app.
 
 ### Weather
 
@@ -30,14 +30,14 @@ feature relies on HTML5 geolocation, so it will work in most modern browsers.
 ### Configuration
 
 To configure weather units or set the background type, visit
-[`/now/app/config`](https://wagnaria.xyz/now/app/config). While Dark Sky can
+[`/now/app/config`](https://descent.live/now/app/config). While Dark Sky can
 automatically determine weather units, OpenWeatherMap cannot, so the app
 defaults to imperial units unless otherwise manually specified.
 
 ### Phillips Hue Control
 
 To enable Phillips Hue control, visit
-[`/now/app/hue`](https://wagnaria.xyz/now/app/hue) and follow the setup
+[`/now/app/hue`](https://descent.live/now/app/hue) and follow the setup
 instructions. Light colors will be set according to the three most prominent
 album art colors. If more than three lights are selected, the colors will be
 reused.
