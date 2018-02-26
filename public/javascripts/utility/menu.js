@@ -14,7 +14,7 @@ function initMenu() {
   }
 
   // Fade menu after initial pause
-  setTimeout(() => { toggleDisplay('#help', false) }, 3600);
+  setTimeout(() => { toggleDisplay('#help', false); }, 3600);
 
   // Save current user to populate index input
   Cookies.set('lastUser', $('#music #user').text(), { expires: 3650 });
@@ -37,7 +37,7 @@ function processKey(event) {
       let showE = false;
       if (nowPlaying()) {
         toggleCookie('extendedOn');
-        show = undefined;
+        showE = undefined;
       }
       toggleDisplay('#userLine', showE);
       break;
@@ -70,7 +70,7 @@ function processKey(event) {
 function toggleDisplay(element, show) {
   // Call function with each element if array of elements is passed
   if (element.constructor === Array) {
-    element.forEach(element => { toggleDisplay(element, show) });
+    element.forEach(element => { toggleDisplay(element, show); });
 
     return;
   }

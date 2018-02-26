@@ -3,7 +3,7 @@ function fetchImages() {
   if (!nowPlaying()) {
     resetCover();
     resetBackground();
-    return
+    return;
   }
 
   // Stop if track has not changed
@@ -108,7 +108,7 @@ function fetchHexColors() {
   let hexColors = [];
 
   // Loop through regular colors
-  for (let i in colors) {
+  for (let i = 0; i < colors.length; i++) {
     // Brighten and get hex values
     let color = colors[i];
     let brightenFactor = 3 * (1 - chroma(color).luminance());

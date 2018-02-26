@@ -10,7 +10,7 @@ function initWeather() {
 
       // Update weather display at regular intervals
       let minutes = 5; // Refresh rate in minutes
-      setInterval(() => { updateWeather(coords) }, minutes * 60000);
+      setInterval(() => { updateWeather(coords); }, minutes * 60000);
     });
 }
 

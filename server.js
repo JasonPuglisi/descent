@@ -18,7 +18,8 @@ app.get('/now', (req, res) => {
     'good_bone',
     'pellitero',
     'Nesquen',
-    'hjbardenhagen'
+    'hjbardenhagen',
+    'Kvasmeister'
   ];
   let user = users[Math.floor(Math.random() * users.length)];
 
