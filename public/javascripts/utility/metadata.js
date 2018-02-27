@@ -13,8 +13,8 @@ function fetchMetadata() {
   let key = 'c1797de6bf0b7e401b623118120cd9e1';
   let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${user}&api_key=${key}&limit=1&format=json`;
   $.get(url, data => {
-    // Reset metadata if no recent tracks
-    if (!data.recenttracks) {
+    // Reset metadata if API error or no recent tracks
+    if (data.error !== undefined || !data.recenttracks) {
       resetMetadata();
       return;
     }
@@ -83,4 +83,22 @@ function updateMetadata() {
 
   // Update cover and artist images
   fetchImages();
+}
+
+function nowPlaying() {
+  // Determine whether or not there is music currently playing
+  return resources.track.current.artist !== '';
+}
+
+function newTrack() {
+  // Determine whether or not the track has changed since last function call
+  if (resources.track.current.artist === resources.track.previous.artist &&
+      resources.track.current.title === resources.track.previous.title)
+    return false;
+
+  // Update previous track information
+  resources.track.previous.artist = resources.track.current.artist;
+  resources.track.previous.title = resources.track.current.title;
+
+  return true;
 }

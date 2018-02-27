@@ -153,6 +153,10 @@ input[type=text] {
   font-family: 'Source Code Pro', monospace;
 }
 
+#help #links {
+  padding-bottom: 0.4em;
+}
+
 #credits {
   padding-left: .2em;
 }

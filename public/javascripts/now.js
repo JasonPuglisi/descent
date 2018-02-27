@@ -1,20 +1,12 @@
 $(() => {
   // Set globals
   window.resources = {
-    images: {
-      blank: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      cover: '',
-      artist: ''
+    features: {
+      weather: false,
+      hue: false
     },
-    state: {
-      cursorTimeout: 3,
-      features: {
-        weather: false,
-        hue: false,
-      },
-      cover: new Image(),
-      background: cookieExists('background') ? Cookies.get('background') : 'album'
-    },
+    cover: new Image(),
+    cursorTimeout: 3,
     track: {
       current: {
         artist: '',
@@ -30,8 +22,8 @@ $(() => {
     },
     colors: {
       regular: [],
-      hue: [],
-      hex: []
+      hex: [],
+      hue: []
     }
   };
 

@@ -1,13 +1,13 @@
 function initMenu() {
   // Update globals
-  resources.state.features.hue = cookieExists('hueIp') &&
+  resources.features.hue = cookieExists('hueIp') &&
     cookieExists('hueUsername') && cookieExists('hueRooms');
 
   // Set function for key presses
   window.onkeydown = processKey;
 
   // Update Hue state
-  if (resources.state.features.hue) {
+  if (resources.features.hue) {
     if (cookieEnabled('hueEnabled'))
       $('#hueIndicator').text('on');
     $('#hueHelp').show();
@@ -44,7 +44,7 @@ function processKey(event) {
     // Handle L to toggle Hue lights
     case 76:
       let on = false;
-      if (resources.state.features.hue) {
+      if (resources.features.hue) {
         toggleCookie('hueEnabled');
         on = undefined;
       }
@@ -58,7 +58,7 @@ function processKey(event) {
     // Handle W to toggle weather
     case 87:
       let showW = false;
-      if (resources.state.features.weather) {
+      if (resources.features.weather) {
         toggleCookie('weatherOn');
         showW = undefined;
       }

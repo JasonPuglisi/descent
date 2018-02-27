@@ -9,15 +9,15 @@ function initCursor() {
 
 function checkCursor() {
   // Decrement timeout or hide cursor
-  if (resources.state.cursorTimeout > 0)
-    resources.state.cursorTimeout--;
+  if (resources.cursorTimeout > 0)
+    resources.cursorTimeout--;
   else
     hideCursor();
 }
 
 function showCursor() {
   // Reset timeout
-  resources.state.cursorTimeout = 3;
+  resources.cursorTimeout = 3;
 
   // Show cursor
   $('body').css('cursor', 'auto');
@@ -26,29 +26,6 @@ function showCursor() {
 function hideCursor() {
   // Hide cursor
   $('body').css('cursor', 'none');
-}
-
-function nowPlaying() {
-  // Determine whether or not there is music currently playing
-  return resources.track.current.artist !== '';
-}
-
-function newTrack() {
-  // Determine whether or not the track has changed since last function call
-  if (resources.track.current.artist === resources.track.previous.artist &&
-      resources.track.current.title === resources.track.previous.title)
-    return false;
-
-  // Update previous track information
-  resources.track.previous.artist = resources.track.current.artist;
-  resources.track.previous.title = resources.track.current.title;
-
-  return true;
-}
-
-function hasCover() {
-  // Determine whether or not cover image is present
-  return resources.images.cover !== '';
 }
 
 function cookieExists(name) {

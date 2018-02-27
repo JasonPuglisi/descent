@@ -3,6 +3,7 @@ function fetchImages() {
   if (!nowPlaying()) {
     resetCover();
     resetBackground();
+    newTrack();
     return;
   }
 
@@ -26,7 +27,7 @@ function fetchImages() {
   }
 
   // Stop if track has changed and background type is not artist
-  if (resources.state.background !== 'artist')
+  if (getBackgroundType() !== 'artist')
     return;
 
   // Query Last.fm for artist information
@@ -46,39 +47,46 @@ function fetchImages() {
 function setCover(cover) {
   // Set cover image
   $('#music #cover')[0].crossOrigin = 'Anonymous';
-  resources.images.cover = cover;
-  updateCover();
+  updateCover(cover);
 }
 
 function resetCover() {
   // Clear/reset cover image
   $('#music #cover')[0].crossOrigin = null;
-  resources.images.cover = '';
-  updateCover();
+  updateCover('');
 }
 
-function updateCover() {
+function updateCover(cover) {
   // Determine cover image url
-  var url = resources.images.cover || resources.images.blank;
+  var url = cover || getBlankImageData();
 
   // Load image before setting it in visible places
-  resources.state.cover.onload = () => {
+  resources.cover.onload = () => {
     // Apply cover image to background if required
-    if (resources.state.background == 'album')
+    if (getBackgroundType() == 'album')
       $('#background').css('background-image', `url(${url}`);
 
     // Apply cover image to preview if it exists
-    if (hasCover())
+    if (cover !== '')
       $('#music #cover').show();
     else
       $('#music #cover').hide();
     $('#music #cover').attr('src', url);
   };
-  resources.state.cover.src = url;
+  resources.cover.src = url;
 }
 
 function resetBackground() {
-  $('#background').css('background-image', `url(${resources.images.blank})`);
+  $('#background').css('background-image', `url(${getBlankImageData()})`);
+}
+
+function getBackgroundType() {
+  return cookieExists('background') ? Cookies.get('background') : 'album';
+}
+
+function hasCover() {
+  // Determine if there's currently a cover image loaded
+  return $('#cover')[0].src !== getBlankImageData();
 }
 
 function fetchColors() {
@@ -169,4 +177,8 @@ function resetColors() {
   // Clear/reset colors
   resources.colors.regular = [];
   fetchHueColors();
+}
+
+function getBlankImageData() {
+  return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 }

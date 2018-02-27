@@ -26,7 +26,7 @@ function updateWeather(coords) {
       return;
 
     // Enable weather display
-    resources.state.features.weather = true;
+    resources.features.weather = true;
 
     // Update weather data
     $('#weather #summary').text(data.summary);
