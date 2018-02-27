@@ -28,16 +28,31 @@ html(lang='en')
     #help
       #links
         a(href='/now/app/config')
-          | [settings] 
+          | [settings 
+          i(class='fas fa-sliders-h fa-sm')
+          | ] 
         a(href='https://github.com/JasonPuglisi/descent')
-          | [source]
-      | [w] weather<br>
-      | [t] time and date<br>
-      | [e] extended info<br>
-      span#hueHelp.hide [l] lights (
+          | [source 
+          i(class='fab fa-github fa-sm')
+          | ]
+      a(onclick='processKey({ keyCode: 87 }); return false;')
+        | [w]
+      |  weather<br>
+      a(onclick='processKey({ keyCode: 84 }); return false;')
+        | [t]
+      |  time and date<br>
+      a(onclick='processKey({ keyCode: 69 }); return false;')
+        | [e]
+      |  extended info<br>
+      span#hueHelp.hide
+        a(onclick='processKey({ keyCode: 76 }); return false;')
+          | [l]
+        |  lights (
         span#hueIndicator off
         | )<br>
-      | [h] help
+      a(onclick='processKey({ keyCode: 72 }); return false;')
+        | [h]
+      |  help
     #weather.hide
       h2#summary
       h1#conditions
@@ -55,7 +70,7 @@ html(lang='en')
     #music
       h2#userLine.hide
         a#userLink(href=`http://last.fm/user/${user}`, target='_blank')
-          i(class='fa fa-lastfm')
+          i(class='fab fa-lastfm')
           | &nbsp;
           span#user= user
         | &nbsp;is listening to

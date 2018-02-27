@@ -50,5 +50,5 @@ h2 {
 }
 
 #links a:not(:last-of-type) {
-  margin-right: 1em;
+  margin-right: 2em;
 }

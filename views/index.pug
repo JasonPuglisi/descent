@@ -30,12 +30,14 @@ html(lang='en')
             input(name='defaultUser', type='hidden', value=`${user}`)
             | &nbsp;
             a(href='#' onclick='submitUser(); return false;')
-              i(class='fa fa-chevron-down')
+              i(class='fas fa-chevron-down')
       #links
         a(href='/now/app/config')
-          | [settings]
+          | settings 
+          i(class='fas fa-sliders-h fa-sm')
         a(href='https://github.com/JasonPuglisi/descent')
-          | [source]
+          | source 
+          i(class='fab fa-github fa-sm')
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
     script(src='/now/app/static/javascripts/index.js')
