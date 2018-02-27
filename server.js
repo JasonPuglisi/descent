@@ -59,18 +59,21 @@ app.get('/now/app/cover', (req, res) => {
   if (!url) {
     console.log('Error getting cover: No URL specified');
     res.send();
+    return;
   }
 
   let pattern = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
   if (!url.match(pattern)) {
-      console.log(`Error getting cover: Invalid URL - ${url}`);
-      res.send();
+    console.log(`Error getting cover: Invalid URL - ${url}`);
+    res.send();
+    return;
   }
 
   request({ url, encoding: null }, (err, res2, body) => {
     if (err || res2.statusCode != 200) {
       console.log(`Error getting cover: Invalid response - ${err}`);
       res.send();
+      return;
     }
 
     res.send(body);
@@ -109,6 +112,7 @@ app.post('/now/app/spotify/track', (req, res) => {
   if (!spotifyKey) {
     console.log('Error getting Spotify track: No API key');
     res.json(new Track());
+    return;
   }
 
   let artist = req.body.artist;
@@ -125,12 +129,14 @@ app.post('/now/app/spotify/track', (req, res) => {
     if (err || res.statusCode != 200) {
       console.log(`Error getting Spotify track: Invalid response: ${err}`);
       res.json(new Track());
+      return;
     }
 
     let data = JSON.parse(body);
     if (data.tracks.total < 1) {
       console.log(`Error getting Spotify track: No results`);
       res.json(new Track());
+      return;
     }
 
     let track = data.tracks.items[0];

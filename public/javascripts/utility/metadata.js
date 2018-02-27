@@ -72,8 +72,9 @@ function updateMetadata(metadata) {
   $('#music #songLink').attr('href', link);
 
   // Update scrobbles
-  $('#scrobbles #scrobbleCount').text(metadata.scrobbles);
-  toggleDisplay('#scrobbles', true);
+  let hasScrobbles = metadata && metadata.scrobbles;
+  $('#scrobbles #scrobbleCount').text(hasScrobbles ? metadata.scrobbles : '');
+  toggleDisplay('#scrobbles', hasScrobbles);
 
   // Update document title and show/hide extended info as necessary
   if (nowPlaying()) {
