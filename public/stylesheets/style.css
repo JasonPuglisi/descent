@@ -184,7 +184,11 @@ input[type=text] {
   color: #d7d7d7;
 }
 
-#music #title, #weather #summary, #datetime #date {
+#scrobbles {
+  font-size: 0.6em;
+}
+
+#music #title, #weather #summary, #datetime #date, #scrobbles {
   margin: 0;
 }
 

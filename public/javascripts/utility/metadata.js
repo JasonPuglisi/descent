@@ -32,7 +32,8 @@ function fetchMetadata() {
       artistId: track.artist.mbid,
       title: track.name,
       link: track.url,
-      cover: track.image[track.image.length - 1]['#text']
+      cover: track.image[track.image.length - 1]['#text'],
+      scrobbles: data.recenttracks['@attr'].total
     };
 
     setMetadata(metadata);
@@ -46,7 +47,7 @@ function setMetadata(metadata) {
   resources.track.current.title = metadata.title;
   resources.track.current.link = metadata.link;
   resources.track.current.cover = metadata.cover ? metadata.cover : '';
-  updateMetadata();
+  updateMetadata(metadata);
 }
 
 function resetMetadata() {
@@ -59,7 +60,7 @@ function resetMetadata() {
   updateMetadata();
 }
 
-function updateMetadata() {
+function updateMetadata(metadata) {
   // Get current track metadata
   let artist = resources.track.current.artist;
   let title = resources.track.current.title;
@@ -69,6 +70,10 @@ function updateMetadata() {
   $('#music #artist').text(artist || 'Nothing in the air...');
   $('#music #title').text(title);
   $('#music #songLink').attr('href', link);
+
+  // Update scrobbles
+  $('#scrobbles #scrobbleCount').text(metadata.scrobbles);
+  toggleDisplay('#scrobbles', true);
 
   // Update document title and show/hide extended info as necessary
   if (nowPlaying()) {

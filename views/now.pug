@@ -69,6 +69,10 @@ html(lang='en')
           span.unit
     #music
       h2#userLine.hide
+        p#scrobbles.hide
+          b
+            span#scrobbleCount
+          |  scrobbles
         a#userLink(href=`http://last.fm/user/${user}`, target='_blank')
           i(class='fab fa-lastfm')
           | &nbsp;
