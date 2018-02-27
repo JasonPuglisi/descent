@@ -34,6 +34,15 @@ To configure weather units or set the background type, visit
 automatically determine weather units, OpenWeatherMap cannot, so the app
 defaults to imperial units unless otherwise manually specified.
 
+### Spotify Image Fallback
+
+If Last.fm is unable to find an album image, the
+[Spotify Web API](https://developer.spotify.com/web-api/) may be used as a
+fallback. You will need to provide API authorization through a client ID and
+client secret assigned by Spotify. Set your client ID as the `SPOTIFY_CLIENT`
+environment variable, and your client secret as the `SPOTIFY_SECRET`
+environment variable.
+
 ### Phillips Hue Control
 
 To enable Phillips Hue control, visit

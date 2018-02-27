@@ -7,6 +7,9 @@ app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/now/app/static/', express.static('public'));
 
+let spotifyKey;
+authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
+
 app.get('/now', (req, res) => {
   let title = 'Descent';
   let users = [
@@ -102,6 +105,41 @@ app.post('/now/app/weather', (req, res) => {
   }
 });
 
+app.post('/now/app/spotify/track', (req, res) => {
+  if (!spotifyKey) {
+    console.log('Error getting Spotify track: No API key');
+    res.json(new Track());
+  }
+
+  let artist = req.body.artist;
+  let title = req.body.title;
+  let query = `${artist} - ${title}`.replace(/ /g, '%20');
+
+  let options = {
+    url: `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
+    headers: {
+      'Authorization': `Bearer ${spotifyKey}`
+    }
+  };
+  request(options, (err, res2, body) => {
+    if (err || res.statusCode != 200) {
+      console.log(`Error getting Spotify track: Invalid response: ${err}`);
+      res.json(new Track());
+    }
+
+    let data = JSON.parse(body);
+    if (data.tracks.total < 1) {
+      console.log(`Error getting Spotify track: No results`);
+      res.json(new Track());
+    }
+
+    let track = data.tracks.items[0];
+    track.success = true;
+
+    res.json(track);
+  });
+});
+
 app.listen(process.env.DESCENT_PORT || 3000);
 
 class Weather {
@@ -191,5 +229,40 @@ function getWeatherOpenweathermap(key, lat, lon, units, callback) {
     weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
 
     callback(null, weather);
+  });
+}
+
+class Track {
+  constructor(success) {
+    this.success = success === true;
+  }
+}
+
+function authenticateSpotify(client, secret) {
+  if (!client || !secret) {
+    console.log('Error getting Spotify authorization: No API credentials');
+    return;
+  }
+
+  let authorization = Buffer.from(`${client}:${secret}`).toString('base64');
+  let options = {
+    url: 'https://accounts.spotify.com/api/token',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${authorization}`
+    },
+    body: 'grant_type=client_credentials'
+  };
+  request.post(options, (err, res, body) => {
+    if (err || res.statusCode != 200) {
+      console.log(`Error getting Spotify authorization: ${err}`);
+      spotifyKey = null;
+      setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
+      return;
+    }
+
+    let data = JSON.parse(body);
+    spotifyKey = data.access_token;
+    setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
   });
 }

@@ -15,14 +15,18 @@ function fetchImages() {
   if (resources.track.current.cover)
     setCover(`/now/app/cover?url=${resources.track.current.cover}`);
   else {
-    let query = `${resources.track.current.artist} - ${resources.track.current.title}`;
-    let url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`;
-    $.get(url, data => {
-      // Set cover image if one is found
-      if (data.tracks.total > 0)
-        setCover(data.tracks.items[0].album.images[0].url);
-      else
+    let url = '/now/app/spotify/track';
+    let body = `artist=${resources.track.current.artist}&title=${resources.track.current.title}`;
+
+    $.post(url, body, data => {
+      // Perform no action if unsuccessful
+      if (!data.success) {
         resetCover();
+        return;
+      }
+
+      // Set cover image if one is found
+      setCover(data.album.images[0].url);
     }).fail(resetCover);
   }
 
