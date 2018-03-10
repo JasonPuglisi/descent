@@ -7,6 +7,7 @@ html(lang='en')
     title= title
     meta(name='description', content='Descent is an elegant now playing display for Last.fm showing song metadata and local weather.')
     link(href='/now/app/static/stylesheets/style.css', rel='stylesheet')
+    link(href='/now/app/static/stylesheets/config.css', rel='stylesheet')
     link(href='/now/app/static/images/icons/apple-touch-icon.png', rel='apple-touch-icon', sizes='180x180')
     link(href='/now/app/static/images/icons/favicon-32x32.png', rel='icon', type='image/png', sizes='32x32')
     link(href='/now/app/static/images/icons/favicon-16x16.png', rel='icon', type='image/png', sizes='16x16')
@@ -21,15 +22,20 @@ html(lang='en')
   body
     .container
       h1#title= title
-      h2 Weather Units
-        div.select-groups
-          div.select-group.group-units#select-group-units-imperial Imperial (&deg;F)
-          div.select-group.group-units#select-group-units-metric Metric (&deg;C)
       h2 Background
         div.select-groups
           div.select-group.group-bg#select-group-bg-album Album
           div.select-group.group-bg#select-group-bg-artist Artist
           div.select-group.group-bg#select-group-bg-none None
+      h2 Weather Units
+        div.select-groups
+          div.select-group.group-units#select-group-units-imperial Imperial (&deg;F)
+          div.select-group.group-units#select-group-units-metric Metric (&deg;C)
+      h2 Time and Date Options
+        div.select-groups
+          div.select-group.group-datetime#select-group-datetime-24hr 24-hour time
+          div.select-group.group-datetime#select-group-datetime-weekday Show weekday
+          div.select-group.group-datetime#select-group-datetime-seconds Show seconds
       a(href='/now')
         | [home]
       | 
@@ -37,4 +43,5 @@ html(lang='en')
         | [hue settings]
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
+    script(src='/now/app/static/javascripts/utility/general.js')
     script(src='/now/app/static/javascripts/config.js')
