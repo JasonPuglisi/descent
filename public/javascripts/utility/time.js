@@ -1,47 +1,43 @@
 function initDatetime() {
-  // Call the update once so the time fades in properly
+  // Update immediately and sync with system clock for next update
+  let nextUpdate = 1000 - new Date().getMilliseconds();
+  setTimeout(() => { updateDatetime(); setInterval(updateDatetime, 1000); }, nextUpdate);
   updateDatetime();
-  setInterval(updateDatetime, 1000);
 
   if (cookieEnabled('datetimeEnabled'))
     toggleDisplay('#datetime', true);
 }
 
-function updateDatetime() {
-  $('#datetime #date').text(getCurrentDate());
-  $('#datetime #time').text(getCurrentTime());
+function updateDatetime(nextUpdate) {
+  let date = new Date();
+
+  $('#datetime #date').text(getCurrentDate(date));
+  $('#datetime #time').text(getCurrentTime(date));
 }
 
-function getCurrentDate() {
-  let months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
-  ];
-  let date = new Date();
-  let month = months[date.getMonth()];
+function getCurrentDate(date) {
+  let modeWeekday = cookieEnabled('weekday');
 
-  return `${month} ${date.getDate()}, ${date.getFullYear()}`;
+  let options = {
+    weekday: modeWeekday ? 'long' : undefined,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+
+  return date.toLocaleDateString('en-US', options);
 }
 
-function getCurrentTime() {
-  let date = new Date();
-  let hours = date.getHours().toString();
-  let minutes = date.getMinutes().toString();
+function getCurrentTime(date) {
+  let mode24 = cookieEnabled('24hr');
+  let modeSeconds = cookieEnabled('seconds');
 
-  if (hours.length === 1)
-    hours = `0${hours}`;
-  if (minutes.length === 1)
-    minutes = `0${minutes}`;
+  let options = {
+    hour12: !mode24,
+    hour: mode24 ? '2-digit' : 'numeric',
+    minute: '2-digit',
+    second: modeSeconds ? '2-digit' : undefined
+  };
 
-  return `${hours}:${minutes}`;
+  return date.toLocaleTimeString('en-US', options);
 }
