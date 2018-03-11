@@ -39,12 +39,38 @@ function fetchImages() {
   let key = 'c1797de6bf0b7e401b623118120cd9e1';
   let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&mbid=${artistId}&api_key=${key}&format=json`;
   $.get(url, data => {
-    // Set artist image if one is found
-    if (data.artist) {
+    // Reset background if artist not found
+    if (!data.artist) {
+      resetBackground();
+      return;
+    }
+
+    if (data.artist.image.length > 0) {
+      // Update background with artist image from Last.fm
       let img = data.artist.image[data.artist.image.length - 1]['#text'];
       $('#background').css('background-image', `url(${img})`);
-    } else
-      resetBackground();
+      return;
+    }
+
+    // Fallback to Spotify for artist image
+    let url = '/now/app/spotify/artist';
+    let body = `artist=${resources.track.current.artist}`;
+
+    $.post(url, body, data => {
+      console.log(data);
+      // Reset background if unsuccessful
+      if (!data.success) {
+        resetBackground();
+        return;
+      }
+
+      // Set background image if one is found
+      if (data.images.length > 0) {
+        let img = data.images[0].url;
+        $('#background').css('background-image', `url(${img})`);
+      } else
+        resetBackground();
+    }).fail(resetCover);
   }).fail(resetBackground);
 }
 
@@ -81,11 +107,12 @@ function updateCover(cover) {
 }
 
 function resetBackground() {
-  $('#background').css('background-image', `url(${getBlankImageData()})`);
+  var url = nowPlaying() ?  resources.cover.src : getBlankImageData();
+  $('#background').css('background-image', `url(${url}`);
 }
 
 function getBackgroundType() {
-  return cookieExists('background') ? Cookies.get('background') : 'album';
+  return cookieExists('background') ? Cookies.get('background') : 'artist';
 }
 
 function hasCover() {

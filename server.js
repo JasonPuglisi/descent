@@ -147,6 +147,43 @@ app.post('/now/app/spotify/track', (req, res) => {
   });
 });
 
+app.post('/now/app/spotify/artist', (req, res) => {
+  if (!spotifyKey) {
+    console.log('Error getting Spotify track: No API key');
+    res.json(new Track());
+    return;
+  }
+
+  let artist = req.body.artist;
+  let query = artist.replace(/ /g, '%20');
+
+  let options = {
+    url: `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
+    headers: {
+      'Authorization': `Bearer ${spotifyKey}`
+    }
+  };
+  request(options, (err, res2, body) => {
+    if (err || res.statusCode != 200) {
+      console.log(`Error getting Spotify artist: Invalid response: ${err}`);
+      res.json(new Artist());
+      return;
+    }
+
+    let data = JSON.parse(body);
+    if (data.artists.total < 1) {
+      console.log(`Error getting Spotify artist: No results`);
+      res.json(new Artist());
+      return;
+    }
+
+    let artist = data.artists.items[0];
+    artist.success = true;
+
+    res.json(artist);
+  });
+});
+
 app.listen(process.env.DESCENT_PORT || 3000);
 
 class Weather {
@@ -240,6 +277,12 @@ function getWeatherOpenweathermap(key, lat, lon, units, callback) {
 }
 
 class Track {
+  constructor(success) {
+    this.success = success === true;
+  }
+}
+
+class Artist {
   constructor(success) {
     this.success = success === true;
   }
