@@ -1,3 +1,6 @@
+/* global resources, Cookies */
+/* global cookieEnabled, cookieExists, nowPlaying, toggleCookie, updateHue */
+
 function initMenu() {
   // Update globals
   resources.features.hue = cookieExists('hueIp') &&
@@ -26,14 +29,15 @@ function processKey(event) {
     return;
 
   // Get key pressed
-  var key = event.keyCode;
+  let key = event.keyCode;
   switch (key) {
     // Handle H to toggle help menu
-    case 72:
+    case 72: {
       toggleDisplay('#help');
       break;
+    }
     // Handle E to toggle extended info
-    case 69:
+    case 69: {
       let showE = false;
       if (nowPlaying()) {
         toggleCookie('extendedOn');
@@ -41,8 +45,9 @@ function processKey(event) {
       }
       toggleDisplay('#userLine', showE);
       break;
+    }
     // Handle L to toggle Hue lights
-    case 76:
+    case 76: {
       let on = false;
       if (resources.features.hue) {
         toggleCookie('hueEnabled');
@@ -50,13 +55,15 @@ function processKey(event) {
       }
       toggleHue(on);
       break;
+    }
     // Handle T to toggle date and time
-    case 84:
+    case 84: {
       toggleCookie('datetimeEnabled');
       toggleDisplay('#datetime');
       break;
+    }
     // Handle W to toggle weather
-    case 87:
+    case 87: {
       let showW = false;
       if (resources.features.weather) {
         toggleCookie('weatherOn');
@@ -64,6 +71,7 @@ function processKey(event) {
       }
       toggleDisplay('#weather', showW);
       break;
+    }
   }
 }
 

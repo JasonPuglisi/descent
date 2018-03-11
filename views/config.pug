@@ -34,8 +34,8 @@ html(lang='en')
             small Default image URL:&nbsp;
               input#defaultBackground(name='defaultBackground', type='text', size='25', maxlength='300', placeholder='none')
               | &nbsp;
-              a#defaultBackgroundSave(href='#' onclick='saveDefaultBackground(); return false;').hide
-                i(class='fas fa-check fa-sm')
+              a#defaultBackgroundSave.hide(href='#' onclick='saveDefaultBackground(); return false;')
+                i.fas.fa-check.fa-sm
       h2 Weather Units
         div.select-groups
           div.select-group.group-units#select-group-units-imperial Imperial (&deg;F)

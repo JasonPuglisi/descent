@@ -1,3 +1,6 @@
+/* global resources, Cookies */
+/* global cookieEnabled, cookieExists, toggleDisplay */
+
 // Initialize weather display
 function initWeather() {
   // Ensure HTML5 geolocation API is present and get coordinates

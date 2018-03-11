@@ -1,3 +1,5 @@
+/* global resources, Cookies, */
+
 function initCursor() {
   // Show cursor on any mouse activity
   $('body').on('ready click contextmenu mousemove', showCursor);

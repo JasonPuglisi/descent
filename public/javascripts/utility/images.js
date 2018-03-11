@@ -1,3 +1,6 @@
+/* global resources, chroma, ColorThief, Cookies */
+/* global cookieEnabled, cookieExists, fetchHueColors, newTrack, nowPlaying, updateHue */
+
 function fetchImages() {
   // Reset display if not playing
   if (!nowPlaying()) {
@@ -57,7 +60,6 @@ function fetchImages() {
     let body = `artist=${resources.track.current.artist}`;
 
     $.post(url, body, data => {
-      console.log(data);
       // Reset background if unsuccessful
       if (!data.success) {
         resetBackground();
@@ -88,7 +90,7 @@ function resetCover() {
 
 function updateCover(cover) {
   // Determine cover image url
-  var url = cover || getBlankImageData();
+  let url = cover || getBlankImageData();
 
   // Load image before setting it in visible places
   resources.cover.onload = () => {

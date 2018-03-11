@@ -1,3 +1,5 @@
+/* global cookieEnabled, toggleDisplay */
+
 function initDatetime() {
   // Update immediately and sync with system clock for next update
   let nextUpdate = 1000 - new Date().getMilliseconds();
@@ -8,7 +10,7 @@ function initDatetime() {
     toggleDisplay('#datetime', true);
 }
 
-function updateDatetime(nextUpdate) {
+function updateDatetime() {
   let date = new Date();
 
   $('#datetime #date').text(getCurrentDate(date));

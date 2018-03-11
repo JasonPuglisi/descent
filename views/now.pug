@@ -29,11 +29,11 @@ html(lang='en')
       #links
         a(href='/now/app/config')
           | [settings 
-          i(class='fas fa-sliders-h fa-sm')
+          i.fas.fa-sliders-h.fa-sm
           | ] 
         a(href='https://github.com/JasonPuglisi/descent')
           | [source 
-          i(class='fab fa-github fa-sm')
+          i.fab.fa-github.fa-sm
           | ]
       a(onclick='processKey({ keyCode: 87 }); return false;')
         | [w]
@@ -74,7 +74,7 @@ html(lang='en')
             span#scrobbleCount
           |  scrobbles
         a#userLink(href=`http://last.fm/user/${user}`, target='_blank')
-          i(class='fab fa-lastfm')
+          i.fab.fa-lastfm
           | &nbsp;
           span#user= user
         | &nbsp;is listening to

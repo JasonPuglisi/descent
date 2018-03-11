@@ -1,3 +1,6 @@
+/* global resources */
+/* global cookieEnabled, fetchColors, fetchImages, resetBackground, toggleDisplay */
+
 function initMetadata() {
   // Update preview image properties
   $('#music #cover')[0].onload = fetchColors;

@@ -1,14 +1,16 @@
-$(function() {
+/* global Cookies */
+
+$(() => {
   discoverBridges();
 });
 
-var connecting = false;
+let connecting = false;
 
 function discoverBridges() {
-  var bridgeFound = false;
-  $.get('https://www.meethue.com/api/nupnp', function(data) {
-    for (var i in data) {
-      var ip = data[i].internalipaddress;
+  let bridgeFound = false;
+  $.get('https://www.meethue.com/api/nupnp', data => {
+    for (let i in data) {
+      let ip = data[i].internalipaddress;
       if (ip) {
         bridgeFound = true;
         $('#select-groups-loading-bridges').hide();
@@ -45,9 +47,9 @@ function discoverBridgesError() {
 }
 
 function registerBridge(ip) {
-  var url = 'http://' + ip + '/api';
-  var body = '{"devicetype": "descent#web_client"}';
-  $.post(url, body, function(data) {
+  let url = 'http://' + ip + '/api';
+  let body = '{"devicetype": "descent#web_client"}';
+  $.post(url, body, data => {
     $('#select-groups-loading-connect').show();
     $('#hue-step-button').show();
     if (data[0].error) {
@@ -65,9 +67,9 @@ function registerBridge(ip) {
 }
 
 function getBridge(ip, username) {
-  var url = 'http://' + ip + '/api/' + username + '/config';
-  $.get(url, function(data) {
-    var name = data.name;
+  let url = 'http://' + ip + '/api/' + username + '/config';
+  $.get(url, data => {
+    let name = data.name;
     $('.select-group.group-bridges.selected').html(name);
 
     Cookies.set('hueIp', ip, { expires: 3650 });
@@ -78,15 +80,15 @@ function getBridge(ip, username) {
 }
 
 function getRooms(ip, username) {
-  var url = 'http://' + ip + '/api/' + username + '/groups';
-  $.get(url, function(data) {
+  let url = 'http://' + ip + '/api/' + username + '/groups';
+  $.get(url, data => {
     $('.group-rooms').each(function() {
       $(this).remove();
     });
     $('#select-groups-loading-rooms').hide();
-    for (var i in data) {
-      var room = data[i];
-      var name = room.name;
+    for (let i in data) {
+      let room = data[i];
+      let name = room.name;
       $('#select-groups-rooms').append('<div class="select-group ' +
         'group-rooms" id="select-group-rooms-' + i + '">' + name + '</div>');
     }
@@ -94,14 +96,14 @@ function getRooms(ip, username) {
     restoreRooms();
 
     $('.group-rooms').click(function() {
-      var e = $(this);
+      let e = $(this);
       if (!e.hasClass('selected')) {
         e.addClass('selected');
       } else {
         e.removeClass('selected');
       }
 
-      var selectedRooms = [];
+      let selectedRooms = [];
       $('.group-rooms.selected').each(function() {
         selectedRooms.push(this.id.substring('select-group-rooms-'.length));
       });
@@ -119,10 +121,10 @@ function getRooms(ip, username) {
 }
 
 function restoreState() {
-  var ip = Cookies.get('hueIp');
-  var username = Cookies.get('hueUsername');
-  var name = Cookies.get('hueName');
-  var rooms = Cookies.get('hueRooms');
+  let ip = Cookies.get('hueIp');
+  let username = Cookies.get('hueUsername');
+  let name = Cookies.get('hueName');
+  let rooms = Cookies.get('hueRooms');
 
   if (ip !== undefined && username !== undefined && name !== undefined) {
     $('#select-group-bridge-' + ip.replace(/\./g, '_')).html(name).addClass(
@@ -135,13 +137,13 @@ function restoreState() {
 }
 
 function restoreRooms() {
-  var rooms = Cookies.get('hueRooms');
+  let rooms = Cookies.get('hueRooms');
 
   if (rooms !== undefined) {
     rooms = rooms.split(',');
     if (rooms.length > 0) {
-      for (var i in rooms) {
-        var room = rooms[i];
+      for (let i in rooms) {
+        let room = rooms[i];
         $('#select-group-rooms-' + rooms[i]).addClass('selected');
       }
       $('#hue-step-done').show();
