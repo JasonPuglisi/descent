@@ -5,7 +5,7 @@ $(() => {
 });
 
 function processBackground() {
-  let selected = Cookies.get('background') || 'album';
+  let selected = Cookies.get('background') || 'artist';
   $(`#select-group-bg-${selected}`).addClass('selected');
 
   $('.select-group.group-bg').on('click', function() {
