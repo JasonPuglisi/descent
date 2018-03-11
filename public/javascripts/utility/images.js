@@ -107,8 +107,15 @@ function updateCover(cover) {
 }
 
 function resetBackground() {
-  var url = nowPlaying() ?  resources.cover.src : getBlankImageData();
+  let url;
+  if (nowPlaying() && resources.cover.src !== getBlankImageData())
+    url = resources.cover.src;
+  else
+    url = getDefaultBackground();
   $('#background').css('background-image', `url(${url}`);
+
+  let blur = !cookieExists('blur') || cookieEnabled('blur') ? 15 : 0;
+  $('#background').css('filter', `blur(${blur}px)`);
 }
 
 function getBackgroundType() {
@@ -208,6 +215,10 @@ function resetColors() {
   // Clear/reset colors
   resources.colors.regular = [];
   fetchHueColors();
+}
+
+function getDefaultBackground() {
+  return Cookies.get('defaultBackground') || getBlankImageData();
 }
 
 function getBlankImageData() {
