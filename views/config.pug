@@ -22,11 +22,20 @@ html(lang='en')
   body
     .container
       h1#title= title
-      h2 Background
+      h2 Background Type
         div.select-groups
           div.select-group.group-bg#select-group-bg-artist Artist
           div.select-group.group-bg#select-group-bg-album Album
           div.select-group.group-bg#select-group-bg-none None
+      h2 Background Options
+        div.select-groups
+          div.select-group.group-bgopt#select-group-bgopt-blur Blur
+          span#defaultBackgroundInputGroup
+            small Default image URL:&nbsp;
+              input#defaultBackground(name='defaultBackground', type='text', size='25', maxlength='300', placeholder='none')
+              | &nbsp;
+              a#defaultBackgroundSave(href='#' onclick='saveDefaultBackground(); return false;').hide
+                i(class='fas fa-check fa-sm')
       h2 Weather Units
         div.select-groups
           div.select-group.group-units#select-group-units-imperial Imperial (&deg;F)

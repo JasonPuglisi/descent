@@ -28,3 +28,7 @@
 .select-groups-loading {
   margin: 5px 0 5px 0;
 }
+
+#defaultBackgroundInputGroup {
+  padding-left: 0.5em;
+}
