@@ -14,7 +14,8 @@ function fetchMetadata() {
   // Query Last.fm for recent track information
   let user = $('#music #user').text();
   let key = 'c1797de6bf0b7e401b623118120cd9e1';
-  let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${user}&api_key=${key}&limit=1&format=json`;
+  let urlUser = encodeURIComponent(user);
+  let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${urlUser}&api_key=${key}&limit=1&format=json`;
   $.get(url, data => {
     // Reset metadata if API error or no recent tracks
     if (data.error !== undefined || !data.recenttracks) {

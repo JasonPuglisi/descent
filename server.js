@@ -31,14 +31,14 @@ app.get('/now', (req, res) => {
 });
 
 app.post('/now', (req, res) => {
-  let user = req.body.user || req.body.defaultUser;
+  let user = encodeURIComponent(req.body.user || req.body.defaultUser);
 
   res.redirect(`/now/${user}`);
 });
 
 app.get('/now/:user', (req, res) => {
   let title = 'Descent';
-  let user = req.params.user.substring(0, 20);
+  let user = decodeURIComponent(req.params.user.substring(0, 20));
 
   res.render('now', { title, user });
 });
@@ -56,7 +56,7 @@ app.get('/now/app/hue', (req, res) => {
 });
 
 app.get('/now/app/cover', (req, res) => {
-  let url = req.query.url;
+  let url = encodeURI(decodeURIComponent(req.query.url));
   if (!url) {
     console.warn('Error getting cover: No URL specified');
     res.send();
@@ -84,7 +84,7 @@ app.get('/now/app/cover', (req, res) => {
 app.post('/now/app/weather', (req, res) => {
   let lat = req.body.latitude;
   let lon = req.body.longitude;
-  let units = req.body.units;
+  let units = decodeURIComponent(req.body.units);
 
   let dsKey = process.env.DARK_SKY_KEY;
   let owmKey = process.env.OPENWEATHERMAP_KEY;
@@ -116,9 +116,9 @@ app.post('/now/app/spotify/track', (req, res) => {
     return;
   }
 
-  let artist = req.body.artist;
-  let title = req.body.title;
-  let query = `${artist} - ${title}`.replace(/ /g, '%20');
+  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
+  let title = encodeURIComponent(decodeURIComponent(req.body.title));
+  let query = `${artist}%20-%20${title}`;
 
   let options = {
     url: `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
@@ -154,8 +154,8 @@ app.post('/now/app/spotify/artist', (req, res) => {
     return;
   }
 
-  let artist = req.body.artist;
-  let query = artist.replace(/ /g, '%20');
+  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
+  let query = artist;
 
   let options = {
     url: `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
@@ -194,7 +194,9 @@ class Weather {
 
 function getWeatherDarkSky(key, lat, lon, units, callback) {
   units = units === 'imperial' ? 'us' : 'si';
-  let url = `https://api.darksky.net/forecast/${key}/${lat},${lon}?units=${units}`;
+  let urlLat = encodeURIComponent(lat);
+  let urlLon = encodeURIComponent(lon);
+  let url = `https://api.darksky.net/forecast/${key}/${urlLat},${urlLon}?units=${units}`;
 
   request(url, (err, res, body) => {
     if (err || res.statusCode != 200)
@@ -229,7 +231,10 @@ function getWeatherDarkSky(key, lat, lon, units, callback) {
 }
 
 function getWeatherOpenweathermap(key, lat, lon, units, callback) {
-  let url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${key}`;
+  let urlLat = encodeURIComponent(lat);
+  let urlLon = encodeURIComponent(lon);
+  let urlUnits = encodeURIComponent(units);
+  let url = `http://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
 
   request(url, (err, res, body) => {
     if (err || res.statusCode != 200)
