@@ -31,14 +31,14 @@ app.get('/now', (req, res) => {
 });
 
 app.post('/now', (req, res) => {
-  let user = req.body.user || req.body.defaultUser;
+  let user = encodeURIComponent(req.body.user || req.body.defaultUser);
 
   res.redirect(`/now/${user}`);
 });
 
 app.get('/now/:user', (req, res) => {
   let title = 'Descent';
-  let user = req.params.user.substring(0, 20);
+  let user = decodeURIComponent(req.params.user.substring(0, 20));
 
   res.render('now', { title, user });
 });
@@ -56,23 +56,23 @@ app.get('/now/app/hue', (req, res) => {
 });
 
 app.get('/now/app/cover', (req, res) => {
-  let url = req.query.url;
+  let url = encodeURI(decodeURIComponent(req.query.url));
   if (!url) {
-    console.log('Error getting cover: No URL specified');
+    console.warn('Error getting cover: No URL specified');
     res.send();
     return;
   }
 
-  let pattern = /^https\:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
+  let pattern = /^https:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
   if (!url.match(pattern)) {
-    console.log(`Error getting cover: Invalid URL - ${url}`);
+    console.warn(`Error getting cover: Invalid URL - ${url}`);
     res.send();
     return;
   }
 
   request({ url, encoding: null }, (err, res2, body) => {
     if (err || res2.statusCode != 200) {
-      console.log(`Error getting cover: Invalid response - ${err}`);
+      console.warn(`Error getting cover: Invalid response - ${err}`);
       res.send();
       return;
     }
@@ -84,7 +84,7 @@ app.get('/now/app/cover', (req, res) => {
 app.post('/now/app/weather', (req, res) => {
   let lat = req.body.latitude;
   let lon = req.body.longitude;
-  let units = req.body.units;
+  let units = decodeURIComponent(req.body.units);
 
   let dsKey = process.env.DARK_SKY_KEY;
   let owmKey = process.env.OPENWEATHERMAP_KEY;
@@ -92,33 +92,33 @@ app.post('/now/app/weather', (req, res) => {
   if (dsKey)
     getWeatherDarkSky(dsKey, lat, lon, units, (err, weather) => {
       if (err)
-        console.log(`Error getting Dark Sky weather: ${err}`);
+        console.warn(`Error getting Dark Sky weather: ${err}`);
 
       res.json(weather);
     });
   else if (owmKey)
     getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
       if (err)
-        console.log(`Error getting OpenWeatherMap weather: ${err}`);
+        console.warn(`Error getting OpenWeatherMap weather: ${err}`);
 
       res.json(weather);
     });
   else {
-    console.log('Error getting weather: No API key');
+    console.warn('Error getting weather: No API key');
     res.json(new Weather());
   }
 });
 
 app.post('/now/app/spotify/track', (req, res) => {
   if (!spotifyKey) {
-    console.log('Error getting Spotify track: No API key');
+    console.warn('Error getting Spotify track: No API key');
     res.json(new Track());
     return;
   }
 
-  let artist = req.body.artist;
-  let title = req.body.title;
-  let query = `${artist} - ${title}`.replace(/ /g, '%20');
+  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
+  let title = encodeURIComponent(decodeURIComponent(req.body.title));
+  let query = `${artist}%20-%20${title}`;
 
   let options = {
     url: `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
@@ -128,14 +128,14 @@ app.post('/now/app/spotify/track', (req, res) => {
   };
   request(options, (err, res2, body) => {
     if (err || res.statusCode != 200) {
-      console.log(`Error getting Spotify track: Invalid response: ${err}`);
+      console.warn(`Error getting Spotify track: Invalid response: ${err}`);
       res.json(new Track());
       return;
     }
 
     let data = JSON.parse(body);
     if (data.tracks.total < 1) {
-      console.log(`Error getting Spotify track: No results`);
+      console.warn('Error getting Spotify track: No results');
       res.json(new Track());
       return;
     }
@@ -149,13 +149,13 @@ app.post('/now/app/spotify/track', (req, res) => {
 
 app.post('/now/app/spotify/artist', (req, res) => {
   if (!spotifyKey) {
-    console.log('Error getting Spotify track: No API key');
+    console.warn('Error getting Spotify track: No API key');
     res.json(new Track());
     return;
   }
 
-  let artist = req.body.artist;
-  let query = artist.replace(/ /g, '%20');
+  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
+  let query = artist;
 
   let options = {
     url: `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
@@ -165,14 +165,14 @@ app.post('/now/app/spotify/artist', (req, res) => {
   };
   request(options, (err, res2, body) => {
     if (err || res.statusCode != 200) {
-      console.log(`Error getting Spotify artist: Invalid response: ${err}`);
+      console.warn(`Error getting Spotify artist: Invalid response: ${err}`);
       res.json(new Artist());
       return;
     }
 
     let data = JSON.parse(body);
     if (data.artists.total < 1) {
-      console.log(`Error getting Spotify artist: No results`);
+      console.warn('Error getting Spotify artist: No results');
       res.json(new Artist());
       return;
     }
@@ -194,7 +194,9 @@ class Weather {
 
 function getWeatherDarkSky(key, lat, lon, units, callback) {
   units = units === 'imperial' ? 'us' : 'si';
-  let url = `https://api.darksky.net/forecast/${key}/${lat},${lon}?units=${units}`;
+  let urlLat = encodeURIComponent(lat);
+  let urlLon = encodeURIComponent(lon);
+  let url = `https://api.darksky.net/forecast/${key}/${urlLat},${urlLon}?units=${units}`;
 
   request(url, (err, res, body) => {
     if (err || res.statusCode != 200)
@@ -229,7 +231,10 @@ function getWeatherDarkSky(key, lat, lon, units, callback) {
 }
 
 function getWeatherOpenweathermap(key, lat, lon, units, callback) {
-  var url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${key}`;
+  let urlLat = encodeURIComponent(lat);
+  let urlLon = encodeURIComponent(lon);
+  let urlUnits = encodeURIComponent(units);
+  let url = `http://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
 
   request(url, (err, res, body) => {
     if (err || res.statusCode != 200)
@@ -290,7 +295,7 @@ class Artist {
 
 function authenticateSpotify(client, secret) {
   if (!client || !secret) {
-    console.log('Error getting Spotify authorization: No API credentials');
+    console.warn('Error getting Spotify authorization: No API credentials');
     return;
   }
 
@@ -305,7 +310,7 @@ function authenticateSpotify(client, secret) {
   };
   request.post(options, (err, res, body) => {
     if (err || res.statusCode != 200) {
-      console.log(`Error getting Spotify authorization: ${err}`);
+      console.warn(`Error getting Spotify authorization: ${err}`);
       spotifyKey = null;
       setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
       return;

@@ -1,3 +1,6 @@
+/* global resources, Cookies */
+/* global cookieEnabled, cookieExists, toggleDisplay */
+
 // Initialize weather display
 function initWeather() {
   // Ensure HTML5 geolocation API is present and get coordinates
@@ -18,7 +21,8 @@ function initWeather() {
 function updateWeather(coords) {
   let url = '/now/app/weather';
   let units = cookieExists('units') ? Cookies.get('units') : 'imperial';
-  let body = `latitude=${coords.latitude}&longitude=${coords.longitude}&units=${units}`;
+  let urlUnits = encodeURIComponent(units);
+  let body = `latitude=${coords.latitude}&longitude=${coords.longitude}&units=${urlUnits}`;
 
   $.post(url, body, data => {
     // Perform no action if unsuccessful

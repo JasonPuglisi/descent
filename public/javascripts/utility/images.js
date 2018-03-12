@@ -1,3 +1,6 @@
+/* global resources, chroma, ColorThief, Cookies */
+/* global cookieEnabled, cookieExists, fetchHueColors, newTrack, nowPlaying, updateHue */
+
 function fetchImages() {
   // Reset display if not playing
   if (!nowPlaying()) {
@@ -12,11 +15,15 @@ function fetchImages() {
     return;
 
   // Check for cover from Last.fm, and fallback to Spotify
-  if (resources.track.current.cover)
-    setCover(`/now/app/cover?url=${resources.track.current.cover}`);
+  if (resources.track.current.cover) {
+    let urlCover = encodeURIComponent(resources.track.current.cover);
+    setCover(`/now/app/cover?url=${urlCover}`);
+  }
   else {
     let url = '/now/app/spotify/track';
-    let body = `artist=${resources.track.current.artist}&title=${resources.track.current.title}`;
+    let urlArtist = encodeURIComponent(resources.track.current.artist);
+    let urlTitle = encodeURIComponent(resources.track.current.title);
+    let body = `artist=${urlArtist}&title=${urlTitle}`;
 
     $.post(url, body, data => {
       // Perform no action if unsuccessful
@@ -36,8 +43,9 @@ function fetchImages() {
 
   // Query Last.fm for artist information
   let artistId = resources.track.current.artistId;
+  let urlArtistId = encodeURIComponent(artistId);
   let key = 'c1797de6bf0b7e401b623118120cd9e1';
-  let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&mbid=${artistId}&api_key=${key}&format=json`;
+  let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&mbid=${urlArtistId}&api_key=${key}&format=json`;
   $.get(url, data => {
     // Reset background if artist not found
     if (!data.artist) {
@@ -54,10 +62,10 @@ function fetchImages() {
 
     // Fallback to Spotify for artist image
     let url = '/now/app/spotify/artist';
-    let body = `artist=${resources.track.current.artist}`;
+    let urlArtist = encodeURIComponent(resources.track.current.artist);
+    let body = `artist=${urlArtist}`;
 
     $.post(url, body, data => {
-      console.log(data);
       // Reset background if unsuccessful
       if (!data.success) {
         resetBackground();
@@ -88,7 +96,7 @@ function resetCover() {
 
 function updateCover(cover) {
   // Determine cover image url
-  var url = cover || getBlankImageData();
+  let url = cover || getBlankImageData();
 
   // Load image before setting it in visible places
   resources.cover.onload = () => {

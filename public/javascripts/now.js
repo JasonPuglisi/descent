@@ -1,3 +1,5 @@
+/* global initCursor, initDatetime, initMenu, initMetadata, initWeather*/
+
 $(() => {
   // Set globals
   window.resources = {

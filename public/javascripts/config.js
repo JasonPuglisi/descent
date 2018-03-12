@@ -1,3 +1,6 @@
+/* global Cookies */
+/* global cookieEnabled, cookieExists */
+
 $(() => {
   processBackground();
   processUnits();
@@ -22,8 +25,14 @@ function processBackground() {
   });
 
   $('#defaultBackground').val(Cookies.get('defaultBackground'));
-  $('#defaultBackground').on('input propertychange paste', function() {
+  $('#defaultBackground').on('input propertychange paste', () => {
     $('#defaultBackgroundSave').show();
+  });
+
+  $('#defaultBackgroundSave').on('click', function() {
+    $(this).hide();
+
+    Cookies.set('defaultBackground', $('#defaultBackground').val(), { expires: 3650 });
   });
 }
 
@@ -50,10 +59,4 @@ function processDatetime() {
       Cookies.set(option, selected, { expires: 3650 });
     });
   });
-}
-
-function saveDefaultBackground() {
-  $('#defaultBackgroundSave').hide();
-
-  Cookies.set('defaultBackground', $('#defaultBackground').val(), { expires: 3650 });
 }

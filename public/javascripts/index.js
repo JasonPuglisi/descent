@@ -1,3 +1,5 @@
+/* global Cookies */
+
 $(() => {
   $('#user').focus();
 

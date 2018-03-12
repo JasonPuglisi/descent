@@ -1,3 +1,6 @@
+/* global resources, chroma, Cookies */
+/* global cookieEnabled, fetchHexColors, hasCover */
+
 function fetchHueColors() {
   // Stop if cover is not present
   if (!hasCover()) {
@@ -56,7 +59,9 @@ function updateHue() {
   let rooms = Cookies.get('hueRooms').split(',');
 
   // Get light information from Hue
-  let url = `http://${ip}/api/${username}/groups`
+  let urlIp = encodeURIComponent(ip);
+  let urlUsername = encodeURIComponent(username);
+  let url = `http://${urlIp}/api/${urlUsername}/groups`;
   $.get(url, data => {
     // Loop through lights and colors for selected groups
     let lights = [];
@@ -75,7 +80,8 @@ function updateHue() {
 
       // Prepare and send update message for each Hue light
       let id = lights[k];
-      let url = `http://${ip}/api/${username}/lights/${id}/state`;
+      let urlId = encodeURIComponent(id);
+      let url = encodeURI(`http://${urlIp}/api/${urlUsername}/lights/${urlId}/state`);
       let body = `{"xy": [${color.x},${color.y}]}`;
       $.ajax({
         url,
