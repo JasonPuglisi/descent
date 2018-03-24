@@ -98,6 +98,10 @@ function updateCover(cover) {
   // Determine cover image url
   let url = cover || getBlankImageData();
 
+  // Enable or disable blur
+  let blur = !cookieExists('blur') || cookieEnabled('blur');
+  $('#background').toggleClass('blur', blur);
+
   // Load image before setting it in visible places
   resources.cover.onload = () => {
     // Apply cover image to background if required
@@ -121,9 +125,6 @@ function resetBackground() {
   else
     url = getDefaultBackground();
   $('#background').css('background-image', `url(${url}`);
-
-  let blur = !cookieExists('blur') || cookieEnabled('blur') ? 15 : 0;
-  $('#background').css('filter', `blur(${blur}px)`);
 }
 
 function getBackgroundType() {

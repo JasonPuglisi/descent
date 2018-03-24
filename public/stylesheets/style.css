@@ -40,6 +40,10 @@ a:not(#songLink):hover {
   display: none;
 }
 
+.blur {
+  filter: blur(15px);
+}
+
 .code {
   font-family: 'Source Code Pro', monospace;
 }
@@ -99,7 +103,6 @@ input[type=text] {
   background-size: cover;
   background-position: center top;
 
-  filter: blur(15px);
   transition: background-image .6s linear;
 }
 
