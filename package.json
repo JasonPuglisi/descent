@@ -16,6 +16,9 @@
   "repository": "github:JasonPuglisi/descent",
   "author": "Jason Puglisi <hello@jasonpuglisi.com> (https://www.jasonpuglisi.com)",
   "main": "server.js",
+  "scripts": {
+    "test": "scripts/test.sh"
+  },
   "private": true,
   "dependencies": {
     "body-parser": "^1.18.2",
