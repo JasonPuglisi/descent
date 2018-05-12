@@ -1,5 +1,7 @@
 # Descent
 
+[![Build Status](https://travis-ci.com/JasonPuglisi/descent.svg?branch=master)](https://travis-ci.com/JasonPuglisi/descent)
+
 Elegant now playing display for Last.fm showing song metadata and local weather.
 
 ## Usage

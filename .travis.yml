@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+- node
+deploy:
+  provider: elasticbeanstalk
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
+  region: $AWS_REGION
+  app: $AWS_APP
+  env: $AWS_ENV
+  bucket_name: $AWS_BUCKET_NAME
+  on:
+    repo: JasonPuglisi/descent
+    branch: master
