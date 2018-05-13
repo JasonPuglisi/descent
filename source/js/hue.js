@@ -14,21 +14,21 @@ function discoverBridges() {
       if (ip) {
         bridgeFound = true;
         $('#select-groups-loading-bridges').hide();
-        $('#select-groups-bridges').append('<div class="select-group ' +
-          'group-bridges" id="select-group-bridge-' + ip.replace(/\./g, '_') +
+        $('#select-groups-bridges').append('<div class="selectGroup ' +
+          'groupBridges" id="select-group-bridge-' + ip.replace(/\./g, '_') +
           '">' + ip + '</div>');
       } else {
         discoverBridgesError();
       }
     }
 
-    $('.select-group.group-bridges').click(function() {
-      $('.hue-step').hide();
+    $('.selectGroup.groupBridges').click(function() {
+      $('.hueStep').hide();
       Cookies.remove('hueIp');
       Cookies.remove('hueUsername');
       Cookies.remove('hueName');
       Cookies.remove('hueRooms');
-      $('.select-group.group-bridges.selected').each(function() {
+      $('.selectGroup.groupBridges.selected').each(function() {
         $(this).removeClass('selected');
       });
       $(this).addClass('selected');
@@ -70,7 +70,7 @@ function getBridge(ip, username) {
   let url = 'http://' + ip + '/api/' + username + '/config';
   $.get(url, data => {
     let name = data.name;
-    $('.select-group.group-bridges.selected').html(name);
+    $('.selectGroup.groupBridges.selected').html(name);
 
     Cookies.set('hueIp', ip, { expires: 3650 });
     Cookies.set('hueUsername', username, { expires: 3650 });
@@ -82,20 +82,20 @@ function getBridge(ip, username) {
 function getRooms(ip, username) {
   let url = 'http://' + ip + '/api/' + username + '/groups';
   $.get(url, data => {
-    $('.group-rooms').each(function() {
+    $('.groupRooms').each(function() {
       $(this).remove();
     });
     $('#select-groups-loading-rooms').hide();
     for (let i in data) {
       let room = data[i];
       let name = room.name;
-      $('#select-groups-rooms').append('<div class="select-group ' +
-        'group-rooms" id="select-group-rooms-' + i + '">' + name + '</div>');
+      $('#select-groups-rooms').append('<div class="selectGroup ' +
+        'groupRooms" id="select-group-rooms-' + i + '">' + name + '</div>');
     }
 
     restoreRooms();
 
-    $('.group-rooms').click(function() {
+    $('.groupRooms').click(function() {
       let e = $(this);
       if (!e.hasClass('selected')) {
         e.addClass('selected');
@@ -104,7 +104,7 @@ function getRooms(ip, username) {
       }
 
       let selectedRooms = [];
-      $('.group-rooms.selected').each(function() {
+      $('.groupRooms.selected').each(function() {
         selectedRooms.push(this.id.substring('select-group-rooms-'.length));
       });
 

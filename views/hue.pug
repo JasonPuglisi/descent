@@ -6,7 +6,7 @@ html(lang='en')
     meta(name='mobile-web-app-capable', content='yes')
     title= title
     meta(name='description', content='Descent is an elegant now playing display for Last.fm showing song metadata and local weather.')
-    link(href='/now/app/static/stylesheets/style.css', rel='stylesheet')
+    link(href='/now/app/static/stylesheets/config.css', rel='stylesheet')
     link(href='/now/app/static/images/icons/apple-touch-icon.png', rel='apple-touch-icon', sizes='180x180')
     link(href='/now/app/static/images/icons/favicon-32x32.png', rel='icon', type='image/png', sizes='32x32')
     link(href='/now/app/static/images/icons/favicon-16x16.png', rel='icon', type='image/png', sizes='16x16')
@@ -20,7 +20,7 @@ html(lang='en')
     meta(name='theme-color', content='#ffffff')
   body
     .container
-      h1#title= title
+      h1= title
       h2
         ol
           li Scanning for Hue Bridges. Select the IP address of your bridge. 
@@ -28,34 +28,36 @@ html(lang='en')
             | due to restrictions of the Hue API, you must instruct your web 
             | browser to allow loading insecure (HTTP) content on this secure 
             | (HTTPS) domain.
-            div.select-groups-loading#select-groups-loading-bridges
+            div.selectGroupsLoading#loading-bridges
               i.fas.fa-circle-notch.fa-spin
-              |   Loading...
-            div.select-groups#select-groups-bridges
-            span.hide#select-groups-bridges-error No bridges found. Make sure 
-              | you're on the same network as your bridge.
-          li.hide.hue-step#hue-step-button Press the link button on your Hue 
+              | Loading...
+            div.selectGroups#bridges
+            span.hide#bridges-error No bridges found. Make sure  you're on the 
+              | same network as your bridge.
+          li.hide.hueStep#hue-step-button Press the link button on your Hue 
             | Bridge and wait a few seconds to connect.
-            div.hide.select-groups-loading#select-groups-loading-connect
+            div.hide.selectGroupsLoading#select-groups-loading-connect
               i.fas.fa-circle-notch.fa-spin
-              |   Connecting...
-          li.hide.hue-step#hue-step-rooms Connected! Select one or more 
+              | Connecting...
+          li.hide.hueStep#hue-step-rooms Connected! Select one or more 
             | rooms to control.
-            div.hide.select-groups-loading#select-groups-loading-rooms
+            div.hide.selectGroupsLoading#select-groups-loading-rooms
               i.fas.fa-circle-notch.fa-spin
-              |   Loading...
-            div.select-groups#select-groups-rooms
-          li.hide.hue-step#hue-step-done You're all done! Now, just hit 
+              | Loading...
+            div.selectGroups#select-groups-rooms
+          li.hide.hueStep#hue-step-done You're all done! Now, just hit 
             span.code l
             |  on your now playing page to toggle light control on and off.
             | You can come back to this page at any time to update the groups
             | you're using or switch to a different Hue bridge (just start over
             | from step one).
-      a(href='/now')
-        | [home]
-      | 
-      a(href='/now/app/config')
-        | [settings]
+      .links
+        a(href='/now')
+          | home 
+          i.fas.fa-home.fa-sm
+        a(href='/now/app/config')
+          | settings 
+          i.fas.fa-sliders-h.fa-sm
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
     script(src='/now/app/static/javascripts/hue.js')

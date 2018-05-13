@@ -25,9 +25,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  margin-left: 25vw;
-  margin-right: 25vw;
-  width: 50vw;
+  margin-left: 10vw;
+  margin-right: 10vw;
+  width: 80vw;
 }
 
 .bubbles {
@@ -35,14 +35,14 @@ body {
   justify-content: flex-end;
   align-items: flex-end;
   margin-top: 1em;
-  margin-left: 15vw;
-  margin-right: 75vw;
-  width: 10vw;
+  margin-left: 5vw;
+  margin-right: 90vw;
+  width: 5vw;
+  height: 30vh;
 
   img {
-    width: 10vw;
-    height: 30vw;
-    max-width: 10vw;
+    flex: 1;
+    max-width: 5vw;
     max-height: 30vh;
   }
 }
@@ -51,87 +51,130 @@ body {
 
 h1 {
   @extend .font-heading;
-  font-size: 2em;
+  font-size: 5em;
   text-transform: uppercase;
 }
 
 h2 {
   @extend .font-subheading;
-  font-size: 0.055em;
+  font-size: 1.9em;
   padding-top: 0.5em;
   padding-bottom: 1.1em;
 }
 
-.userInput {
-  @extend .font-default;
-  background-color: transparent;
-  border-style: none none solid none;
-  border-width: 0.1em;
-  border-radius: 0px;
-  border-color: $white;
-  font-size: 1em;
-  letter-spacing: 0.015em;
-  color: $white;
+.userInputLine {
+  white-space: nowrap;
 }
 
-.userInput::placeholder {
-  color: $white;
-  opacity: 0.3;
-}
-
-.links {
-  @extend .font-code;
-  font-size: 0.055em;
-}
-
-.links a:not(:last-of-type) {
-  margin-right: 2em;
+a i.fas.fa-chevron-down {
+  line-height: 0.8em;
+  vertical-align: middle;
 }
 
 /* Media queries */
 
 // Bootstrap equivalent: medium
 @media (min-width: 768px) {
-  h1 {
-    font-size: 4em;
+  .container {
+    margin-left: 15vw;
+    margin-right: 15vw;
+    width: 70vw;
   }
 
-  h2 {
-    font-size: 0.8em;
+  .bubbles {
+    margin-top: 1em;
+    margin-left: 8vw;
+    margin-right: 85vw;
+    width: 7vw;
+    height: 30vh;
+  
+    img {
+      flex: 1;
+      max-width: 7vw;
+      max-height: 30vh;
+    }
   }
 
-  .links {
-    font-size: 0.75em;
-  }
-}
-
-// Bootstrap equivalent: large
-@media (min-width: 992px) {
   h1 {
     font-size: 6em;
   }
 
   h2 {
-    font-size: 1.15em;
+    font-size: 1.4em;
   }
 
   .links {
-    font-size: 0.95em;
+    font-size: 1em;
+  }
+}
+
+// Bootstrap equivalent: large
+@media (min-width: 992px) {
+  .container {
+    margin-left: 18vw;
+    margin-right: 18vw;
+    width: 64vw;
+  }
+
+  .bubbles {
+    margin-top: 1em;
+    margin-left: 9vw;
+    margin-right: 82vw;
+    width: 9vw;
+    height: 30vh;
+  
+    img {
+      flex: 1;
+      max-width: 9vw;
+      max-height: 30vh;
+    }
+  }
+
+  h1 {
+    font-size: 7em;
+  }
+
+  h2 {
+    font-size: 1.6em;
+  }
+
+  .links {
+    font-size: 1.2em;
   }
 }
 
 // Bootstrap equivalent: extra large
 @media (min-width: 1200px) {
+  .container {
+    margin-left: 21vw;
+    margin-right: 21vw;
+    width: 58vw;
+  }
+
+  .bubbles {
+    margin-top: 1em;
+    margin-left: 10vw;
+    margin-right: 79vw;
+    width: 11vw;
+    height: 32vh;
+  
+    img {
+      flex: 1;
+      max-width: 11vw;
+      max-height: 32vh;
+    }
+  }
+
   h1 {
-    font-size: 8em;
+    font-size: 7em;
   }
 
   h2 {
-    font-size: 1.5em;
+    font-size: 1.6em;
   }
 
   .links {
-    font-size: 1.15em;
+    font-size: 1.2em;
   }
 }
 

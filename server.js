@@ -27,7 +27,7 @@ app.get('/now', (req, res) => {
   ];
   let user = users[Math.floor(Math.random() * users.length)];
 
-  res.render('index', { title, user });
+  res.render('landing', { title, user });
 });
 
 app.post('/now', (req, res) => {
