@@ -13,3 +13,5 @@ deploy:
   on:
     repo: JasonPuglisi/descent
     branch: master
+before_deploy:
+- git add -f public/javascripts public/stylesheets
