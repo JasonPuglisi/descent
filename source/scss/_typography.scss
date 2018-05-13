@@ -1,5 +1,36 @@
 .font-default {
+  font-family: 'Open Sans', Arial, sans-serif;
   font-weight: 400;
   color: $primary-color-text;
-  font-family: 'Open Sans', Arial, sans-serif;
+}
+
+.font-heading {
+  font-family: 'Oswald', 'Open Sans', Arial, sans-serif;
+  font-weight: 700;
+  color: $primary-color-text;
+}
+
+.font-subheading {
+  font-family: 'Noto Serif', Georgia, serif;
+  font-weight: 400;
+  color: $primary-color-text;
+}
+
+.font-code {
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 400;
+  color: $primary-color-text;
+}
+
+a {
+  text-decoration: none;
+  color: $white;
+  opacity: .8;
+
+  transition: opacity .2s linear;
+}
+
+a:hover {
+  text-decoration: none;
+  opacity: 1;
 }

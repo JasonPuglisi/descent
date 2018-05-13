@@ -3,7 +3,6 @@
 @import 'reset';
 @import 'external';
 @import 'variables';
-
 @import 'typography';
 
 /* Universal styles */
@@ -15,58 +14,125 @@ body {
 
 /* Layout styles */
 
-#container {
-  position: fixed;
-  left: 45%;
-  top: 50%;
-  text-align: left;
-
-  transform: translate(-50%, -70%);
+.outer-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-#container::before {
-  content: url('/now/app/static/images/bubbles.svg');
-
-  position: fixed;
-  z-index: -1;
-  top: -50%;
-  left: -20%;
-  width: 100px;
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 25vw;
+  margin-right: 25vw;
+  width: 50vw;
 }
 
-#container #user {
-  border-width: 2px;
-}
+.bubbles {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: 1em;
+  margin-left: 15vw;
+  margin-right: 75vw;
+  width: 10vw;
 
-#container #user::placeholder {
-  color: #a4ade6;
-  opacity: 0.3;
+  img {
+    width: 10vw;
+    height: 30vw;
+    max-width: 10vw;
+    max-height: 30vh;
+  }
 }
 
 /* Typography styles */
 
 h1 {
-  font-family: 'Oswald', 'Open Sans', Arial, sans-serif;
-  font-weight: 700;
-  font-size: 6.5em;
+  @extend .font-heading;
+  font-size: 2em;
   text-transform: uppercase;
-  margin: 0;
 }
 
 h2 {
-  font-family: 'Noto Serif', Georgia, serif;
-  margin-top: -0.2em;
-  margin-bottom: 2em;
+  @extend .font-subheading;
+  font-size: 0.055em;
+  padding-top: 0.5em;
+  padding-bottom: 1.1em;
 }
 
-#links {
-  font-family: 'Source Code Pro', monospace;
+.userInput {
+  @extend .font-default;
+  background-color: transparent;
+  border-style: none none solid none;
+  border-width: 0.1em;
+  border-radius: 0px;
+  border-color: $white;
+  font-size: 1em;
+  letter-spacing: 0.015em;
+  color: $white;
 }
 
-#links a:not(:last-of-type) {
+.userInput::placeholder {
+  color: $white;
+  opacity: 0.3;
+}
+
+.links {
+  @extend .font-code;
+  font-size: 0.055em;
+}
+
+.links a:not(:last-of-type) {
   margin-right: 2em;
 }
 
 /* Media queries */
+
+// Bootstrap equivalent: medium
+@media (min-width: 768px) {
+  h1 {
+    font-size: 4em;
+  }
+
+  h2 {
+    font-size: 0.8em;
+  }
+
+  .links {
+    font-size: 0.75em;
+  }
+}
+
+// Bootstrap equivalent: large
+@media (min-width: 992px) {
+  h1 {
+    font-size: 6em;
+  }
+
+  h2 {
+    font-size: 1.15em;
+  }
+
+  .links {
+    font-size: 0.95em;
+  }
+}
+
+// Bootstrap equivalent: extra large
+@media (min-width: 1200px) {
+  h1 {
+    font-size: 8em;
+  }
+
+  h2 {
+    font-size: 1.5em;
+  }
+
+  .links {
+    font-size: 1.15em;
+  }
+}
 
 @import 'queries';
