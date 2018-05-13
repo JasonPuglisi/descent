@@ -1,7 +1,7 @@
 /* global Cookies */
 
 $(() => {
-  $('#user').focus();
+  $('.userInput').focus();
 
   let user = Cookies.get('lastUser');
   if (user !== undefined)
@@ -9,9 +9,9 @@ $(() => {
   else
     user = $('[name="defaultUser"]').val();
 
-  $('#user').attr('placeholder', user);
+  $('.userInput').attr('placeholder', user);
 });
 
 function submitUser() {
-  $('#userInput').submit();
+  $('.userInputForm').submit();
 }
