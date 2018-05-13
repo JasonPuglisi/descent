@@ -12,15 +12,15 @@ function initMenu() {
   // Update Hue state
   if (resources.features.hue) {
     if (cookieEnabled('hueEnabled'))
-      $('#hueIndicator').text('on');
-    $('#hueHelp').show();
+      $('.hueIndicator').text('on');
+    $('.hueHelp').show();
   }
 
   // Fade menu after initial pause
-  setTimeout(() => { toggleDisplay('#help', false); }, 3600);
+  setTimeout(() => { toggleDisplay('.help', false); }, 3600);
 
   // Save current user to populate index input
-  Cookies.set('lastUser', $('#music #user').text(), { expires: 3650 });
+  Cookies.set('lastUser', $('.music .user').text(), { expires: 3650 });
 }
 
 function processKey(event) {
@@ -33,7 +33,7 @@ function processKey(event) {
   switch (key) {
     // Handle H to toggle help menu
     case 72: {
-      toggleDisplay('#help');
+      toggleDisplay('.help');
       break;
     }
     // Handle E to toggle extended info
@@ -43,7 +43,7 @@ function processKey(event) {
         toggleCookie('extendedOn');
         showE = undefined;
       }
-      toggleDisplay('#userLine', showE);
+      toggleDisplay('.userLine', showE);
       break;
     }
     // Handle L to toggle Hue lights
@@ -59,7 +59,7 @@ function processKey(event) {
     // Handle T to toggle date and time
     case 84: {
       toggleCookie('datetimeEnabled');
-      toggleDisplay('#datetime');
+      toggleDisplay('.datetime');
       break;
     }
     // Handle W to toggle weather
@@ -69,7 +69,7 @@ function processKey(event) {
         toggleCookie('weatherOn');
         showW = undefined;
       }
-      toggleDisplay('#weather', showW);
+      toggleDisplay('.weather', showW);
       break;
     }
   }
@@ -97,12 +97,12 @@ function toggleDisplay(element, show) {
 function toggleHue(on) {
   // Determine whether or not to turn Hue on
   if (on === undefined)
-    on = $('#hueIndicator').text() === 'off';
+    on = $('.hueIndicator').text() === 'off';
 
   // Turn Hue on/off
   if (on) {
-    $('#hueIndicator').text('on');
+    $('.hueIndicator').text('on');
     updateHue();
   } else
-    $('#hueIndicator').text('off');
+    $('.hueIndicator').text('off');
 }

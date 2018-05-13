@@ -33,14 +33,14 @@ function updateWeather(coords) {
     resources.features.weather = true;
 
     // Update weather data
-    $('#weather #summary').text(data.summary);
-    $('#weather #conditions #temperature').text(data.temperature);
-    $('#weather #conditions #apparentTemperature').text(data.apparentTemperature);
-    $('#weather #conditions .unit').text(data.unit);
-    $('#weather #conditions #icon').removeClass($(this).attr('class')).addClass(data.icon);
+    $('.weather .summary').text(data.summary);
+    $('.weather .conditions .temperature').text(data.temperature);
+    $('.weather .conditions .apparentTemperature').text(data.apparentTemperature);
+    $('.weather .conditions .unit').text(data.unit);
+    $('.weather .conditions .icon').removeClass($(this).attr('class')).addClass(data.icon);
 
     // Display weather text as appropriate
     if (cookieEnabled('weatherOn') || !cookieExists('weatherOn'))
-      toggleDisplay('#weather', true);
+      toggleDisplay('.weather', true);
   });
 }
