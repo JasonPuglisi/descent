@@ -1,0 +1,72 @@
+/* Sass imports */
+
+@import 'reset';
+@import 'external';
+@import 'variables';
+
+@import 'typography';
+
+/* Universal styles */
+
+body {
+  @extend .font-default;
+  background-color: $black;
+}
+
+/* Layout styles */
+
+#container {
+  position: fixed;
+  left: 45%;
+  top: 50%;
+  text-align: left;
+
+  transform: translate(-50%, -70%);
+}
+
+#container::before {
+  content: url('/now/app/static/images/bubbles.svg');
+
+  position: fixed;
+  z-index: -1;
+  top: -50%;
+  left: -20%;
+  width: 100px;
+}
+
+#container #user {
+  border-width: 2px;
+}
+
+#container #user::placeholder {
+  color: #a4ade6;
+  opacity: 0.3;
+}
+
+/* Typography styles */
+
+h1 {
+  font-family: 'Oswald', 'Open Sans', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 6.5em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+h2 {
+  font-family: 'Noto Serif', Georgia, serif;
+  margin-top: -0.2em;
+  margin-bottom: 2em;
+}
+
+#links {
+  font-family: 'Source Code Pro', monospace;
+}
+
+#links a:not(:last-of-type) {
+  margin-right: 2em;
+}
+
+/* Media queries */
+
+@import 'queries';

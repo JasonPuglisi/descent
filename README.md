@@ -10,8 +10,9 @@ Ensure you have recent versions of [Node.js](https://nodejs.org/en/) and
 [npm](https://www.npmjs.com/) installed. 
 
 Run `npm i -g yarn` to install [yarn](https://yarnpkg.com/en/). Next, run
-`yarn install` to install Decent's dependencies. Finally, run `yarn start` to
-start Descent's server.
+`yarn add global gulp` and `yarn` to install Descent's dependencies. Finally,
+run `gulp build` to build Descent's static files, and `yarn start` to start
+Descent's server.
 
 Descent's server listens on port 3000 by default, but this can be changed by
 setting the `DESCENT_PORT` environment variable. It's recommended to use a
