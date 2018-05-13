@@ -25,12 +25,13 @@ html(lang='en')
       .container
         h1= title
         form.userInputForm(method='post')
-          h2 enter your Last.fm username:&nbsp;
-            span
+          h2 enter your Last.fm username: 
+            span.userInputLine
               input.userInput(name='user', type='text', size='15', maxlength='20')
               input(name='defaultUser', type='hidden', value=`${user}`)
               | &nbsp;
-              a.i.fas.fa-chevron-down(href='#' onclick='submitUser(); return false;')
+              a(href='#' onclick='submitUser(); return false;')
+                i.fas.fa-chevron-down
         .links
           a(href='/now/app/config')
             | settings 
@@ -40,4 +41,4 @@ html(lang='en')
             i.fab.fa-github.fa-sm
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
-    script(src='/now/app/static/javascripts/index.js')
+    script(src='/now/app/static/javascripts/landing.js')

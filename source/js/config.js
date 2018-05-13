@@ -9,39 +9,39 @@ $(() => {
 
 function processBackground() {
   let selected = Cookies.get('background') || 'artist';
-  $(`#select-group-bg-${selected}`).addClass('selected');
+  $(`#bg-${selected}`).addClass('selected');
 
-  $('.select-group.group-bg').on('click', function() {
-    $('.select-group.group-bg.selected').each(function() { $(this).removeClass('selected'); });
+  $('.selectGroup.groupBg').on('click', function() {
+    $('.selectGroup.groupBg.selected').each(function() { $(this).removeClass('selected'); });
     $(this).addClass('selected');
     Cookies.set('background', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650 });
   });
 
   selected = !cookieExists('blur') || cookieEnabled('blur');
-  $('#select-group-bgopt-blur').toggleClass('selected', selected).on('click', function() {
+  $('#bgopt-blur').toggleClass('selected', selected).on('click', function() {
     selected = !selected;
     $(this).toggleClass('selected');
     Cookies.set('blur', selected, { expires: 365 });
   });
 
-  $('#defaultBackground').val(Cookies.get('defaultBackground'));
-  $('#defaultBackground').on('input propertychange paste', () => {
-    $('#defaultBackgroundSave').show();
+  $('#bgopt-default').val(Cookies.get('defaultBackground'));
+  $('#bgopt-default').on('input propertychange paste', () => {
+    $('.backgroundInputSave').show();
   });
 
-  $('#defaultBackgroundSave').on('click', function() {
+  $('a.backgroundInputSave').on('click', function() {
     $(this).hide();
 
-    Cookies.set('defaultBackground', $('#defaultBackground').val(), { expires: 3650 });
+    Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650 });
   });
 }
 
 function processUnits() {
   let selected = Cookies.get('units') || 'imperial';
-  $(`#select-group-units-${selected}`).addClass('selected');
+  $(`#units-${selected}`).addClass('selected');
 
-  $('.select-group.group-units').on('click', function() {
-    $('.select-group.group-units.selected').each(function() { $(this).removeClass('selected'); });
+  $('.selectGroup.groupUnits').on('click', function() {
+    $('.selectGroup.groupUnits.selected').each(function() { $(this).removeClass('selected'); });
     $(this).addClass('selected');
     Cookies.set('units', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650 });
   });
@@ -51,9 +51,9 @@ function processDatetime() {
   let options = ['24hr', 'weekday', 'seconds'];
   options.forEach(option => {
     let selected = cookieEnabled(option);
-    $(`#select-group-datetime-${option}`).toggleClass('selected', selected);
+    $(`#datetime-${option}`).toggleClass('selected', selected);
 
-    $(`#select-group-datetime-${option}`).on('click', function() {
+    $(`#datetime-${option}`).on('click', function() {
       selected = !selected;
       $(this).toggleClass('selected');
       Cookies.set(option, selected, { expires: 3650 });

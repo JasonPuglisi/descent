@@ -34,3 +34,42 @@ a:hover {
   text-decoration: none;
   opacity: 1;
 }
+
+input {
+  @extend .font-default;
+  background-color: transparent;
+  border-style: none none solid none;
+  border-width: 0.1em;
+  border-radius: 0px;
+  border-color: $white;
+  box-shadow: 0em 0.15em darken($black, 10);
+  font-size: 1em;
+  letter-spacing: 0.015em;
+  color: $white;
+}
+
+input::placeholder {
+  color: $white;
+  opacity: 0.3;
+}
+
+.links {
+  @extend .font-code;
+  font-size: 1em;
+}
+
+.links a:not(:last-of-type) {
+  margin-right: 2em;
+}
+
+.code {
+  @extend .font-code;
+}
+
+.hide {
+  display: none;
+}
+
+::selection {
+  background: $primary-color-light;
+}

@@ -1,34 +1,96 @@
-.select-group {
+/* Sass imports */
+
+@import 'reset';
+@import 'external';
+@import 'variables';
+@import 'typography';
+
+/* Universal styles */
+
+body {
+  @extend .font-default;
+  background-color: $black;
+}
+
+/* Layout styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 2em;
+}
+
+/* Typography styles */
+
+h1 {
+  @extend .font-heading;
+  font-size: 3em;
+  text-transform: uppercase;
+}
+
+h2 {
+  @extend .font-subheading;
+  font-size: 1.5em;
+  padding-top: 1em;
+  padding-bottom: 0.5em;
+}
+
+.backgroundInputLine {
+  white-space: nowrap;
+}
+
+a i.fas.fa-check {
+  line-height: 0.8em;
+  vertical-align: middle;
+}
+
+i.fas.fa-circle-notch {
+  margin-right: 0.5em;
+}
+
+.links {
+  padding-top: 2em;
+}
+
+/* Layout styles */
+
+.selectGroup {
   cursor: pointer;
   display: inline-block;
-  margin: 5px 10px 5px 0;
-  padding: 5px 15px;
-  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0.7em 1.4em 0.7em 0;
+  padding: 0.7em 1.7em;
+  background-color: $gray;
   border-style: solid;
-  border-width: 1px;
-  border-radius: 0;
-  border-color: #f6f5f7;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  border-width: 0.1em;
+  border-radius: 0.2em;
+  border-color: $white;
+  box-shadow: 0.2em 0.3em darken($black, 10);
   user-select: none;
 }
 
-.select-group:hover, .select-group:active {
-  background-color: rgba(255, 255, 255, 0.4);
+.selectGroup:hover, .selectGroup:active {
+  background-color: $primary-color-light;
+  box-shadow: 0.15em 0.2em darken($black, 10);
+  color: $black;
 }
 
-.select-group.selected {
-  background-color: #e0d5ff;
-  color: #212121;
+.selectGroup.selected {
+  background-color: $primary-color;
+  box-shadow: 0.15em 0.2em darken($black, 10);
 }
 
-.select-groups-loading {
-  margin: 5px 0 5px 0;
+.selectGroup.selected:hover, .selectGroup.selected:active {
+  color: $white;
 }
 
-#defaultBackgroundInputGroup {
-  padding-left: 0.5em;
+.selectGroupsLoading {
+  margin: 0.7em 0em 0.7em 0em;
 }
+
+.groupBgopt#bgopt-default {
+  margin-left: 0.2em;
+}
+
+/* Media queries */
+
+@import 'queries';
