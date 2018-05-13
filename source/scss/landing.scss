@@ -5,13 +5,6 @@
 @import 'variables';
 @import 'typography';
 
-/* Universal styles */
-
-body {
-  @extend .font-default;
-  background-color: $black;
-}
-
 /* Layout styles */
 
 .outer-container {
@@ -21,29 +14,29 @@ body {
 }
 
 .container {
+  align-items: flex-start;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
   margin-left: 10vw;
   margin-right: 10vw;
   width: 80vw;
 }
 
 .bubbles {
-  display: flex;
-  justify-content: flex-end;
   align-items: flex-end;
-  margin-top: 1em;
+  display: flex;
+  height: 30vh;
+  justify-content: flex-end;
   margin-left: 5vw;
   margin-right: 90vw;
+  margin-top: 1em;
   width: 5vw;
-  height: 30vh;
 
   img {
     flex: 1;
-    max-width: 5vw;
     max-height: 30vh;
+    max-width: 5vw;
   }
 }
 
@@ -51,15 +44,17 @@ body {
 
 h1 {
   @extend .font-heading;
+
   font-size: 5em;
   text-transform: uppercase;
 }
 
 h2 {
   @extend .font-subheading;
+
   font-size: 1.9em;
-  padding-top: 0.5em;
   padding-bottom: 1.1em;
+  padding-top: 0.5em;
 }
 
 .userInputLine {
@@ -82,16 +77,16 @@ a i.fas.fa-chevron-down {
   }
 
   .bubbles {
-    margin-top: 1em;
+    height: 30vh;
     margin-left: 8vw;
     margin-right: 85vw;
+    margin-top: 1em;
     width: 7vw;
-    height: 30vh;
   
     img {
       flex: 1;
-      max-width: 7vw;
       max-height: 30vh;
+      max-width: 7vw;
     }
   }
 
@@ -117,16 +112,16 @@ a i.fas.fa-chevron-down {
   }
 
   .bubbles {
-    margin-top: 1em;
+    height: 30vh;
     margin-left: 9vw;
     margin-right: 82vw;
+    margin-top: 1em;
     width: 9vw;
-    height: 30vh;
   
     img {
       flex: 1;
-      max-width: 9vw;
       max-height: 30vh;
+      max-width: 9vw;
     }
   }
 
@@ -152,16 +147,16 @@ a i.fas.fa-chevron-down {
   }
 
   .bubbles {
-    margin-top: 1em;
+    height: 32vh;
     margin-left: 10vw;
     margin-right: 79vw;
+    margin-top: 1em;
     width: 11vw;
-    height: 32vh;
   
     img {
       flex: 1;
-      max-width: 11vw;
       max-height: 32vh;
+      max-width: 11vw;
     }
   }
 
@@ -177,5 +172,3 @@ a i.fas.fa-chevron-down {
     font-size: 1.2em;
   }
 }
-
-@import 'queries';

@@ -1,0 +1,130 @@
+/* Sass imports */
+
+@import 'reset';
+@import 'external';
+@import 'variables';
+@import 'typography';
+
+/* External imports */
+
+// Weather Icons
+@import url('https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css');
+
+/* Typography styles */
+
+html, body {
+  font-weight: 300;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 2em;
+  margin-top: 0.4em;
+}
+
+h2 {
+  font-size: 1.6em;
+}
+
+.apparent {
+  color: $light-gray;
+  font-size: 0.75em;
+}
+
+.links {
+  padding-bottom: 0.4em;
+}
+
+.menuItem {
+  margin-top: 0.1em;
+}
+
+.userLine {
+  margin-bottom: 0.65em;
+}
+
+.scrobbles {
+  color: $light-gray;
+  font-size: 0.6em;
+  margin-bottom: 0.3em;
+}
+
+.artist {
+  margin-top: 0.5em;
+}
+
+/* Layout styles */
+
+.background {
+  background-position: center top;
+  background-size: cover;
+  height: 100vh;
+  margin-left: -2em;
+  margin-top: -2em;
+  padding: 4em;
+  position: fixed;
+  transition: background-image .6s linear;
+  width: 100vw;
+  z-index: -1;
+}
+
+.container {
+  background-color: $background-mask;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 4em);
+  justify-content: space-between;
+  padding: 2em 3em;
+  width: calc(100vw - 6em);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.row.top {
+  align-items: flex-start;
+}
+
+.row.bottom {
+  align-items: flex-end;
+}
+
+.corner.left {
+  text-align: left;
+}
+
+.corner.right {
+  text-align: right;
+}
+
+.cover {
+  width: 32vw;
+}
+
+/* Media queries */
+
+// Bootstrap equivalent: medium
+@media (min-width: 768px) {
+  .cover {
+    width: 28vw;
+  }
+}
+
+// Bootstrap equivalent: large
+@media (min-width: 992px) {
+  .cover {
+    width: 24vw;
+  }
+}
+
+// Bootstrap equivalent: extra large
+@media (min-width: 1200px) {
+  .cover {
+    width: 20vw;
+  }
+}

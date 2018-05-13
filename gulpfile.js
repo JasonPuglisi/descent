@@ -9,9 +9,7 @@ let uglify       = require('gulp-uglify-es').default;
 gulp.task('build-css', () => {
   return gulp.src('source/scss/*.scss')
     .pipe(sourcemaps.init())
-    .pipe(sass({
-      outputStyle: 'compressed'
-    }).on('error', sass.logError))
+    .pipe(sass({ outputStyle: 'compressed' }).on('error', sass.logError))
     .pipe(autoprefixer())
     .pipe(sourcemaps.write('./sourcemaps'))
     .pipe(gulp.dest('public/stylesheets'));

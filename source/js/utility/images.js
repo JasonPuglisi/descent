@@ -56,7 +56,7 @@ function fetchImages() {
     if (data.artist.image.length > 0) {
       // Update background with artist image from Last.fm
       let img = data.artist.image[data.artist.image.length - 1]['#text'];
-      $('#background').css('background-image', `url(${img})`);
+      $('.background').css('background-image', `url(${img})`);
       return;
     }
 
@@ -75,7 +75,7 @@ function fetchImages() {
       // Set background image if one is found
       if (data.images.length > 0) {
         let img = data.images[0].url;
-        $('#background').css('background-image', `url(${img})`);
+        $('.background').css('background-image', `url(${img})`);
       } else
         resetBackground();
     }).fail(resetCover);
@@ -84,13 +84,13 @@ function fetchImages() {
 
 function setCover(cover) {
   // Set cover image
-  $('#music #cover')[0].crossOrigin = 'Anonymous';
+  $('.music .cover')[0].crossOrigin = 'Anonymous';
   updateCover(cover);
 }
 
 function resetCover() {
   // Clear/reset cover image
-  $('#music #cover')[0].crossOrigin = null;
+  $('.music .cover')[0].crossOrigin = null;
   updateCover('');
 }
 
@@ -100,20 +100,20 @@ function updateCover(cover) {
 
   // Enable or disable blur
   let blur = !cookieExists('blur') || cookieEnabled('blur');
-  $('#background').toggleClass('blur', blur);
+  $('.background').toggleClass('blur', blur);
 
   // Load image before setting it in visible places
   resources.cover.onload = () => {
     // Apply cover image to background if required
     if (getBackgroundType() == 'album')
-      $('#background').css('background-image', `url(${url}`);
+      $('.background').css('background-image', `url(${url}`);
 
     // Apply cover image to preview if it exists
     if (cover !== '')
-      $('#music #cover').show();
+      $('.music .cover').show();
     else
-      $('#music #cover').hide();
-    $('#music #cover').attr('src', url);
+      $('.music .cover').hide();
+    $('.music .cover').attr('src', url);
   };
   resources.cover.src = url;
 }
@@ -124,7 +124,7 @@ function resetBackground() {
     url = resources.cover.src;
   else
     url = getDefaultBackground();
-  $('#background').css('background-image', `url(${url}`);
+  $('.background').css('background-image', `url(${url}`);
 }
 
 function getBackgroundType() {
@@ -133,7 +133,7 @@ function getBackgroundType() {
 
 function hasCover() {
   // Determine if there's currently a cover image loaded
-  return $('#cover')[0].src !== getBlankImageData();
+  return $('.cover')[0].src !== getBlankImageData();
 }
 
 function fetchColors() {
@@ -145,7 +145,7 @@ function fetchColors() {
 
   // Get colors from Color Thief
   let colorThief = new ColorThief();
-  let colors = colorThief.getPalette($('#music #cover')[0], 2);
+  let colors = colorThief.getPalette($('.music .cover')[0], 2);
 
   // Set colors from Color Thief
   setColors(colors);
@@ -207,8 +207,8 @@ function updateColors() {
   }
 
   // Update text colors
-  $('#music #title').css('color', hexColors[0]);
-  $('#music #artist').css('color', hexColors[1]);
+  $('.music .title').css('color', hexColors[0]);
+  $('.music .artist').css('color', hexColors[1]);
 
   // Update Hue lights
   updateHue();

@@ -7,14 +7,14 @@ function initDatetime() {
   updateDatetime();
 
   if (cookieEnabled('datetimeEnabled'))
-    toggleDisplay('#datetime', true);
+    toggleDisplay('.datetime', true);
 }
 
 function updateDatetime() {
   let date = new Date();
 
-  $('#datetime #date').text(getCurrentDate(date));
-  $('#datetime #time').text(getCurrentTime(date));
+  $('.datetime .date').text(getCurrentDate(date));
+  $('.datetime .time').text(getCurrentTime(date));
 }
 
 function getCurrentDate(date) {
