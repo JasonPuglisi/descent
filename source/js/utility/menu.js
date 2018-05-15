@@ -1,5 +1,5 @@
 /* global resources, Cookies */
-/* global cookieEnabled, cookieExists, nowPlaying, toggleCookie, updateHue */
+/* global cookieEnabled, cookieExists, getBackgroundType, nowPlaying, toggleCookie, updateHue */
 
 function initMenu() {
   // Update globals
@@ -21,6 +21,10 @@ function initMenu() {
 
   // Save current user to populate index input
   Cookies.set('lastUser', $('.music .user').text(), { expires: 3650 });
+
+  // Apply transparent background if required
+  if (getBackgroundType() === 'transparent')
+    $('body').css('background-color', 'transparent');
 }
 
 function processKey(event) {
