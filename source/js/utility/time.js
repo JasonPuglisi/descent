@@ -6,7 +6,7 @@ function initDatetime() {
   setTimeout(() => { updateDatetime(); setInterval(updateDatetime, 1000); }, nextUpdate);
   updateDatetime();
 
-  if (cookieEnabled('datetimeEnabled'))
+  if (cookieEnabled('datetimeOn'))
     toggleDisplay('.datetime', true);
 }
 

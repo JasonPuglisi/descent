@@ -62,7 +62,7 @@ function processKey(event) {
     }
     // Handle T to toggle date and time
     case 84: {
-      toggleCookie('datetimeEnabled');
+      toggleCookie('datetimeOn');
       toggleDisplay('.datetime');
       break;
     }

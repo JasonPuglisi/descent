@@ -46,14 +46,53 @@ client ID and client secret assigned by Spotify. Set your client ID as the
 `SPOTIFY_CLIENT` environment variable, and your client secret as the
 `SPOTIFY_SECRET` environment variable.
 
-### General User Configuration
+### Descent Configuration
 
 To configure the background, weather, and time displays, visit
 [`/now/app/config`](https://descent.live/now/app/config). Dark Sky can
 automatically determine weather units, but OpenWeatherMap cannot, so Descent
 defaults to imperial units unless otherwise specified.
 
-### Phillips Hue Control User Configuration
+### Descent Configuration Import
+
+You can import settings through a POST request to
+[`/now/app/config/set`](https://descent.live/now/app/config/set). Each post
+parameter correponds to a cookie. Valid parameters and values are as follows:
+
+**Background type**  
+`background`: `artist`, `album`, `transparent`, `none`
+
+**Background blurring**  
+`blur`: `true`, `false`
+
+**Default background image**  
+`defaultBackground`: any valid image URL
+
+**Weather units**  
+`units`: `imperial`, `metric`
+
+**Date/time 24-hour display**  
+`24hr`: `true`, `false`
+
+**Date/time weekday display**  
+`weekday`: `true`, `false`
+
+**Date/time seconds display**  
+`seconds`: `true`, `false`
+
+**User to redirect to**  
+`lastUser`: any valid Last.fm username
+
+**Weather display enabled**  
+`weatherOn`: `true`, `false`
+
+**Date/time display enabled**  
+`datetimeOn`: `true`, `false`
+
+**Extended information display enabled**  
+`extendedOn`: `true`, `false`
+
+### Phillips Hue Configuration
 
 To enable Phillips Hue control, visit
 [`/now/app/hue`](https://descent.live/now/app/hue) and follow the setup
