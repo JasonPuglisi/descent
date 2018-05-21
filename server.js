@@ -49,6 +49,73 @@ app.get('/now/app/config', (req, res) => {
   res.render('config', { title });
 });
 
+app.post('/now/app/config/set', (req, res) => {
+  let cookies = [
+    {
+      'name': 'background',
+      'options': ['artist', 'album', 'transparent', 'none']
+    },
+    {
+      'name': 'blur',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'defaultBackground'
+    },
+    {
+      'name': 'units',
+      'options': ['imperial', 'metric']
+    },
+    {
+      'name': '24hr',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'weekday',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'seconds',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'lastUser'
+    },
+    {
+      'name': 'weatherOn',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'datetimeOn',
+      'options': ['true', 'false']
+    },
+    {
+      'name': 'extendedOn',
+      'options': ['true', 'false']
+    }
+  ];
+
+  for (let cookie of cookies) {
+    let name = cookie.name;
+    let options = cookie.options;
+    let selected = req.body[name];
+
+    if (selected === undefined || (options !== undefined && !options.includes(selected)))
+      continue;
+
+    res.cookie(name, selected, { maxAge: 315360000000 });
+  }
+
+  let user = req.body.lastUser;
+
+  if (user === undefined || user === null) {
+    res.redirect('/now');
+    return;
+  }
+
+  res.redirect(`/now/${user}`);
+});
+
 app.get('/now/app/hue', (req, res) => {
   let title = 'Descent Hue Setup';
 
