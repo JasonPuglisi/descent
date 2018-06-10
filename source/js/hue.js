@@ -13,8 +13,8 @@ function discoverBridges() {
       let ip = data[i].internalipaddress;
       if (ip) {
         bridgeFound = true;
-        $('#select-groups-loading-bridges').hide();
-        $('#select-groups-bridges').append('<div class="selectGroup ' +
+        $('#loading-bridges').hide();
+        $('#bridges').append('<div class="selectGroup ' +
           'groupBridges" id="select-group-bridge-' + ip.replace(/\./g, '_') +
           '">' + ip + '</div>');
       } else {
