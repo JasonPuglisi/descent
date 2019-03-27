@@ -31,33 +31,20 @@ gulp.task('build-js-utility', () => {
     .pipe(gulp.dest('public/javascripts/utility'));
 });
 
-gulp.task('sync-css', ['build-css'], () => {
+gulp.task('sync-css', gulp.series('build-css', () => {
   browserSync.reload();
-});
+}));
 
-gulp.task('sync-js', ['build-js'], () => {
+gulp.task('sync-js', gulp.series('build-js', () => {
   browserSync.reload();
-});
+}));
 
-gulp.task('sync-js-utility', ['build-js-utility'], () => {
+gulp.task('sync-js-utility', gulp.series('build-js-utility', () => {
   browserSync.reload();
-});
+}));
 
 gulp.task('reload', () => {
   browserSync.reload();
-});
-
-gulp.task('watch', ['nodemon'], () => {
-  browserSync.init({
-    proxy: `localhost:${process.env.DESCENT_PORT || 3000}/now`,
-    port: 3333
-  });
-
-  gulp.watch('source/scss/*.scss', ['sync-css']);
-  gulp.watch('source/js/*.js', ['sync-js']);
-  gulp.watch('source/js/utility/*.js', ['sync-js-utility']);
-  gulp.watch('*.js', ['reload']);
-  gulp.watch('views/*.pug', ['reload']);
 });
 
 gulp.task('nodemon', callback => {
@@ -77,5 +64,18 @@ gulp.task('nodemon', callback => {
   });
 });
 
-gulp.task('build', ['build-css', 'build-js', 'build-js-utility']);
-gulp.task('default', ['build', 'watch']);
+gulp.task('watch', gulp.series('nodemon', () => {
+  browserSync.init({
+    proxy: `localhost:${process.env.DESCENT_PORT || 3000}/now`,
+    port: 3333
+  });
+
+  gulp.watch('source/scss/*.scss', gulp.series('sync-css'));
+  gulp.watch('source/js/*.js', gulp.series('sync-js'));
+  gulp.watch('source/js/utility/*.js', gulp.series('sync-js-utility'));
+  gulp.watch('*.js', gulp.series('reload'));
+  gulp.watch('views/*.pug', gulp.series('reload'));
+}));
+
+gulp.task('build', gulp.series('build-css', 'build-js', 'build-js-utility'));
+gulp.task('default', gulp.series('build', 'watch'));
