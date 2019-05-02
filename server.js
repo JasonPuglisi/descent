@@ -1,6 +1,9 @@
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 const express = require('express');
 const request = require('request');
+
+/* Base application functionality */
 
 let app = express();
 app.set('view engine', 'pug');
@@ -116,39 +119,184 @@ app.post('/now/app/config/set', (req, res) => {
   res.redirect(`/now/${user}`);
 });
 
+/* Hue functionality */
+
 app.get('/now/app/hue', (req, res) => {
   let title = 'Descent Hue Setup';
 
-  res.render('hue', { title });
+  res.render('hue', { title, hueClientId: process.env.HUE_CLIENT,
+    hueAppId: process.env.HUE_ID });
 });
 
-app.post('/now/app/weather', (req, res) => {
-  let lat = req.body.latitude;
-  let lon = req.body.longitude;
-  let units = decodeURIComponent(req.body.units);
+app.get('/now/app/hue/authorize', (req, res) => {
+  let code = req.query.code;
+  let refreshToken = req.query.refreshToken;
+  authenticateHue(code, refreshToken, auth => {
+    if (auth) {
+      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.accessTokenExpiry });
+      res.cookie('hueRefreshToken', auth.refreshToken, { maxAge: auth.refreshTokenExpiry });
+      res.cookie('hueUsername', auth.username, { maxAge: auth.accessTokenExpiry });
+    }
 
-  let dsKey = process.env.DARK_SKY_KEY;
-  let owmKey = process.env.OPENWEATHERMAP_KEY;
+    res.redirect('/now/app/hue');
+  });
+});
 
-  if (dsKey)
-    getWeatherDarkSky(dsKey, lat, lon, units, (err, weather) => {
-      if (err)
-        console.warn(`Error getting Dark Sky weather: ${err}`);
-
-      res.json(weather);
-    });
-  else if (owmKey)
-    getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
-      if (err)
-        console.warn(`Error getting OpenWeatherMap weather: ${err}`);
-
-      res.json(weather);
-    });
-  else {
-    console.warn('Error getting weather: No API key');
-    res.json(new Weather());
+function authenticateHue(code, refreshToken, callback) {
+  if (!code && !refreshToken) {
+    console.warn('Error authenticating with Hue: No authorization code or refresh token');
+    callback();
+    return;
   }
+
+  let clientId = process.env.HUE_CLIENT;
+  let clientSecret = process.env.HUE_SECRET;
+  if (!clientId || !clientSecret) {
+    console.warn('Error authenticating with Hue: Missing client ID or secret');
+    callback();
+    return;
+  }
+
+  let url = code ? `https://api.meethue.com/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/oauth2/refresh?grant_type=refresh_token';
+  request.post(url, (err, res) => {
+    if (err || res.statusCode !== 401) {
+      console.warn('Error authenticating with Hue: No initial challenge');
+      callback();
+      return;
+    }
+
+    let authHeader = res.headers['www-authenticate'];
+    let realm = authHeader.match(/realm="(.+?)"/)[1];
+    let nonce = authHeader.match(/nonce="(.+?)"/)[1];
+    let uriSuffix = code ? 'token' : 'refresh';
+    let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
+
+    let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/oauth2/${uriSuffix}", response="${digest}"`;
+    let headers = { 'Authorization': auth };
+
+    let form = code ? undefined : { refresh_token: refreshToken };
+
+    request.post(url, { headers, form }, (err, res, body) => {
+      if (err || res.statusCode !== 200) {
+        console.warn(`Error authenticating with Hue: Digest failure: ${body}`);
+        callback();
+        return;
+      }
+
+      let data = JSON.parse(body);
+      let accessToken = data.access_token;
+      let accessTokenExpiry = (parseInt(data.access_token_expires_in) - 300) * 1000;
+      let refreshToken = data.refresh_token;
+      let refreshTokenExpiry = (parseInt(data.refresh_token_expires_in) - 300) * 1000;
+      let tokenType = data.token_type;
+
+      hueWhitelistApplication(accessToken, (username) => {
+        let auth = { accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry, tokenType, username };
+        callback(auth);
+      });
+    });
+  });
+}
+
+function calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix) {
+  let hash1Data = `${clientId}:${realm}:${clientSecret}`;
+  let hash1 = crypto.createHash('md5').update(hash1Data).digest('hex');
+
+  let hash2Data = `POST:/oauth2/${uriSuffix}`;
+  let hash2 = crypto.createHash('md5').update(hash2Data).digest('hex');
+
+  let digestData = `${hash1}:${nonce}:${hash2}`;
+  let digest = crypto.createHash('md5').update(digestData).digest('hex');
+
+  return digest;
+}
+
+function hueWhitelistApplication(accessToken, callback) {
+  let url = 'https://api.meethue.com/bridge/0/config';
+  let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+  let body = JSON.stringify({ linkbutton: true });
+  request.put(url, { headers, body }, (err, res, body) => {
+    url = 'https://api.meethue.com/bridge/';
+    body = JSON.stringify({ devicetype: 'Descent' });
+
+    request.post(url, { headers, body }, (err, res, body) => {
+      let data = JSON.parse(body);
+      callback(data[0].success.username);
+    });
+  });
+}
+
+app.post('/now/app/hue/api/groups', (req, res) => {
+  let accessToken = req.body.accessToken;
+  let username = req.body.username;
+
+  let url = `https://api.meethue.com/bridge/${username}/groups`;
+  let headers = { 'Authorization': `Bearer ${accessToken}` };
+  request(url, { headers }, (err, res2, body) => {
+    let data = JSON.parse(body);
+    res.json(data);
+  });
 });
+
+app.post('/now/app/hue/api/light', (req, res) => {
+  let accessToken = req.body.accessToken;
+  let username = req.body.username;
+
+  let id = req.body.id;
+  let colorX = req.body.colorX;
+  let colorY = req.body.colorY;
+
+  let url = `https://api.meethue.com/bridge/${username}/lights/${id}/state`;
+  let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+  let body = `{"xy": [${colorX},${colorY}]}`;
+  request.put(url, { headers, body }, (err, res2, body) => {
+    let data = JSON.parse(body);
+    res.json(data);
+  });
+});
+
+/* Spotify functionality */
+
+class Track {
+  constructor(success) {
+    this.success = success === true;
+  }
+}
+
+class Artist {
+  constructor(success) {
+    this.success = success === true;
+  }
+}
+
+function authenticateSpotify(client, secret) {
+  if (!client || !secret) {
+    console.warn('Error getting Spotify authorization: No API credentials');
+    return;
+  }
+
+  let authorization = Buffer.from(`${client}:${secret}`).toString('base64');
+  let options = {
+    url: 'https://accounts.spotify.com/api/token',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${authorization}`
+    },
+    body: 'grant_type=client_credentials'
+  };
+  request.post(options, (err, res, body) => {
+    if (err || res.statusCode != 200) {
+      console.warn(`Error getting Spotify authorization: ${err}`);
+      spotifyKey = null;
+      setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
+      return;
+    }
+
+    let data = JSON.parse(body);
+    spotifyKey = data.access_token;
+    setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
+  });
+}
 
 app.post('/now/app/spotify/track', (req, res) => {
   if (!spotifyKey) {
@@ -219,13 +367,41 @@ app.post('/now/app/spotify/artist', (req, res) => {
   });
 });
 
-app.listen(process.env.DESCENT_PORT || 3000);
+/* Weather (OpenWeatherMap and DarkSky) functionality */
 
 class Weather {
   constructor(success) {
     this.success = success === true;
   }
 }
+
+app.post('/now/app/weather', (req, res) => {
+  let lat = req.body.latitude;
+  let lon = req.body.longitude;
+  let units = decodeURIComponent(req.body.units);
+
+  let dsKey = process.env.DARK_SKY_KEY;
+  let owmKey = process.env.OPENWEATHERMAP_KEY;
+
+  if (dsKey)
+    getWeatherDarkSky(dsKey, lat, lon, units, (err, weather) => {
+      if (err)
+        console.warn(`Error getting Dark Sky weather: ${err}`);
+
+      res.json(weather);
+    });
+  else if (owmKey)
+    getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
+      if (err)
+        console.warn(`Error getting OpenWeatherMap weather: ${err}`);
+
+      res.json(weather);
+    });
+  else {
+    console.warn('Error getting weather: No API key');
+    res.json(new Weather());
+  }
+});
 
 function getWeatherDarkSky(key, lat, lon, units, callback) {
   units = units === 'imperial' ? 'us' : 'si';
@@ -316,43 +492,6 @@ function getWeatherOpenweathermap(key, lat, lon, units, callback) {
   });
 }
 
-class Track {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
+/* Application runtime */
 
-class Artist {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
-
-function authenticateSpotify(client, secret) {
-  if (!client || !secret) {
-    console.warn('Error getting Spotify authorization: No API credentials');
-    return;
-  }
-
-  let authorization = Buffer.from(`${client}:${secret}`).toString('base64');
-  let options = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${authorization}`
-    },
-    body: 'grant_type=client_credentials'
-  };
-  request.post(options, (err, res, body) => {
-    if (err || res.statusCode != 200) {
-      console.warn(`Error getting Spotify authorization: ${err}`);
-      spotifyKey = null;
-      setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
-      return;
-    }
-
-    let data = JSON.parse(body);
-    spotifyKey = data.access_token;
-    setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
-  });
-}
+app.listen(process.env.DESCENT_PORT || 3000);

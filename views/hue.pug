@@ -22,35 +22,23 @@ html(lang='en')
     .container
       h1= title
       h2
+        span.hide.hueClientId= hueClientId
+        span.hide.hueAppId= hueAppId
         ol
-          li Scanning for Hue Bridges. Select the IP address of your bridge. 
-            | If you're not sure which one is right, try the first. Note that 
-            | due to restrictions of the Hue API, you must instruct your web 
-            | browser to allow loading insecure (HTTP) content on this secure 
-            | (HTTPS) domain.
-            div.selectGroupsLoading#loading-bridges
-              i.fas.fa-circle-notch.fa-spin
-              | Loading...
-            div.selectGroups#bridges
-            span.hide#bridges-error No bridges found. Make sure  you're on the 
-              | same network as your bridge.
-          li.hide.hueStep#hue-step-button Press the link button on your Hue 
-            | Bridge and wait a few seconds to connect.
-            div.hide.selectGroupsLoading#select-groups-loading-connect
-              i.fas.fa-circle-notch.fa-spin
-              | Connecting...
-          li.hide.hueStep#hue-step-rooms Connected! Select one or more 
-            | rooms to control.
+          li.hueStep#loading
+            i.fas.fa-circle-notch.fa-spin
+            | Loading...
+          li.hide.hueStep#connect
+            a.appAuth Click here
+            |  to connect your Hue account.
+          li.hide.hueStep#hue-step-rooms Select one or more  rooms to control.
             div.hide.selectGroupsLoading#select-groups-loading-rooms
               i.fas.fa-circle-notch.fa-spin
               | Loading...
             div.selectGroups#select-groups-rooms
-          li.hide.hueStep#hue-step-done You're all done! Now, just hit 
+          li.hide.hueStep#hue-step-done All set. Hit 
             span.code l
             |  on your now playing page to toggle light control on and off.
-            | You can come back to this page at any time to update the groups
-            | you're using or switch to a different Hue bridge (just start over
-            | from step one).
       .links
         a(href='/now')
           | home 

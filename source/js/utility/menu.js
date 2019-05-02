@@ -3,18 +3,22 @@
 
 function initMenu() {
   // Update globals
-  resources.features.hue = cookieExists('hueIp') &&
+  resources.features.hue = cookieExists('hueAccessToken') &&
     cookieExists('hueUsername') && cookieExists('hueRooms');
+  if (!resources.features.hue && cookieExists('hueRefreshToken')) {
+    let refreshToken = Cookies.get('hueRefreshToken');
+    let url = `/now/app/hue/authorize?refreshToken=${refreshToken}`;
+    $.get(url, () => {
+      resources.features.hue = true;
+      enableHue();
+    });
+  }
 
   // Set function for key presses
   window.onkeydown = processKey;
 
   // Update Hue state
-  if (resources.features.hue) {
-    if (cookieEnabled('hueEnabled'))
-      $('.hueIndicator').text('on');
-    $('.hueHelp').show();
-  }
+  enableHue();
 
   // Fade menu after initial pause
   setTimeout(() => { toggleDisplay('.help', false); }, 3600);
@@ -96,6 +100,14 @@ function toggleDisplay(element, show) {
     $(element).fadeIn(750, 'linear');
   else
     $(element).fadeOut(750, 'linear');
+}
+
+function enableHue() {
+  if (resources.features.hue) {
+    if (cookieEnabled('hueEnabled'))
+      $('.hueIndicator').text('on');
+    $('.hueHelp').show();
+  }
 }
 
 function toggleHue(on) {
