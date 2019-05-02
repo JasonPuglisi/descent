@@ -146,6 +146,7 @@ function authenticateHue(code, refreshToken, callback) {
   if (!code && !refreshToken) {
     console.warn('Error authenticating with Hue: No authorization code or refresh token');
     callback();
+    return;
   }
 
   let clientId = process.env.HUE_CLIENT;
@@ -153,6 +154,7 @@ function authenticateHue(code, refreshToken, callback) {
   if (!clientId || !clientSecret) {
     console.warn('Error authenticating with Hue: Missing client ID or secret');
     callback();
+    return;
   }
 
   let url = code ? `https://api.meethue.com/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/oauth2/refresh?grant_type=refresh_token';
@@ -160,13 +162,14 @@ function authenticateHue(code, refreshToken, callback) {
     if (err || res.statusCode !== 401) {
       console.warn('Error authenticating with Hue: No initial challenge');
       callback();
+      return;
     }
 
     let authHeader = res.headers['www-authenticate'];
     let realm = authHeader.match(/realm="(.+?)"/)[1];
     let nonce = authHeader.match(/nonce="(.+?)"/)[1];
     let uriSuffix = code ? 'token' : 'refresh';
-    let digest = calculateHueDigest(clientId, clientSecret, realm, nonce);
+    let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
 
     let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/oauth2/${uriSuffix}", response="${digest}"`;
     let headers = { 'Authorization': auth };
@@ -177,6 +180,7 @@ function authenticateHue(code, refreshToken, callback) {
       if (err || res.statusCode !== 200) {
         console.warn(`Error authenticating with Hue: Digest failure: ${body}`);
         callback();
+        return;
       }
 
       let data = JSON.parse(body);
@@ -194,11 +198,11 @@ function authenticateHue(code, refreshToken, callback) {
   });
 }
 
-function calculateHueDigest(clientId, clientSecret, realm, nonce) {
+function calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix) {
   let hash1Data = `${clientId}:${realm}:${clientSecret}`;
   let hash1 = crypto.createHash('md5').update(hash1Data).digest('hex');
 
-  let hash2Data = 'POST:/oauth2/token';
+  let hash2Data = `POST:/oauth2/${uriSuffix}`;
   let hash2 = crypto.createHash('md5').update(hash2Data).digest('hex');
 
   let digestData = `${hash1}:${nonce}:${hash2}`;

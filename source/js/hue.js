@@ -5,17 +5,17 @@ $(() => {
 });
 
 function loadAuthorization() {
-  $('#loading').hide();
-
   let accessToken = Cookies.get('hueAccessToken');
   let refreshToken = Cookies.get('hueRefreshToken');
   let username = Cookies.get('hueUsername');
   if (accessToken) {
+    $('#loading').hide();
     $('#hue-step-rooms').show();
     getRooms(accessToken, username);
   } else if (refreshToken) {
     refreshAccessToken(refreshToken, loadAuthorization);
   } else {
+    $('#loading').hide();
     $('#connect').show();
     authorizeApplication();
   }
