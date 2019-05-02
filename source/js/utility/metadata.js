@@ -7,7 +7,7 @@ function initMetadata() {
 
   // Start metadata fetch loop
   fetchMetadata();
-  setInterval(fetchMetadata, 3000);
+  setInterval(fetchMetadata, 2000);
 }
 
 function fetchMetadata() {

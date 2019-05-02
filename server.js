@@ -122,32 +122,6 @@ app.get('/now/app/hue', (req, res) => {
   res.render('hue', { title });
 });
 
-app.get('/now/app/cover', (req, res) => {
-  let url = encodeURI(decodeURIComponent(req.query.url));
-  if (!url) {
-    console.warn('Error getting cover: No URL specified');
-    res.send();
-    return;
-  }
-
-  let pattern = /^https:\/\/lastfm-img[0-9]+\.akamaized\.net\//;
-  if (!url.match(pattern)) {
-    console.warn(`Error getting cover: Invalid URL - ${url}`);
-    res.send();
-    return;
-  }
-
-  request({ url, encoding: null }, (err, res2, body) => {
-    if (err || res2.statusCode != 200) {
-      console.warn(`Error getting cover: Invalid response - ${err}`);
-      res.send();
-      return;
-    }
-
-    res.send(body);
-  });
-});
-
 app.post('/now/app/weather', (req, res) => {
   let lat = req.body.latitude;
   let lon = req.body.longitude;
@@ -216,8 +190,8 @@ app.post('/now/app/spotify/track', (req, res) => {
 
 app.post('/now/app/spotify/artist', (req, res) => {
   if (!spotifyKey) {
-    console.warn('Error getting Spotify track: No API key');
-    res.json(new Track());
+    console.warn('Error getting Spotify artist: No API key');
+    res.json(new Artist());
     return;
   }
 
@@ -225,26 +199,20 @@ app.post('/now/app/spotify/artist', (req, res) => {
   let query = artist;
 
   let options = {
-    url: `https://api.spotify.com/v1/search?q=${query}&type=artist&limit=1`,
+    url: `https://api.spotify.com/v1/artists/${query}`,
     headers: {
       'Authorization': `Bearer ${spotifyKey}`
     }
   };
   request(options, (err, res2, body) => {
-    if (err || res.statusCode != 200) {
+    if (err || res2.statusCode != 200) {
       console.warn(`Error getting Spotify artist: Invalid response: ${err}`);
       res.json(new Artist());
       return;
     }
 
     let data = JSON.parse(body);
-    if (data.artists.total < 1) {
-      console.warn('Error getting Spotify artist: No results');
-      res.json(new Artist());
-      return;
-    }
-
-    let artist = data.artists.items[0];
+    let artist = data;
     artist.success = true;
 
     res.json(artist);

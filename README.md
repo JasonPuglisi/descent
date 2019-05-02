@@ -4,6 +4,14 @@
 
 Elegant now playing display for Last.fm showing song metadata and local weather.
 
+## Overview
+
+Fetches now playing song information from Last.fm and displays album artwork
+along with local weather, time, and user info. Automatically hides the cursor
+after a few seconds of inactivity if the window is in focus.
+
+Able to control colored Philips Hue lights based on prominent album art colors.
+
 ## Usage
 
 Ensure you have recent versions of [Node.js](https://nodejs.org/en/) and
@@ -19,6 +27,8 @@ setting the `DESCENT_PORT` environment variable. It's recommended to use a
 proxy, such as [NGINX](https://www.nginx.com/), in front of Descent's server.
 
 Navigate to [`/now`](https://descent.live/now) to use Descent.
+
+## API Requirements
 
 ### Weather
 
@@ -39,15 +49,14 @@ work in some modern browsers.
 
 ### Spotify Images
 
-The
-[Spotify Web API](https://beta.developer.spotify.com/documentation/web-api/) is
-required for all artist images. Additionally, if Last.fm is unable to find an
-album image, Spotify may be used as a backup.
-
+Album cover and artist images and provided by the
+[Spotify Web API](https://beta.developer.spotify.com/documentation/web-api/).
 You will need to provide API authorization through a client ID and client
 secret assigned by Spotify. Set your client ID as the `SPOTIFY_CLIENT`
 environment variable, and your client secret as the `SPOTIFY_SECRET`
 environment variable.
+
+## User Preferences
 
 ### Descent Configuration
 
@@ -56,7 +65,7 @@ To configure the background, weather, and time displays, visit
 automatically determine weather units, but OpenWeatherMap cannot, so Descent
 defaults to imperial units unless otherwise specified.
 
-### Descent Configuration Import
+#### Descent Configuration Import
 
 You can import settings through a POST request to
 [`/now/app/config/set`](https://descent.live/now/app/config/set). Each post
@@ -107,11 +116,3 @@ If Descent is hosted using HTTPS, users must instruct their browsers to allow
 loading insecure (HTTP) content for the Descent website. This is because the
 Hue API can only be accessed via HTTP. Users are informed of this on the
 configuration page.
-
-## Overview
-
-Fetches now playing song information from Last.fm and displays album artwork
-along with local weather, time, and user info. Automatically hides the cursor
-after a few seconds of inactivity if the window is in focus.
-
-Able to control colored Philips Hue lights based on prominent album art colors.
