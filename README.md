@@ -37,14 +37,17 @@ For users to enable weather display, they must allow the Descent website to
 access their location. This feature relies on HTML5 geolocation, so it may only
 work in some modern browsers.
 
-### Spotify Image Fallback
+### Spotify Images
 
-If Last.fm is unable to find an album or artist image, the
-[Spotify Web API](https://beta.developer.spotify.com/documentation/web-api/)
-may be used as a backup. You will need to provide API authorization through a
-client ID and client secret assigned by Spotify. Set your client ID as the
-`SPOTIFY_CLIENT` environment variable, and your client secret as the
-`SPOTIFY_SECRET` environment variable.
+The
+[Spotify Web API](https://beta.developer.spotify.com/documentation/web-api/) is
+required for all artist images. Additionally, if Last.fm is unable to find an
+album image, Spotify may be used as a backup.
+
+You will need to provide API authorization through a client ID and client
+secret assigned by Spotify. Set your client ID as the `SPOTIFY_CLIENT`
+environment variable, and your client secret as the `SPOTIFY_SECRET`
+environment variable.
 
 ### Descent Configuration
 
