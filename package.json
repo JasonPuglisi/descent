@@ -28,7 +28,7 @@
     "request": "^2.85.0"
   },
   "devDependencies": {
-    "browser-sync": "^2.24.4",
+    "browser-sync": "^2.26.5",
     "eslint": "^5.15.3",
     "gulp-autoprefixer": "^6.0.0",
     "gulp-nodemon": "^2.2.1",

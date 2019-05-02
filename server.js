@@ -194,7 +194,7 @@ app.post('/now/app/spotify/track', (req, res) => {
     }
   };
   request(options, (err, res2, body) => {
-    if (err || res.statusCode != 200) {
+    if (err || res2.statusCode != 200) {
       console.warn(`Error getting Spotify track: Invalid response: ${err}`);
       res.json(new Track());
       return;

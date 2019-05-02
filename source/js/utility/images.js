@@ -41,44 +41,18 @@ function fetchImages() {
   if (getBackgroundType() !== 'artist')
     return;
 
-  // Query Last.fm for artist information
-  let artistId = resources.track.current.artistId;
-  let urlArtistId = encodeURIComponent(artistId);
-  let key = 'c1797de6bf0b7e401b623118120cd9e1';
-  let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&mbid=${urlArtistId}&api_key=${key}&format=json`;
-  $.get(url, data => {
-    // Reset background if artist not found
-    if (!data.artist) {
-      resetBackground();
-      return;
-    }
+  // Query Spotify for artist image
+  let url = '/now/app/spotify/artist';
+  let urlArtist = encodeURIComponent(resources.track.current.artist);
+  let body = `artist=${urlArtist}`;
 
-    if (data.artist.image.length > 0) {
-      // Update background with artist image from Last.fm
-      let img = data.artist.image[data.artist.image.length - 1]['#text'];
+  $.post(url, body, data => {
+    // Set background image if one is found
+    if (data && data.success && data.images.length > 0) {
+      let img = data.images[0].url;
       $('.background').css('background-image', `url(${img})`);
-      return;
-    }
-
-    // Fallback to Spotify for artist image
-    let url = '/now/app/spotify/artist';
-    let urlArtist = encodeURIComponent(resources.track.current.artist);
-    let body = `artist=${urlArtist}`;
-
-    $.post(url, body, data => {
-      // Reset background if unsuccessful
-      if (!data.success) {
-        resetBackground();
-        return;
-      }
-
-      // Set background image if one is found
-      if (data.images.length > 0) {
-        let img = data.images[0].url;
-        $('.background').css('background-image', `url(${img})`);
-      } else
-        resetBackground();
-    }).fail(resetCover);
+    } else
+      resetBackground();
   }).fail(resetBackground);
 }
 
