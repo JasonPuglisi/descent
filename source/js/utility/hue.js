@@ -54,15 +54,13 @@ function updateHue() {
     return;
 
   // Set Hue credentials
-  let ip = Cookies.get('hueIp');
+  let accessToken = Cookies.get('hueAccessToken');
   let username = Cookies.get('hueUsername');
   let rooms = Cookies.get('hueRooms').split(',');
 
   // Get light information from Hue
-  let urlIp = encodeURIComponent(ip);
-  let urlUsername = encodeURIComponent(username);
-  let url = `http://${urlIp}/api/${urlUsername}/groups`;
-  $.get(url, data => {
+  let url = '/now/app/hue/api/groups';
+  $.post(url, { accessToken, username }, data => {
     // Loop through lights and colors for selected groups
     let lights = [];
     for (let i in rooms) {
@@ -80,14 +78,12 @@ function updateHue() {
 
       // Prepare and send update message for each Hue light
       let id = lights[k];
-      let urlId = encodeURIComponent(id);
-      let url = encodeURI(`http://${urlIp}/api/${urlUsername}/lights/${urlId}/state`);
-      let body = `{"xy": [${color.x},${color.y}]}`;
-      $.ajax({
-        url,
-        type: 'PUT',
-        data: body
-      });
+      let colorX = color.x;
+      let colorY = color.y;
+
+      // Send state request
+      let url = '/now/app/hue/api/light';
+      $.post(url, { accessToken, username, id, colorX, colorY });
     }
   });
 

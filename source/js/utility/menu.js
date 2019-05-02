@@ -3,8 +3,9 @@
 
 function initMenu() {
   // Update globals
-  resources.features.hue = cookieExists('hueIp') &&
-    cookieExists('hueUsername') && cookieExists('hueRooms');
+  resources.features.hue = (cookieExists('hueAccessToken') ||
+    cookieExists('hueRefreshToken')) && cookieExists('hueUsername') &&
+    cookieExists('hueRooms');
 
   // Set function for key presses
   window.onkeydown = processKey;
