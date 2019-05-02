@@ -45,7 +45,6 @@ function fetchArtistImage(artistId, callback) {
   let url = '/now/app/spotify/artist';
   let urlArtistId = encodeURIComponent(artistId);
   let body = `artist=${urlArtistId}`;
-  console.info(body);
 
   $.post(url, body, data => {
     // Set background image if one is found
