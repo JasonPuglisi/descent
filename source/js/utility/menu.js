@@ -11,6 +11,7 @@ function initMenu() {
     $.get(url, () => {
       resources.features.hue = true;
       enableHue();
+      updateHue();
     });
   }
 
