@@ -56,6 +56,14 @@ secret assigned by Spotify. Set your client ID as the `SPOTIFY_CLIENT`
 environment variable, and your client secret as the `SPOTIFY_SECRET`
 environment variable.
 
+### Philips Hue Lights
+
+Hue lights are controlled by the
+[Philips Hue API](https://developers.meethue.com/). You must register an
+application to provide a few required values. Set your app ID as the `HUE_ID`
+environment variable, your client ID as the `HUE_CLIENT` environment variable,
+and your client secret as the `HUE_SECRET` environment variable.
+
 ## User Preferences
 
 ### Descent Configuration
