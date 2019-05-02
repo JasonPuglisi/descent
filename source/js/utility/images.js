@@ -14,45 +14,45 @@ function fetchImages() {
   if (!newTrack())
     return;
 
-  // Check for cover from Last.fm, and fallback to Spotify
-  if (resources.track.current.cover) {
-    let urlCover = encodeURIComponent(resources.track.current.cover);
-    setCover(`/now/app/cover?url=${urlCover}`);
-  }
-  else {
-    let url = '/now/app/spotify/track';
-    let urlArtist = encodeURIComponent(resources.track.current.artist);
-    let urlTitle = encodeURIComponent(resources.track.current.title);
-    let body = `artist=${urlArtist}&title=${urlTitle}`;
+  // Update cover and artist images
+  fetchTrackInfo((coverImageUrl, artistId) => {
+    setCover(coverImageUrl);
 
-    $.post(url, body, data => {
-      // Perform no action if unsuccessful
-      if (!data.success) {
-        resetCover();
-        return;
-      }
+    // Update background if type is artist
+    if (getBackgroundType() === 'artist')
+      fetchArtistImage(artistId, setBackground);
+  });
+}
 
-      // Set cover image if one is found
-      setCover(data.album.images[0].url);
-    }).fail(resetCover);
-  }
+function fetchTrackInfo(callback) {
+  // Query Spotify for track info
+  let url = '/now/app/spotify/track';
+  let urlArtist = encodeURIComponent(resources.track.current.artist);
+  let urlTitle = encodeURIComponent(resources.track.current.title);
+  let body = `artist=${urlArtist}&title=${urlTitle}`;
 
-  // Stop if track has changed and background type is not artist
-  if (getBackgroundType() !== 'artist')
-    return;
+  $.post(url, body, data => {
+    // Return track info if found
+    if (data && data.success && data.album.images.length > 0)
+      return callback(data.album.images[0].url, data.artists[0].id);
 
+    resetCover();
+  }).fail(resetCover);
+}
+
+function fetchArtistImage(artistId, callback) {
   // Query Spotify for artist image
   let url = '/now/app/spotify/artist';
-  let urlArtist = encodeURIComponent(resources.track.current.artist);
-  let body = `artist=${urlArtist}`;
+  let urlArtistId = encodeURIComponent(artistId);
+  let body = `artist=${urlArtistId}`;
+  console.info(body);
 
   $.post(url, body, data => {
     // Set background image if one is found
-    if (data && data.success && data.images.length > 0) {
-      let img = data.images[0].url;
-      $('.background').css('background-image', `url(${img})`);
-    } else
-      resetBackground();
+    if (data && data.success && data.images.length > 0) 
+      return callback(data.images[0].url);
+
+    resetBackground();
   }).fail(resetBackground);
 }
 
@@ -90,6 +90,11 @@ function updateCover(cover) {
     $('.music .cover').attr('src', url);
   };
   resources.cover.src = url;
+}
+
+function setBackground(background) {
+  // Set background image
+  $('.background').css('background-image', `url(${background})`);
 }
 
 function resetBackground() {
