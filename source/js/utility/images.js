@@ -48,7 +48,7 @@ function fetchArtistImage(artistId, callback) {
 
   $.post(url, body, data => {
     // Set background image if one is found
-    if (data && data.success && data.images.length > 0) 
+    if (data && data.success && data.images.length > 0)
       return callback(data.images[0].url);
 
     resetBackground();
@@ -64,7 +64,7 @@ function setCover(cover) {
 function resetCover() {
   // Clear/reset cover image
   $('.music .cover')[0].crossOrigin = null;
-  updateCover('');
+  updateCover();
 }
 
 function updateCover(cover) {
@@ -78,8 +78,10 @@ function updateCover(cover) {
   // Load image before setting it in visible places
   resources.cover.onload = () => {
     // Apply cover image to background if required
-    if (getBackgroundType() == 'album')
-      $('.background').css('background-image', `url(${url}`);
+    if (getBackgroundType() == 'album') {
+      url = cover || getDefaultBackground();
+      setBackground(url);
+    }
 
     // Apply cover image to preview if it exists
     if (cover !== '')
@@ -91,18 +93,24 @@ function updateCover(cover) {
   resources.cover.src = url;
 }
 
+function getBackground() {
+  // Get background image CSS property (includes "url()")
+  return $('.background').css('background-image');
+}
+
 function setBackground(background) {
   // Set background image
-  $('.background').css('background-image', `url(${background})`);
+  if (getBackground().indexOf(background) == -1)
+    $('.background').css('background-image', `url(${background})`);
 }
 
 function resetBackground() {
   let url;
-  if (nowPlaying() && resources.cover.src !== getBlankImageData())
+  if (nowPlaying() && resources.cover.src && resources.cover.src !== getBlankImageData())
     url = resources.cover.src;
   else
     url = getDefaultBackground();
-  $('.background').css('background-image', `url(${url}`);
+  setBackground(url);
 }
 
 function getBackgroundType() {

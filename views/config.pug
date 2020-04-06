@@ -31,11 +31,11 @@ html(lang='en')
       div.selectGroups
         div.selectGroup.groupBgopt#bgopt-blur Blur
         span.backgroundInputLine
-          small Default image URL: 
+          small Default image URL:&nbsp;
             input.input-group.groupBgopt#bgopt-default(name='defaultBackground', type='text', size='20', maxlength='300', placeholder='None')
             | &nbsp;
             a.backgroundInputSave.hide(href='#' onclick='return false;')
-              i.fas.fa-check.fa-sm
+              i.fas.fa-save.fa-sm
       h2 Weather Units
       div.selectGroups
         div.selectGroup.groupUnits#units-imperial Imperial (ºF)
@@ -47,10 +47,10 @@ html(lang='en')
         div.selectGroup.groupDatetime#datetime-seconds Show seconds
       .links
         a(href='/now')
-          | home 
+          | home&nbsp;
           i.fas.fa-home.fa-sm
         a(href='/now/app/hue')
-          | hue settings 
+          | hue settings&nbsp;
           i.fas.fa-lightbulb.fa-sm
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
