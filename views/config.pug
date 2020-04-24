@@ -1,58 +1,44 @@
-doctype html
-html(lang='en')
-  head
-    meta(charset='utf-8')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
-    meta(name='mobile-web-app-capable', content='yes')
-    title= title
-    meta(name='description', content='Descent is an elegant now playing display for Last.fm showing song metadata and local weather.')
-    link(href='/now/app/static/stylesheets/config.css', rel='stylesheet')
-    link(href='/now/app/static/images/icons/apple-touch-icon.png', rel='apple-touch-icon', sizes='180x180')
-    link(href='/now/app/static/images/icons/favicon-32x32.png', rel='icon', type='image/png', sizes='32x32')
-    link(href='/now/app/static/images/icons/favicon-16x16.png', rel='icon', type='image/png', sizes='16x16')
-    link(href='/now/app/static/images/icons/site.webmanifest', rel='manifest')
-    link(href='/now/app/static/images/icons/safari-pinned-tab.svg', rel='mask-icon', color='#5bbad5')
-    link(href='/now/app/static/images/icons/favicon.ico', rel='shortcut icon')
-    meta(name='apple-mobile-web-app-title', content='Descent')
-    meta(name='application-name', content='Descent')
-    meta(name='msapplication-TileColor', content='#35384a')
-    meta(name='msapplication-config', content='/now/app/static/images/icons/browserconfig.xml')
-    meta(name='theme-color', content='#ffffff')
-  body
-    .container
-      h1= title
-      h2 Background Type
-      div.selectGroups
-        div.selectGroup.groupBg#bg-artist Artist
-        div.selectGroup.groupBg#bg-album Album
-        div.selectGroup.groupBg#bg-transparent Transparent
-        div.selectGroup.groupBg#bg-none None
-      h2 Background Options
-      div.selectGroups
-        div.selectGroup.groupBgopt#bgopt-blur Blur
-        span.backgroundInputLine
-          small Default image URL: 
-            input.input-group.groupBgopt#bgopt-default(name='defaultBackground', type='text', size='20', maxlength='300', placeholder='None')
-            | &nbsp;
-            a.backgroundInputSave.hide(href='#' onclick='return false;')
-              i.fas.fa-check.fa-sm
-      h2 Weather Units
-      div.selectGroups
-        div.selectGroup.groupUnits#units-imperial Imperial (ºF)
-        div.selectGroup.groupUnits#units-metric Metric (ºC)
-      h2 Time and Date Options
-      div.selectGroups
-        div.selectGroup.groupDatetime#datetime-24hr 24-hour time
-        div.selectGroup.groupDatetime#datetime-weekday Show weekday
-        div.selectGroup.groupDatetime#datetime-seconds Show seconds
-      .links
-        a(href='/now')
-          | home 
-          i.fas.fa-home.fa-sm
-        a(href='/now/app/hue')
-          | hue settings 
-          i.fas.fa-lightbulb.fa-sm
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
-    script(src='/now/app/static/javascripts/utility/general.js')
-    script(src='/now/app/static/javascripts/config.js')
+extends template/layout
+
+block otherStylesheets
+  link(href='/now/app/static/stylesheets/config.css', rel='stylesheet')
+
+block content
+  .container
+    h1= title
+    h2 Background Type
+    div.selectGroups
+      div.selectGroup.groupBg#bg-artist Artist
+      div.selectGroup.groupBg#bg-album Album
+      div.selectGroup.groupBg#bg-transparent Transparent
+      div.selectGroup.groupBg#bg-none None
+    h2 Background Options
+    div.selectGroups
+      div.selectGroup.groupBgopt#bgopt-blur Blur
+      span.backgroundInputLine
+        small Default image URL:&nbsp;
+          input.input-group.groupBgopt#bgopt-default(name='defaultBackground', type='text', size='20', maxlength='300', placeholder='None')
+          | &nbsp;
+          a.backgroundInputSave.hide(href='#' onclick='return false;')
+            i.fas.fa-save.fa-sm
+            |  save
+    h2 Weather Units
+    div.selectGroups
+      div.selectGroup.groupUnits#units-imperial Imperial (ºF)
+      div.selectGroup.groupUnits#units-metric Metric (ºC)
+    h2 Time and Date Options
+    div.selectGroups
+      div.selectGroup.groupDatetime#datetime-24hr 24-hour time
+      div.selectGroup.groupDatetime#datetime-weekday Show weekday
+      div.selectGroup.groupDatetime#datetime-seconds Show seconds
+    .links
+      a(href='/now')
+        | home&nbsp;
+        i.fas.fa-home.fa-sm
+      a(href='/now/app/hue')
+        | hue settings&nbsp;
+        i.fas.fa-lightbulb.fa-sm
+
+block otherJavascripts
+  script(src='/now/app/static/javascripts/utility/general.js')
+  script(src='/now/app/static/javascripts/config.js')

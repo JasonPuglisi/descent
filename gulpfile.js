@@ -91,6 +91,7 @@ gulp.task('watch', gulp.series('nodemon', function(done) {
   gulp.watch('source/js/utility/*.js', gulp.series('sync-js-utility'));
   gulp.watch('*.js', gulp.series('reload'));
   gulp.watch('views/*.pug', gulp.series('reload'));
+  gulp.watch('views/template/*.pug', gulp.series('reload'));
 
   done();
 }));

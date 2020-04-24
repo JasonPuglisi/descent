@@ -48,7 +48,7 @@ function processKey(event) {
     // Handle E to toggle extended info
     case 69: {
       let showE = false;
-      if (nowPlaying()) {
+      if (resources.track.current.playing) {
         toggleCookie('extendedOn');
         showE = undefined;
       }

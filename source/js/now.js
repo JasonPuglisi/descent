@@ -10,17 +10,8 @@ $(() => {
     cover: new Image(),
     cursorTimeout: 3,
     track: {
-      current: {
-        artist: '',
-        artistId: '',
-        title: '',
-        link: '',
-        cover: ''
-      },
-      previous: {
-        artist: '',
-        title: ''
-      }
+      current: {},
+      previous: {}
     },
     colors: {
       regular: [],

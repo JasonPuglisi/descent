@@ -1,44 +1,29 @@
-doctype html
-html(lang='en')
-  head
-    meta(charset='utf-8')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
-    meta(name='mobile-web-app-capable', content='yes')
-    title= title
-    meta(name='description', content='Descent is an elegant now playing display for Last.fm showing song metadata and local weather.')
-    link(href='/now/app/static/stylesheets/landing.css', rel='stylesheet')
-    link(href='/now/app/static/images/icons/apple-touch-icon.png', rel='apple-touch-icon', sizes='180x180')
-    link(href='/now/app/static/images/icons/favicon-32x32.png', rel='icon', type='image/png', sizes='32x32')
-    link(href='/now/app/static/images/icons/favicon-16x16.png', rel='icon', type='image/png', sizes='16x16')
-    link(href='/now/app/static/images/icons/site.webmanifest', rel='manifest')
-    link(href='/now/app/static/images/icons/safari-pinned-tab.svg', rel='mask-icon', color='#5bbad5')
-    link(href='/now/app/static/images/icons/favicon.ico', rel='shortcut icon')
-    meta(name='apple-mobile-web-app-title', content='Descent')
-    meta(name='application-name', content='Descent')
-    meta(name='msapplication-TileColor', content='#35384a')
-    meta(name='msapplication-config', content='/now/app/static/images/icons/browserconfig.xml')
-    meta(name='theme-color', content='#ffffff')
-  body
-    .outer-container
-      .bubbles
-        img(src='/now/app/static/images/bubbles.svg')
-      .container
-        h1= title
-        form.userInputForm(method='post')
-          h2 enter your Last.fm username: 
-            span.userInputLine
-              input.userInput(name='user', type='text', size='15', maxlength='20')
-              input(name='defaultUser', type='hidden', value=`${user}`)
-              | &nbsp;
-              a(href='#' onclick='submitUser(); return false;')
-                i.fas.fa-chevron-down
-        .links
-          a(href='/now/app/config')
-            | settings 
-            i.fas.fa-sliders-h.fa-sm
-          a(href='https://github.com/JasonPuglisi/descent')
-            | source 
-            i.fab.fa-github.fa-sm
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js')
-    script(src='/now/app/static/javascripts/landing.js')
+extends template/layout
+
+block otherStylesheets
+  link(href='/now/app/static/stylesheets/landing.css', rel='stylesheet')
+
+block content
+  .outer-container
+    .bubbles
+      img(src='/now/app/static/images/bubbles.svg')
+    .container
+      h1= title
+      form.userInputForm(method='post')
+        h2 enter your Last.fm username: 
+          span.userInputLine
+            input.userInput(name='user', type='text', size='15', maxlength='20')
+            input(name='defaultUser', type='hidden', value=`${user}`)
+            | &nbsp;
+            a(href='#' onclick='submitUser(); return false;')
+              i.fas.fa-chevron-down
+      .links
+        a(href='/now/app/config')
+          | settings 
+          i.fas.fa-sliders-h.fa-sm
+        a(href='https://github.com/JasonPuglisi/descent')
+          | source 
+          i.fab.fa-github.fa-sm
+
+block otherJavascripts
+  script(src='/now/app/static/javascripts/landing.js')

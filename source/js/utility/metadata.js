@@ -1,13 +1,15 @@
 /* global resources */
-/* global cookieEnabled, fetchColors, fetchImages, resetBackground, toggleDisplay */
+/* global cacheImages, checkLoadStatus, clearColors, clearImages, cookieEnabled, toggleDisplay, updateHue */
 
 function initMetadata() {
-  // Update preview image properties
-  $('.music .cover')[0].onload = fetchColors;
+  // Start state update loop
+  refreshState();
+  setInterval(refreshState, 3000);
+}
 
-  // Start metadata fetch loop
+function refreshState() {
+  // Query Last.fm for recent track information
   fetchMetadata();
-  setInterval(fetchMetadata, 3000);
 }
 
 function fetchMetadata() {
@@ -16,59 +18,141 @@ function fetchMetadata() {
   let key = 'c1797de6bf0b7e401b623118120cd9e1';
   let urlUser = encodeURIComponent(user);
   let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${urlUser}&api_key=${key}&limit=1&format=json`;
-  $.get(url, data => {
-    // Reset metadata if API error or no recent tracks
-    if (data.error !== undefined || !data.recenttracks) {
-      resetMetadata();
-      return;
+  $.ajax({
+    url: url,
+    timeout: 2000,
+    success: data => {
+      // Handle successful response
+      updateState(data);
+    },
+    error: () => {
+      // Handle errored response
+      updateState();
     }
+  });
+}
 
-    // Reset metadata if no track is playing
+function updateState(data) {
+  // Update current state
+  let playing = false;
+  let error = false;
+  let metadata = {};
+  if (!data || data.error) {
+    // Invalid or error response
+    error = true;
+  } else if (!data.recenttracks || !data.recenttracks.track || !data.recenttracks.track[0]) {
+    // Valid response but missing recent track data
+  } else {
+    // Valid response with recent track data
     let track = data.recenttracks.track[0];
-    if (!track['@attr'] || !track['@attr'].nowplaying){
-      resetMetadata();
-      return;
+    if (!track['@attr'] || !track['@attr'].nowplaying) {
+      // No currently playing track
+    } else {
+      // Currently playing track present
+      playing = true;
+
+      // Set track metadata
+      metadata = {
+        artist: track.artist['#text'],
+        artistId: track.artist.mbid,
+        title: track.name,
+        link: track.url,
+        cover: track.image[track.image.length - 1]['#text'],
+        scrobbles: data.recenttracks['@attr'].total
+      };
     }
+  }
 
-    // Update metadata
-    let metadata = {
-      artist: track.artist['#text'],
-      artistId: track.artist.mbid,
-      title: track.name,
-      link: track.url,
-      cover: track.image[track.image.length - 1]['#text'],
-      scrobbles: data.recenttracks['@attr'].total
-    };
+  // Update global state and metadata
+  setMetadata(playing, error, metadata);
 
-    setMetadata(metadata);
-  }).fail(resetMetadata);
+  // Determine if state changed and take appropriate action
+  handleStateChange();
 }
 
-function setMetadata(metadata) {
-  // Set track metadata
-  resources.track.current.artist = metadata.artist;
-  resources.track.current.artistId = metadata.artistId;
-  resources.track.current.title = metadata.title;
-  resources.track.current.link = metadata.link;
+function setMetadata(playing, error, metadata) {
+  // Set global state
+  resources.track.current.playing = playing;
+  resources.track.current.error = error;
+
+  // Set global track metadata
+  resources.track.current.artist = metadata.artist !== undefined ? metadata.artist : '';
+  resources.track.current.artistId = metadata.artistId ? metadata.artistId : '';
+  resources.track.current.title = metadata.title !== undefined ? metadata.title : '';
+  resources.track.current.link = metadata.link ? metadata.link : '';
   resources.track.current.cover = metadata.cover ? metadata.cover : '';
-  updateMetadata(metadata);
+  resources.track.current.scrobbles = metadata.scrobbles ? metadata.scrobbles : '';
 }
 
-function resetMetadata() {
-  // Clear/reset track metadata
-  resources.track.current.artist = '';
-  resources.track.current.artistId = '';
-  resources.track.current.title = '';
-  resources.track.current.link = '';
-  resources.track.current.cover = '';
-  updateMetadata();
+function handleStateChange() {
+  // Get current and previous state
+  current = resources.track.current;
+  previous = resources.track.previous;
+
+  if (previous.playing === undefined) {
+    if (!current.playing) {
+      // State changed from unloaded to idle (clear colors, lights, text)
+      clearColors();
+      updateHue();
+      clearImages();
+      updateMetadata();
+    } else {
+      // State changed from unloaded to playing (fetch images; update colors, lights, images, text)
+      cacheImages();
+    }
+  } else if (!previous.playing) {
+    if (current.playing) {
+      // State changed from idle to playing (fetch images; update colors, lights, images, text)
+      cacheImages();
+    }
+  } else {
+    if (current.playing) {
+      if (current.artist !== previous.artist || current.title !== previous.title) {
+        // State changed from playing to playing new song (fetch images; update colors, lights, images, text)
+        cacheImages();
+      }
+    } else {
+      // State changed from playing to idle (wait; clear colors, lights, images, text)
+      clearColors();
+      updateHue();
+      clearImages();
+      updateMetadata();
+    }
+  }
+
+  // Set previous state to current
+  resources.track.previous = {
+    playing: current.playing,
+    artist: current.artist,
+    title: current.title
+  };
 }
 
-function updateMetadata(metadata) {
+function clearColors() {
+  // Set default colors
+  hexColors = [ '#f6f5f7', '#f6f5f7' ];
+  hueColors = [ { x: (1 / 3), y: (1 / 3) } ];
+
+  resources.colors.hex = hexColors;
+  resources.colors.hue = hueColors;
+
+  // Update text
+  updateTextColors();
+}
+
+function updateTextColors() {
+  // Update text based on current colors
+  $('.music .title').css('color', resources.colors.hex[0]);
+  $('.music .artist').css('color', resources.colors.hex[1]);
+}
+
+function updateMetadata() {
   // Get current track metadata
+  let playing = resources.track.current.playing;
   let artist = resources.track.current.artist;
   let title = resources.track.current.title;
   let link = resources.track.current.link;
+  let scrobbles = resources.track.current.scrobbles;
 
   // Update track metadata text
   $('.music .artist').text(artist || 'Nothing in the air...');
@@ -76,39 +160,16 @@ function updateMetadata(metadata) {
   $('.music .songLink').attr('href', link);
 
   // Update scrobbles
-  let hasScrobbles = metadata && metadata.scrobbles;
-  $('.scrobbles .scrobbleCount').text(hasScrobbles ? metadata.scrobbles : '');
-  toggleDisplay('.scrobbles', hasScrobbles);
+  $('.scrobbles .scrobbleCount').text(scrobbles ? scrobbles : '');
+  toggleDisplay('.scrobbles', scrobbles);
 
   // Update document title and show/hide extended info as necessary
-  if (nowPlaying()) {
+  if (playing) {
     document.title = `"${title}" by ${artist}`;
     if (cookieEnabled('extendedOn'))
       toggleDisplay('.userLine', true);
   } else {
     document.title = 'Descent';
     toggleDisplay('.userLine', false);
-    resetBackground();
   }
-
-  // Update cover and artist images
-  fetchImages();
-}
-
-function nowPlaying() {
-  // Determine whether or not there is music currently playing
-  return resources.track.current.artist !== '';
-}
-
-function newTrack() {
-  // Determine whether or not the track has changed since last function call
-  if (resources.track.current.artist === resources.track.previous.artist &&
-      resources.track.current.title === resources.track.previous.title)
-    return false;
-
-  // Update previous track information
-  resources.track.previous.artist = resources.track.current.artist;
-  resources.track.previous.title = resources.track.current.title;
-
-  return true;
 }
