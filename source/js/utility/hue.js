@@ -1,13 +1,7 @@
 /* global resources, chroma, Cookies */
 /* global cookieEnabled, fetchHexColors, hasCover */
 
-function fetchHueColors() {
-  // Stop if cover is not present
-  if (!hasCover()) {
-    resetHueColors();
-    return;
-  }
-
+function getHueColors() {
   // Get regular colors
   let colors = resources.colors.regular;
   let hueColors = [];
@@ -32,20 +26,8 @@ function fetchHueColors() {
     hueColors.push({ x: finalX, y: finalY });
   }
 
-  // Set colors from calculations
-  setHueColors(hueColors);
-}
-
-function setHueColors(colors) {
-  // Set Hue colors
-  resources.colors.hue = colors;
-  fetchHexColors();
-}
-
-function resetHueColors() {
-  // Clear/reset Hue colors
-  resources.colors.hue = [];
-  fetchHexColors();
+  // Return hue colors
+  return hueColors;
 }
 
 function updateHue() {
@@ -86,5 +68,4 @@ function updateHue() {
       $.post(url, { accessToken, username, id, colorX, colorY });
     }
   });
-
 }
