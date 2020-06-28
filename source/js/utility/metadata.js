@@ -104,6 +104,14 @@ function handleStateChange() {
     if (current.playing) {
       // State changed from idle to playing (fetch images; update colors, lights, images, text)
       cacheImages();
+    } else {
+      // State unchanged from idle (check idle timeout)
+      if (checkIdleTimeout()) {
+        clearColors();
+        updateHue();
+        clearImages();
+        updateMetadata();
+      }
     }
   } else {
     if (current.playing) {
@@ -112,11 +120,8 @@ function handleStateChange() {
         cacheImages();
       }
     } else {
-      // State changed from playing to idle (wait; clear colors, lights, images, text)
-      clearColors();
-      updateHue();
-      clearImages();
-      updateMetadata();
+      // State changed from playing to idle (start idle timeout)
+      startIdleTimeout();
     }
   }
 
@@ -126,6 +131,16 @@ function handleStateChange() {
     artist: current.artist,
     title: current.title
   };
+}
+
+function startIdleTimeout() {
+  // Start new idle timeout of 10 seconds
+  resources.track.current.idleTimeout = Date.now() + 10 * 1000;
+}
+
+function checkIdleTimeout() {
+  // Check if timeout has been met before changing to idle state
+  return resources.track.current.idleTimeout && Date.now() > resources.track.current.idleTimeout;
 }
 
 function clearColors() {
@@ -147,6 +162,9 @@ function updateTextColors() {
 }
 
 function updateMetadata() {
+  // Clear idle timeout
+  delete resources.track.current.idleTimeout;
+
   // Get current track metadata
   let playing = resources.track.current.playing;
   let artist = resources.track.current.artist;
