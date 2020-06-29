@@ -26,6 +26,14 @@ function getHueColors() {
     hueColors.push({ x: finalX, y: finalY });
   }
 
+  if (cookieEnabled('shuffle')) {
+    // Shuffle color order
+    for (let i = hueColors.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [hueColors[i], hueColors[j]] = [hueColors[j], hueColors[i]];
+    }
+  }
+
   // Return hue colors
   return hueColors;
 }

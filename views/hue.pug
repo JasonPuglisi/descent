@@ -6,24 +6,32 @@ block otherStylesheets
 block content
   .container
     h1= title
-    h2
+    div
       span.hide.hueClientId= hueClientId
       span.hide.hueAppId= hueAppId
       ol
         li.hueStep#loading
-          i.fas.fa-circle-notch.fa-spin
-          | Loading...
-        li.hide.hueStep#connect
-          a.appAuth Click here
-          |  to connect your Hue account.
-        li.hide.hueStep#hue-step-rooms Select one or more  rooms to control.
-          div.hide.selectGroupsLoading#select-groups-loading-rooms
+          h2
             i.fas.fa-circle-notch.fa-spin
             | Loading...
+        li.hide.hueStep#connect
+          h2
+            a.appAuth Click here
+            |  to connect your Hue account.
+        li.hide.hueStep#hue-step-rooms
+          h2 Select one or more  rooms to control.
+          div.hide.selectGroupsLoading#select-groups-loading-rooms
+            h2
+              i.fas.fa-circle-notch.fa-spin
+              | Loading...
           div.selectGroups#select-groups-rooms
         li.hide.hueStep#hue-step-done All set. Hit 
           span.code l
           |  on your now playing page to toggle light control on and off.
+    div.hide#hue-options
+      h2 Color Options
+      div.selectGroups
+        div.selectGroup.groupHue#hue-shuffle Shuffle order
     .links
       a(href='/now')
         | home 
@@ -33,4 +41,5 @@ block content
         i.fas.fa-sliders-h.fa-sm
 
 block otherJavascripts
+  script(src='/now/app/static/javascripts/utility/general.js')
   script(src='/now/app/static/javascripts/hue.js')

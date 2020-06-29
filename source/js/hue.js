@@ -1,7 +1,9 @@
 /* global Cookies */
+/* global cookieEnabled */
 
 $(() => {
   loadAuthorization();
+  processOptions();
 });
 
 function loadAuthorization() {
@@ -11,6 +13,7 @@ function loadAuthorization() {
   if (accessToken) {
     $('#loading').hide();
     $('#hue-step-rooms').show();
+    $('#hue-options').show();
     getRooms(accessToken, username);
   } else if (refreshToken) {
     refreshAccessToken(refreshToken, loadAuthorization);
@@ -88,6 +91,7 @@ function restoreState() {
       'selected');
     $('#hue-step-button').show();
     $('#hue-step-rooms').show();
+    $('#hue-options').show();
 
     getRooms(ip, username);
   }
@@ -106,4 +110,18 @@ function restoreRooms() {
       $('#hue-step-done').show();
     }
   }
+}
+
+function processOptions() {
+  let options = ['shuffle'];
+  options.forEach(option => {
+    let selected = cookieEnabled(option);
+    $(`#hue-${option}`).toggleClass('selected', selected);
+
+    $(`#hue-${option}`).on('click', function() {
+      selected = !selected;
+      $(this).toggleClass('selected');
+      Cookies.set(option, selected, { expires: 3650 });
+    });
+  });
 }
