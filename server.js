@@ -305,8 +305,8 @@ app.post('/now/app/spotify/track', (req, res) => {
     return;
   }
 
-  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
-  let title = encodeURIComponent(decodeURIComponent(req.body.title));
+  let artist = encodeURIComponent(req.body.artist);
+  let title = encodeURIComponent(req.body.title);
   let query = `${artist}%20-%20${title}`;
 
   let options = {
