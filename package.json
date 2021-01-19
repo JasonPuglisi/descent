@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "browser-sync": "^2.26.13",
-    "eslint": "^7.13.0",
+    "eslint": "^7.18.0",
     "gulp-autoprefixer": "^7.0.1",
     "gulp-nodemon": "^2.5.0",
     "gulp-sass": "^4.1.0",
