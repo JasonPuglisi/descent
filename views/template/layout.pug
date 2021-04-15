@@ -1,3 +1,5 @@
+include external
+
 doctype html
 html(lang='en')
   head
@@ -20,12 +22,12 @@ html(lang='en')
       meta(name='msapplication-config', content='/now/app/static/images/icons/browserconfig.xml')
       meta(name='theme-color', content='#ffffff')
     block defaultStylesheets
-      link(href='https://fonts.googleapis.com/css2?family=Noto+Serif&family=Open+Sans:wght@300;400&family=Oswald:wght@700&family=Source+Code+Pro&display=swap', rel='stylesheet')
-      link(href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css', rel='stylesheet', integrity='sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==', crossorigin='anonymous')
+      +googleFonts
+      +fontAwesome
     block otherStylesheets
   body
     block content
     block defaultJavascripts
-      script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js', integrity='sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==', crossorigin='anonymous')
-      script(src='https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min.js', integrity='sha512-Meww2sXqNHxI1+5Dyh/9KAtvI9RZSA4c1K2k5iL02oiPO/RH3Q30L3M1albtqMg50u4gRTYdV4EXOQqXEI336A==', crossorigin='anonymous')
+      +jquery
+      +jsCookie
     block otherJavascripts
