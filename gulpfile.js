@@ -4,7 +4,7 @@ let gulp         = require('gulp');
 let autoprefixer = require('gulp-autoprefixer');
 let browserSync  = require('browser-sync').create();
 let nodemon      = require('gulp-nodemon');
-let sass         = require('gulp-sass');
+let sass         = require('gulp-sass')(require('sass'));
 let sourcemaps   = require('gulp-sourcemaps');
 let uglify       = require('gulp-uglify-es').default;
 
