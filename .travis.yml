@@ -12,6 +12,6 @@ deploy:
   bucket_name: $AWS_BUCKET_NAME
   on:
     repo: JasonPuglisi/descent
-    branch: master
+    branch: main
 before_deploy:
 - git add -f public/javascripts public/stylesheets
