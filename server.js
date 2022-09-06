@@ -66,6 +66,12 @@ app.post('/now/app/config/set', (req, res) => {
       'name': 'defaultBackground'
     },
     {
+      'name': 'latitude'
+    },
+    {
+      'name': 'longitude'
+    },
+    {
       'name': 'units',
       'options': ['imperial', 'metric']
     },
@@ -449,9 +455,10 @@ function getWeatherOpenweathermap(key, lat, lon, units, callback) {
 
   request(url, (err, res, body) => {
     if (err || res.statusCode != 200)
-      callback(`Invalid response: ${err}`, new Weather());
+      return callback(`Invalid response: ${err}`, new Weather());
 
     let data = JSON.parse(body);
+
     let icons = {
       '01d': 'day-sunny',
       '01n': 'night-clear',

@@ -20,3 +20,4 @@ $primary-color: $purple;
 $primary-color-light: $purple-light;
 $primary-color-placeholder: $purple-gray;
 $primary-color-text: $white;
+$primary-color-dull: darken($primary-color-text, 30);

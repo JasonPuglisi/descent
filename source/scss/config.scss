@@ -29,7 +29,7 @@ h2 {
   padding-top: 1em;
 }
 
-.backgroundInputLine {
+.inputLine {
   white-space: nowrap;
 }
 
@@ -83,4 +83,10 @@ i.fas.fa-circle-notch {
 
 .groupBgopt#bgopt-default {
   margin-left: 0.2em;
+}
+
+.coordinateNotice {
+  color: $primary-color-dull;
+  padding: 0 0 0.5em 0;
+  font-size: 0.85em;
 }

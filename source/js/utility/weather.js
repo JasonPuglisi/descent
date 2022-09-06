@@ -3,18 +3,35 @@
 
 // Initialize weather display
 function initWeather() {
-  // Ensure HTML5 geolocation API is present and get coordinates
-  if (navigator.geolocation)
+  coords = getCoordinates((coords) => {
+    // Update weather display immediately
+    updateWeather(coords);
+
+    // Update weather display at regular intervals
+    let minutes = 5; // Refresh rate in minutes
+    setInterval(() => { updateWeather(coords); }, minutes * 60000);
+  });
+}
+
+// Get coordinates from cookies or HTML5 geolocation API
+function getCoordinates(callback) {
+  // Try to get coordinates from cookies
+  let coords = {
+    'latitude': Cookies.get('latitude'),
+    'longitude': Cookies.get('longitude')
+  };
+
+  if (coords.latitude && coords.longitude) {
+    callback(coords);
+  } else if (navigator.geolocation) {
+    // Ensure HTML5 geolocation API is present and get coordinates
     navigator.geolocation.getCurrentPosition(position => {
-      let coords = position.coords;
+      coords.latitude = position.coords.latitude;
+      coords.longitude = position.coords.longitude;
 
-      // Update weather display immediately
-      updateWeather(coords);
-
-      // Update weather display at regular intervals
-      let minutes = 5; // Refresh rate in minutes
-      setInterval(() => { updateWeather(coords); }, minutes * 60000);
+      callback(coords);
     });
+  }
 }
 
 // Update weather display
