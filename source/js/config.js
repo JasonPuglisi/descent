@@ -3,6 +3,7 @@
 
 $(() => {
   processBackground();
+  processLocation();
   processUnits();
   processDatetime();
 });
@@ -33,6 +34,42 @@ function processBackground() {
     $(this).hide();
 
     Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650 });
+  });
+}
+
+function validateCoordinate(coordinate) {
+  return /^(-?\d+\.\d+)?$/.test(coordinate);
+}
+
+function showHideLocationSave() {
+  let latitude = $('#loc-latitude').val();
+  let longitude = $('#loc-longitude').val();
+
+  if (!latitude == !longitude &&
+      validateCoordinate(latitude) && validateCoordinate(longitude)) {
+    $('a.locationInputSave').show();
+  } else {
+    $('a.locationInputSave').hide();
+  }
+}
+
+function processLocation() {
+  $('#loc-latitude').val(Cookies.get('latitude'));
+  $('#loc-longitude').val(Cookies.get('longitude'));
+
+  $('#loc-latitude').on('input propertychange paste', () => {
+    showHideLocationSave();
+  });
+
+  $('#loc-longitude').on('input propertychange paste', () => {
+    showHideLocationSave();
+  });
+
+  $('a.locationInputSave').on('click', function() {
+    $(this).hide();
+
+    Cookies.set('latitude', $('#loc-latitude').val(), { expires: 3650 });
+    Cookies.set('longitude', $('#loc-longitude').val(), { expires: 3650 });
   });
 }
 

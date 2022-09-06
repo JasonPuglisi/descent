@@ -88,6 +88,12 @@ parameter correponds to a cookie. Valid parameters and values are as follows:
 **Default background image**  
 `defaultBackground`: any valid image URL
 
+**Weather location latitude**
+`latitude`: any valid latitude coordinate
+
+**Weather location longitude**
+`longitude`: any valid longitude coordinate
+
 **Weather units**  
 `units`: `imperial`, `metric`
 
