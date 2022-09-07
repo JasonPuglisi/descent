@@ -415,94 +415,96 @@ app.post('/now/app/weather', (req, res) => {
   }
 });
 
-function getWeatherDarkSky(key, lat, lon, units, callback) {
+async function getWeatherDarkSky(key, lat, lon, units, callback) {
   units = units === 'imperial' ? 'us' : 'si';
   let urlLat = encodeURIComponent(lat);
   let urlLon = encodeURIComponent(lon);
   let url = `https://api.darksky.net/forecast/${key}/${urlLat},${urlLon}?units=${units}`;
 
-  request(url, (err, res, body) => {
-    if (err || res.statusCode != 200)
-      callback(`Invalid response: ${err}`, new Weather());
+  const response = await fetch(url);
 
-    let data = JSON.parse(body);
-    let icons = {
-      'clear-day': 'day-sunny',
-      'clear-night': 'night-clear',
-      'rain': 'rain',
-      'snow': 'snow',
-      'sleet': 'sleet',
-      'wind': 'cloudy-gusts',
-      'fog': 'fog',
-      'cloudy': 'cloudy',
-      'partly-cloudy-day': 'day-cloudy',
-      'partly-cloudy-night': 'night-alt-cloudy',
-      'hail': 'hail',
-      'thunderstorm': 'thunderstorm',
-      'tornado': 'tornado'
-    };
+  if (!response.ok) {
+    callback(`Invalid response: ${err}`, new Weather());
+  }
 
-    let weather = new Weather(true);
-    weather.summary = data.minutely.summary;
-    weather.temperature = Math.round(data.currently.temperature);
-    weather.apparentTemperature = Math.round(data.currently.apparentTemperature);
-    weather.unit = units === 'us' ? 'F' : 'C';
-    weather.icon = icons[data.currently.icon];
+  let data = await response.json();
+  let icons = {
+    'clear-day': 'day-sunny',
+    'clear-night': 'night-clear',
+    'rain': 'rain',
+    'snow': 'snow',
+    'sleet': 'sleet',
+    'wind': 'cloudy-gusts',
+    'fog': 'fog',
+    'cloudy': 'cloudy',
+    'partly-cloudy-day': 'day-cloudy',
+    'partly-cloudy-night': 'night-alt-cloudy',
+    'hail': 'hail',
+    'thunderstorm': 'thunderstorm',
+    'tornado': 'tornado'
+  };
 
-    callback(null, weather);
-  });
+  let weather = new Weather(true);
+  weather.summary = data.minutely.summary;
+  weather.temperature = Math.round(data.currently.temperature);
+  weather.apparentTemperature = Math.round(data.currently.apparentTemperature);
+  weather.unit = units === 'us' ? 'F' : 'C';
+  weather.icon = icons[data.currently.icon];
+
+  callback(null, weather);
 }
 
-function getWeatherOpenweathermap(key, lat, lon, units, callback) {
+async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
   let urlLat = encodeURIComponent(lat);
   let urlLon = encodeURIComponent(lon);
   let urlUnits = encodeURIComponent(units);
   let url = `http://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
 
-  request(url, (err, res, body) => {
-    if (err || res.statusCode != 200)
-      return callback(`Invalid response: ${err}`, new Weather());
+  const response = await fetch(url);
 
-    let data = JSON.parse(body);
+  if (!response.ok) {
+    return callback(`Invalid response: ${err}`, new Weather());
+  }
 
-    let icons = {
-      '01d': 'day-sunny',
-      '01n': 'night-clear',
-      '02d': 'day-cloudy',
-      '02n': 'night-cloudy',
-      '03d': 'cloud',
-      '03n': 'cloud',
-      '04d': 'cloudy',
-      '04n': 'cloudy',
-      '09d': 'rain',
-      '09n': 'rain',
-      '10d': 'day-rain',
-      '10n': 'night-rain',
-      '11d': 'thunderstorm',
-      '11n': 'thunderstorm',
-      '13d': 'snow',
-      '13n': 'snow',
-      '50d': 'windy',
-      '50n': 'windy'
-    };
-    let apparent;
-    if (units === 'imperial')
-      apparent = 35.74 + 0.6215 * data.main.temp - 35.75 * Math.pow(data.wind.speed, 0.16)
-        + 0.4275 * data.main.temp * Math.pow(data.wind.speed, 0.16);
-    else
-      apparent = 13.12 + 0.6215 * data.main.temp - 11.37 * Math.pow(data.wind.speed, 0.16)
-        + 0.3965 * data.main.temp * Math.pow(data.wind.speed, 0.16);
+  let data = await response.json();
 
-    let weather = new Weather(true);
-    weather.summary = `${data.weather[0].description} currently`;
-    weather.summary = `${weather.summary.substring(0, 1).toUpperCase()}${weather.summary.substring(1)}`;
-    weather.temperature = Math.round(data.main.temp);
-    weather.apparentTemperature = Math.round(apparent);
-    weather.unit = units === 'imperial' ? 'F' : 'C';
-    weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
+  let icons = {
+    '01d': 'day-sunny',
+    '01n': 'night-clear',
+    '02d': 'day-cloudy',
+    '02n': 'night-cloudy',
+    '03d': 'cloud',
+    '03n': 'cloud',
+    '04d': 'cloudy',
+    '04n': 'cloudy',
+    '09d': 'rain',
+    '09n': 'rain',
+    '10d': 'day-rain',
+    '10n': 'night-rain',
+    '11d': 'thunderstorm',
+    '11n': 'thunderstorm',
+    '13d': 'snow',
+    '13n': 'snow',
+    '50d': 'windy',
+    '50n': 'windy'
+  };
+  let apparent;
+  if (units === 'imperial')
+    apparent = 35.74 + 0.6215 * data.main.temp - 35.75 * Math.pow(data.wind.speed, 0.16)
+      + 0.4275 * data.main.temp * Math.pow(data.wind.speed, 0.16);
+  else
+    apparent = 13.12 + 0.6215 * data.main.temp - 11.37 * Math.pow(data.wind.speed, 0.16)
+      + 0.3965 * data.main.temp * Math.pow(data.wind.speed, 0.16);
 
-    callback(null, weather);
-  });
+  let weather = new Weather(true);
+  weather.summary = `${data.weather[0].description} currently`;
+  weather.summary = `${weather.summary.substring(0, 1).toUpperCase()}${weather.summary.substring(1)}`;
+  weather.temperature = Math.round(data.main.temp);
+  weather.apparentTemperature = Math.round(apparent);
+  weather.unit = units === 'imperial' ? 'F' : 'C';
+  weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
+
+  callback(null, weather);
 }
 
 /* Application runtime */
