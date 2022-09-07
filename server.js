@@ -190,7 +190,7 @@ async function authenticateHue(code, refreshToken, callback) {
     'method': 'post',
     'body': form,
     'headers': headers
-  })
+  });
 
   if (!response2.ok) {
     console.warn(`Error authenticating with Hue: Digest failure`);
