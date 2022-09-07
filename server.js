@@ -1,7 +1,8 @@
-const bodyParser = require('body-parser');
-const crypto = require('crypto');
-const express = require('express');
-const request = require('request');
+import bodyParser from 'body-parser';
+import crypto from 'crypto';
+import express from 'express';
+import fetch from 'node-fetch';
+import request from 'request';
 
 /* Base application functionality */
 
@@ -275,36 +276,40 @@ class Artist {
   }
 }
 
-function authenticateSpotify(client, secret) {
+async function authenticateSpotify(client, secret) {
   if (!client || !secret) {
     console.warn('Error getting Spotify authorization: No API credentials');
     return;
   }
 
   let authorization = Buffer.from(`${client}:${secret}`).toString('base64');
-  let options = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${authorization}`
-    },
-    body: 'grant_type=client_credentials'
+  let url = 'https://accounts.spotify.com/api/token';
+  let body = 'grant_type=client_credentials';
+  let headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': `Basic ${authorization}`
   };
-  request.post(options, (err, res, body) => {
-    if (err || res.statusCode != 200) {
-      console.warn(`Error getting Spotify authorization: ${err}`);
-      spotifyKey = null;
-      setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
-      return;
-    }
 
-    let data = JSON.parse(body);
-    spotifyKey = data.access_token;
-    setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
+  const response = await fetch(url, {
+    'method': 'post',
+    'body': body,
+    'headers': headers
   });
+
+  if (!response.ok) {
+    console.warn(`Error getting Spotify authorization: ${response.statusText}`);
+    spotifyKey = null;
+    setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
+    return;
+  }
+
+  const data = await response.json();
+
+  spotifyKey = data.access_token;
+  setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
 }
 
-app.post('/now/app/spotify/track', (req, res) => {
+app.post('/now/app/spotify/track', async (req, res) => {
   if (!spotifyKey) {
     console.warn('Error getting Spotify track: No API key');
     res.json(new Track());
@@ -314,35 +319,36 @@ app.post('/now/app/spotify/track', (req, res) => {
   let artist = encodeURIComponent(req.body.artist);
   let title = encodeURIComponent(req.body.title);
   let query = `${artist}%20-%20${title}`;
-
-  let options = {
-    url: `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
-    headers: {
-      'Authorization': `Bearer ${spotifyKey}`
-    }
+  let url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`;
+  let headers = {
+    'Authorization': `Bearer ${spotifyKey}`
   };
-  request(options, (err, res2, body) => {
-    if (err || res2.statusCode != 200) {
-      console.warn(`Error getting Spotify track: Invalid response: ${err}`);
-      res.json(new Track());
-      return;
-    }
 
-    let data = JSON.parse(body);
-    if (data.tracks.total < 1) {
-      console.warn('Error getting Spotify track: No results');
-      res.json(new Track());
-      return;
-    }
-
-    let track = data.tracks.items[0];
-    track.success = true;
-
-    res.json(track);
+  const response = await fetch(url, {
+    'headers': headers
   });
+
+  if (!response.ok) {
+    console.warn(`Error getting Spotify track: Invalid response: ${err}`);
+    res.json(new Track());
+    return;
+  }
+
+  const data = await response.json();
+
+  if (data.tracks.total < 1) {
+    console.warn('Error getting Spotify track: No results');
+    res.json(new Track());
+    return;
+  }
+
+  let track = data.tracks.items[0];
+  track.success = true;
+
+  res.json(track);
 });
 
-app.post('/now/app/spotify/artist', (req, res) => {
+app.post('/now/app/spotify/artist', async (req, res) => {
   if (!spotifyKey) {
     console.warn('Error getting Spotify artist: No API key');
     res.json(new Artist());
@@ -351,26 +357,26 @@ app.post('/now/app/spotify/artist', (req, res) => {
 
   let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
   let query = artist;
-
-  let options = {
-    url: `https://api.spotify.com/v1/artists/${query}`,
-    headers: {
-      'Authorization': `Bearer ${spotifyKey}`
-    }
+  let url = `https://api.spotify.com/v1/artists/${query}`;
+  let headers = {
+    'Authorization': `Bearer ${spotifyKey}`
   };
-  request(options, (err, res2, body) => {
-    if (err || res2.statusCode != 200) {
-      console.warn(`Error getting Spotify artist: Invalid response: ${err}`);
-      res.json(new Artist());
-      return;
-    }
 
-    let data = JSON.parse(body);
-    let artist = data;
-    artist.success = true;
-
-    res.json(artist);
+  const response = await fetch(url, {
+    'headers': headers
   });
+
+  if (!response.ok) {
+    console.warn(`Error getting Spotify artist: Invalid response: ${err}`);
+    res.json(new Artist());
+    return;
+  }
+
+  let data = await response.json();
+
+  data.success = true;
+
+  res.json(data);
 });
 
 /* Weather (OpenWeatherMap and DarkSky) functionality */

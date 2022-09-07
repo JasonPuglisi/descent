@@ -1,12 +1,17 @@
 /* eslint prefer-arrow-callback: off */
 
-let gulp         = require('gulp');
-let autoprefixer = require('gulp-autoprefixer');
-let browserSync  = require('browser-sync').create();
-let nodemon      = require('gulp-nodemon');
-let sass         = require('gulp-sass')(require('sass'));
-let sourcemaps   = require('gulp-sourcemaps');
-let uglify       = require('gulp-uglify-es').default;
+import gulp from 'gulp';
+import autoprefixer from 'gulp-autoprefixer';
+import browserSyncBase from 'browser-sync';
+import nodemon from 'gulp-nodemon';
+import dartSass from 'sass';
+import gulpSass from 'gulp-sass';
+import sourcemaps from 'gulp-sourcemaps';
+import uglifyBase from 'gulp-uglify-es';
+
+const browserSync = browserSyncBase.create();
+const sass = gulpSass(dartSass);
+const uglify = uglifyBase.default;
 
 gulp.task('build-css', function(done) {
   gulp.src('source/scss/*.scss')

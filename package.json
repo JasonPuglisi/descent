@@ -1,6 +1,6 @@
 {
   "name": "descent",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Elegant now playing display for Last.fm showing song metadata and local weather.",
   "keywords": [
     "descent",
@@ -16,6 +16,7 @@
   "repository": "github:JasonPuglisi/descent",
   "author": "Jason Puglisi <hello@jasonpuglisi.com> (https://www.jasonpuglisi.com)",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "scripts/build_and_test.sh"
   },
@@ -24,6 +25,7 @@
     "body-parser": "^1.20.0",
     "express": "^4.18.1",
     "gulp": "^4.0.2",
+    "node-fetch": "^3.2.10",
     "pug": "^3.0.2",
     "request": "^2.88.2"
   },
