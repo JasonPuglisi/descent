@@ -2,7 +2,6 @@ import bodyParser from 'body-parser';
 import crypto from 'crypto';
 import express from 'express';
 import fetch from 'node-fetch';
-import request from 'request';
 
 /* Base application functionality */
 
@@ -149,7 +148,7 @@ app.get('/now/app/hue/authorize', (req, res) => {
   });
 });
 
-function authenticateHue(code, refreshToken, callback) {
+async function authenticateHue(code, refreshToken, callback) {
   if (!code && !refreshToken) {
     console.warn('Error authenticating with Hue: No authorization code or refresh token');
     callback();
@@ -165,43 +164,50 @@ function authenticateHue(code, refreshToken, callback) {
   }
 
   let url = code ? `https://api.meethue.com/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/oauth2/refresh?grant_type=refresh_token';
-  request.post(url, (err, res) => {
-    if (err || res.statusCode !== 401) {
-      console.warn('Error authenticating with Hue: No initial challenge');
-      callback();
-      return;
-    }
 
-    let authHeader = res.headers['www-authenticate'];
-    let realm = authHeader.match(/realm="(.+?)"/)[1];
-    let nonce = authHeader.match(/nonce="(.+?)"/)[1];
-    let uriSuffix = code ? 'token' : 'refresh';
-    let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
+  const response = await fetch(url, {
+    'method': 'post'
+  });
 
-    let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/oauth2/${uriSuffix}", response="${digest}"`;
-    let headers = { 'Authorization': auth };
+  if (!response.ok && response.status != 401) {
+    console.warn('Error authenticating with Hue: No initial challenge');
+    callback();
+    return;
+  }
 
-    let form = code ? undefined : { refresh_token: refreshToken };
+  let authHeader = response.headers.get('www-authenticate');
+  let realm = authHeader.match(/realm="(.+?)"/)[1];
+  let nonce = authHeader.match(/nonce="(.+?)"/)[1];
+  let uriSuffix = code ? 'token' : 'refresh';
+  let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
 
-    request.post(url, { headers, form }, (err, res, body) => {
-      if (err || res.statusCode !== 200) {
-        console.warn(`Error authenticating with Hue: Digest failure: ${body}`);
-        callback();
-        return;
-      }
+  let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/oauth2/${uriSuffix}", response="${digest}"`;
+  let headers = { 'Authorization': auth };
 
-      let data = JSON.parse(body);
-      let accessToken = data.access_token;
-      let accessTokenExpiry = (parseInt(data.access_token_expires_in) - 300) * 1000;
-      let refreshToken = data.refresh_token;
-      let refreshTokenExpiry = (parseInt(data.refresh_token_expires_in) - 300) * 1000;
-      let tokenType = data.token_type;
+  let form = code ? undefined : { refresh_token: refreshToken };
 
-      hueWhitelistApplication(accessToken, (username) => {
-        let auth = { accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry, tokenType, username };
-        callback(auth);
-      });
-    });
+  const response2 = await fetch(url, {
+    'method': 'post',
+    'body': form,
+    'headers': headers
+  })
+
+  if (!response2.ok) {
+    console.warn(`Error authenticating with Hue: Digest failure`);
+    callback();
+    return;
+  }
+
+  let data = await response2.json();
+  let accessToken = data.access_token;
+  let accessTokenExpiry = (parseInt(data.access_token_expires_in) - 300) * 1000;
+  let refreshTokenNew = data.refresh_token;
+  let refreshTokenExpiry = (parseInt(data.refresh_token_expires_in) - 300) * 1000;
+  let tokenType = data.token_type;
+
+  hueWhitelistApplication(accessToken, (username) => {
+    let auth = { accessToken, accessTokenExpiry, refreshTokenNew, refreshTokenExpiry, tokenType, username };
+    callback(auth);
   });
 }
 
@@ -218,34 +224,46 @@ function calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix) {
   return digest;
 }
 
-function hueWhitelistApplication(accessToken, callback) {
+async function hueWhitelistApplication(accessToken, callback) {
   let url = 'https://api.meethue.com/bridge/0/config';
   let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
   let body = JSON.stringify({ linkbutton: true });
-  request.put(url, { headers, body }, (err, res, body) => {
-    url = 'https://api.meethue.com/bridge/';
-    body = JSON.stringify({ devicetype: 'Descent' });
 
-    request.post(url, { headers, body }, (err, res, body) => {
-      let data = JSON.parse(body);
-      callback(data[0].success.username);
-    });
+  const response = await fetch(url, {
+    'method': 'put',
+    'body': body,
+    'headers': headers
   });
+
+  url = 'https://api.meethue.com/bridge/';
+  body = JSON.stringify({ devicetype: 'Descent' });
+
+  const response2 = await fetch(url, {
+    'method': 'post',
+    'body': body,
+    'headers': headers
+  });
+
+  let data = await response2.json();
+  callback(data[0].success.username);
 }
 
-app.post('/now/app/hue/api/groups', (req, res) => {
+app.post('/now/app/hue/api/groups', async (req, res) => {
   let accessToken = req.body.accessToken;
   let username = req.body.username;
 
   let url = `https://api.meethue.com/bridge/${username}/groups`;
   let headers = { 'Authorization': `Bearer ${accessToken}` };
-  request(url, { headers }, (err, res2, body) => {
-    let data = JSON.parse(body);
-    res.json(data);
+
+  const response = await fetch(url, {
+    'headers': headers
   });
+
+  let data = await response.json();
+  res.json(data);
 });
 
-app.post('/now/app/hue/api/light', (req, res) => {
+app.post('/now/app/hue/api/light', async (req, res) => {
   let accessToken = req.body.accessToken;
   let username = req.body.username;
 
@@ -256,10 +274,15 @@ app.post('/now/app/hue/api/light', (req, res) => {
   let url = `https://api.meethue.com/bridge/${username}/lights/${id}/state`;
   let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
   let body = `{"xy": [${colorX},${colorY}]}`;
-  request.put(url, { headers, body }, (err, res2, body) => {
-    let data = JSON.parse(body);
-    res.json(data);
+
+  const response = await fetch(url, {
+    'method': 'put',
+    'body': body,
+    'headers': headers
   });
+
+  let data = await response.json();
+  res.json(data);
 });
 
 /* Spotify functionality */
