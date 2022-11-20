@@ -34,7 +34,7 @@ function refreshAccessToken(refreshToken, callback) {
 function authorizeApplication() {
   let hueClientId = $('.hueClientId').text();
   let hueAppId = $('.hueAppId').text();
-  $('.appAuth').attr('href', `https://api.meethue.com/oauth2/auth?clientid=${hueClientId}&appid=${hueAppId}&deviceid=Descent&response_type=code`);
+  $('.appAuth').attr('href', `https://api.meethue.com/v2/oauth2/authorize?client_id=${hueClientId}&response_type=code`);
 }
 
 function getRooms(accessToken, username) {

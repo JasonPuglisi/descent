@@ -139,9 +139,9 @@ app.get('/now/app/hue/authorize', (req, res) => {
   let refreshToken = req.query.refreshToken;
   authenticateHue(code, refreshToken, auth => {
     if (auth) {
-      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.accessTokenExpiry });
-      res.cookie('hueRefreshToken', auth.refreshToken, { maxAge: auth.refreshTokenExpiry });
-      res.cookie('hueUsername', auth.username, { maxAge: auth.accessTokenExpiry });
+      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry });
+      res.cookie('hueRefreshToken', auth.refreshToken, { maxAge: 315360000000 });
+      res.cookie('hueUsername', auth.username, { maxAge: 315360000000 });
     }
 
     res.redirect('/now/app/hue');
@@ -163,7 +163,7 @@ async function authenticateHue(code, refreshToken, callback) {
     return;
   }
 
-  let url = code ? `https://api.meethue.com/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/oauth2/refresh?grant_type=refresh_token';
+  let url = code ? `https://api.meethue.com/v2/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/v2/oauth2/refresh?grant_type=refresh_token';
 
   const response = await fetch(url, {
     'method': 'post'
@@ -181,10 +181,13 @@ async function authenticateHue(code, refreshToken, callback) {
   let uriSuffix = code ? 'token' : 'refresh';
   let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
 
-  let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/oauth2/${uriSuffix}", response="${digest}"`;
-  let headers = { 'Authorization': auth };
+  let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/v2/oauth2/${uriSuffix}", response="${digest}"`;
+  let headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': auth
+  };
 
-  let form = code ? undefined : { refresh_token: refreshToken };
+  let form = code ? `code=${code}&grant_type=authorization_code` : { refresh_token: refreshToken };
 
   const response2 = await fetch(url, {
     'method': 'post',
@@ -200,13 +203,12 @@ async function authenticateHue(code, refreshToken, callback) {
 
   let data = await response2.json();
   let accessToken = data.access_token;
-  let accessTokenExpiry = (parseInt(data.access_token_expires_in) - 300) * 1000;
+  let expiry = (parseInt(data.expires_in) - 300) * 1000;
   let refreshTokenNew = data.refresh_token;
-  let refreshTokenExpiry = (parseInt(data.refresh_token_expires_in) - 300) * 1000;
   let tokenType = data.token_type;
 
   hueWhitelistApplication(accessToken, (username) => {
-    let auth = { accessToken, accessTokenExpiry, refreshTokenNew, refreshTokenExpiry, tokenType, username };
+    let auth = { accessToken, expiry, refreshTokenNew, tokenType, username };
     callback(auth);
   });
 }
@@ -215,7 +217,7 @@ function calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix) {
   let hash1Data = `${clientId}:${realm}:${clientSecret}`;
   let hash1 = crypto.createHash('md5').update(hash1Data).digest('hex');
 
-  let hash2Data = `POST:/oauth2/${uriSuffix}`;
+  let hash2Data = `POST:/v2/oauth2/${uriSuffix}`;
   let hash2 = crypto.createHash('md5').update(hash2Data).digest('hex');
 
   let digestData = `${hash1}:${nonce}:${hash2}`;
