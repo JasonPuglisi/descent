@@ -1,6 +1,6 @@
 # Descent
 
-[![Build Status](https://travis-ci.com/JasonPuglisi/descent.svg?branch=master)](https://travis-ci.com/JasonPuglisi/descent)
+[![Build Status](https://app.travis-ci.com/JasonPuglisi/descent.svg?branch=main)](https://app.travis-ci.com/JasonPuglisi/descent)
 
 Elegant now playing display for Last.fm showing song metadata and local weather.
 
@@ -125,8 +125,3 @@ To enable Phillips Hue control, visit
 instructions. Light colors will be set according to the three most prominent
 album art colors. If more than three lights are selected, the colors will be
 reused.
-
-If Descent is hosted using HTTPS, users must instruct their browsers to allow
-loading insecure (HTTP) content for the Descent website. This is because the
-Hue API can only be accessed via HTTP. Users are informed of this on the
-configuration page.
