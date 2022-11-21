@@ -26,7 +26,7 @@ Descent's server listens on port 3000 by default, but this can be changed by
 setting the `DESCENT_PORT` environment variable. It's recommended to use a
 proxy, such as [NGINX](https://www.nginx.com/), in front of Descent's server.
 
-Navigate to [`/now`](https://descent.live/now) to use Descent.
+Navigate to [`/`](https://descent.live/) to use Descent.
 
 ## API Requirements
 
@@ -69,14 +69,14 @@ and your client secret as the `HUE_SECRET` environment variable.
 ### Descent Configuration
 
 To configure the background, weather, and time displays, visit
-[`/now/app/config`](https://descent.live/now/app/config). Dark Sky can
+[`/app/config`](https://descent.live/app/config). Dark Sky can
 automatically determine weather units, but OpenWeatherMap cannot, so Descent
 defaults to imperial units unless otherwise specified.
 
 #### Descent Configuration Import
 
 You can import settings through a POST request to
-[`/now/app/config/set`](https://descent.live/now/app/config/set). Each post
+[`/app/config/set`](https://descent.live/app/config/set). Each post
 parameter correponds to a cookie. Valid parameters and values are as follows:
 
 **Background type**  
@@ -121,7 +121,7 @@ parameter correponds to a cookie. Valid parameters and values are as follows:
 ### Phillips Hue Configuration
 
 To enable Phillips Hue control, visit
-[`/now/app/hue`](https://descent.live/now/app/hue) and follow the setup
+[`/app/hue`](https://descent.live/app/hue) and follow the setup
 instructions. Light colors will be set according to the three most prominent
 album art colors. If more than three lights are selected, the colors will be
 reused.

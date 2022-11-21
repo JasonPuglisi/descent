@@ -3,12 +3,12 @@
     "short_name": "Descent",
     "icons": [
         {
-            "src": "/now/app/static/images/icons/android-chrome-192x192.png",
+            "src": "/app/static/images/icons/android-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "/now/app/static/images/icons/android-chrome-512x512.png",
+            "src": "/app/static/images/icons/android-chrome-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
         }

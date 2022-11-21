@@ -1,7 +1,7 @@
 extends template/layout
 
 block otherStylesheets
-  link(href='/now/app/static/stylesheets/config.css', rel='stylesheet')
+  link(href='/app/static/stylesheets/config.css', rel='stylesheet')
 
 block content
   .container
@@ -33,13 +33,13 @@ block content
       div.selectGroups
         div.selectGroup.groupHue#hue-shuffle Shuffle order
     .links
-      a(href='/now')
+      a(href='/')
         | home 
         i.fas.fa-home.fa-sm
-      a(href='/now/app/config')
+      a(href='/app/config')
         | settings 
         i.fas.fa-sliders-h.fa-sm
 
 block otherJavascripts
-  script(src='/now/app/static/javascripts/utility/general.js')
-  script(src='/now/app/static/javascripts/hue.js')
+  script(src='/app/static/javascripts/utility/general.js')
+  script(src='/app/static/javascripts/hue.js')

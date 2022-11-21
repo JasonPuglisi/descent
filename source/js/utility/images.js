@@ -11,7 +11,7 @@ function cacheImages() {
   resources.track.current.artistImageLoaded = false;
 
   // Query Spotify for track info
-  let url = '/now/app/spotify/track';
+  let url = '/app/spotify/track';
   let urlArtist = encodeURIComponent(resources.track.current.artist);
   let urlTitle = encodeURIComponent(resources.track.current.title);
   let body = `artist=${urlArtist}&title=${urlTitle}`;
@@ -41,7 +41,7 @@ function cacheImages() {
         albumCache.src = albumUrl;
 
         // Query Spotify for artist image
-        let artistUrl = '/now/app/spotify/artist';
+        let artistUrl = '/app/spotify/artist';
         let urlArtistId = encodeURIComponent(data.artists[0].id);
         let artistBody = `artist=${urlArtistId}`;
 

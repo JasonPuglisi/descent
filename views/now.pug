@@ -2,7 +2,7 @@ extends template/layout
 
 block otherStylesheets
   +weatherIcons
-  link(href='/now/app/static/stylesheets/now.css', rel='stylesheet')
+  link(href='/app/static/stylesheets/now.css', rel='stylesheet')
 
 block content
   .background.blur
@@ -31,7 +31,7 @@ block content
       .corner.left
         .help.code
           .links
-            a(href='/now/app/config')
+            a(href='/app/config')
               | settings 
               i.fas.fa-sliders-h.fa-sm
             a(href='https://github.com/JasonPuglisi/descent' target='_blank')
@@ -80,11 +80,11 @@ block content
 block otherJavascripts
   +colorThief
   +chroma
-  script(src='/now/app/static/javascripts/utility/general.js')
-  script(src='/now/app/static/javascripts/utility/hue.js')
-  script(src='/now/app/static/javascripts/utility/images.js')
-  script(src='/now/app/static/javascripts/utility/menu.js')
-  script(src='/now/app/static/javascripts/utility/metadata.js')
-  script(src='/now/app/static/javascripts/utility/time.js')
-  script(src='/now/app/static/javascripts/utility/weather.js')
-  script(src='/now/app/static/javascripts/now.js')
+  script(src='/app/static/javascripts/utility/general.js')
+  script(src='/app/static/javascripts/utility/hue.js')
+  script(src='/app/static/javascripts/utility/images.js')
+  script(src='/app/static/javascripts/utility/menu.js')
+  script(src='/app/static/javascripts/utility/metadata.js')
+  script(src='/app/static/javascripts/utility/time.js')
+  script(src='/app/static/javascripts/utility/weather.js')
+  script(src='/app/static/javascripts/now.js')

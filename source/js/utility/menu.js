@@ -7,7 +7,7 @@ function initMenu() {
     cookieExists('hueUsername') && cookieExists('hueRooms');
   if (!resources.features.hue && cookieExists('hueRefreshToken')) {
     let refreshToken = Cookies.get('hueRefreshToken');
-    let url = `/now/app/hue/authorize?refreshToken=${refreshToken}`;
+    let url = `/app/hue/authorize?refreshToken=${refreshToken}`;
     $.get(url, () => {
       resources.features.hue = true;
       enableHue();
