@@ -16,7 +16,7 @@ function loadAuthorization() {
     $('#hue-options').show();
     getRooms(accessToken, username);
   } else if (refreshToken) {
-    refreshAccessToken(refreshToken, loadAuthorization);
+    refreshAccessToken(refreshToken, username, loadAuthorization);
   } else {
     $('#loading').hide();
     $('#connect').show();
@@ -24,8 +24,8 @@ function loadAuthorization() {
   }
 }
 
-function refreshAccessToken(refreshToken, callback) {
-  let url = `/now/app/hue/authorize?refreshToken=${refreshToken}`;
+function refreshAccessToken(refreshToken, username, callback) {
+  let url = `/now/app/hue/authorize?refreshToken=${refreshToken}&username=${username}`;
   $.get(url, () => {
     callback();
   });
@@ -33,7 +33,6 @@ function refreshAccessToken(refreshToken, callback) {
 
 function authorizeApplication() {
   let hueClientId = $('.hueClientId').text();
-  let hueAppId = $('.hueAppId').text();
   $('.appAuth').attr('href', `https://api.meethue.com/v2/oauth2/authorize?client_id=${hueClientId}&response_type=code`);
 }
 

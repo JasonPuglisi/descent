@@ -137,18 +137,19 @@ app.get('/now/app/hue', (req, res) => {
 app.get('/now/app/hue/authorize', (req, res) => {
   let code = req.query.code;
   let refreshToken = req.query.refreshToken;
-  authenticateHue(code, refreshToken, auth => {
+  let username = req.query.username;
+  authenticateHue(code, refreshToken, username, auth => {
     if (auth) {
       res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry });
       res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000 });
-      res.cookie('hueUsername', auth.username, { maxAge: 315360000000 });
+      res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000 });
     }
 
     res.redirect('/now/app/hue');
   });
 });
 
-async function authenticateHue(code, refreshToken, callback) {
+async function authenticateHue(code, refreshToken, username, callback) {
   if (!code && !refreshToken) {
     console.warn('Error authenticating with Hue: No authorization code or refresh token');
     callback();
@@ -209,8 +210,8 @@ async function authenticateHue(code, refreshToken, callback) {
   let refreshTokenNew = data.refresh_token;
   let tokenType = data.token_type;
 
-  hueWhitelistApplication(accessToken, (username) => {
-    let auth = { accessToken, expiry, refreshTokenNew, tokenType, username };
+  hueWhitelistApplication(accessToken, username, (usernameNew) => {
+    let auth = { accessToken, expiry, refreshTokenNew, tokenType, usernameNew };
     callback(auth);
   });
 }
@@ -228,8 +229,13 @@ function calculateHueDigest(clientId, clientSecret, realm, urlSlug, nonce) {
   return digest;
 }
 
-async function hueWhitelistApplication(accessToken, callback) {
-  let url = 'https://api.meethue.com/bridge/0/config';
+async function hueWhitelistApplication(accessToken, username, callback) {
+  if (username) {
+    callback(username);
+    return;
+  }
+
+  let url = 'https://api.meethue.com/route/api/0/config';
   let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
   let body = JSON.stringify({ linkbutton: true });
 
@@ -239,7 +245,7 @@ async function hueWhitelistApplication(accessToken, callback) {
     'headers': headers
   });
 
-  url = 'https://api.meethue.com/bridge/';
+  url = 'https://api.meethue.com/route/api';
   body = JSON.stringify({ devicetype: 'Descent' });
 
   const response2 = await fetch(url, {
