@@ -64,6 +64,14 @@ application to provide a few required values. Set your app ID as the `HUE_ID`
 environment variable, your client ID as the `HUE_CLIENT` environment variable,
 and your client secret as the `HUE_SECRET` environment variable.
 
+### Last.fm Rate Limiting
+
+To avoid Last.fm rate limiting, you can adjust the API polling interval. Set
+the `LASTFM_POLL_INTERVAL` environment variable to an integer in milliseconds.
+The default is `10000` (10 seconds), but a more reasonable value could be
+`5000` (5 seconds). If API calls in the browser start failing, and playing data
+isn't loading, increase the interval.
+
 ## User Preferences
 
 ### Descent Configuration
