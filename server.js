@@ -140,7 +140,7 @@ app.get('/now/app/hue/authorize', (req, res) => {
   authenticateHue(code, refreshToken, auth => {
     if (auth) {
       res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry });
-      res.cookie('hueRefreshToken', auth.refreshToken, { maxAge: 315360000000 });
+      res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000 });
       res.cookie('hueUsername', auth.username, { maxAge: 315360000000 });
     }
 
@@ -163,7 +163,9 @@ async function authenticateHue(code, refreshToken, callback) {
     return;
   }
 
-  let url = code ? `https://api.meethue.com/v2/oauth2/token?code=${code}&grant_type=authorization_code` : 'https://api.meethue.com/v2/oauth2/refresh?grant_type=refresh_token';
+  let urlParams = code ? 'code=${code}&grant_type=authorization_code' : 'grant_type=refresh_token';
+  let urlSlug = '/v2/oauth2/token'
+  let url = `https://api.meethue.com${urlSlug}?${urlParams}`;
 
   const response = await fetch(url, {
     'method': 'post'
@@ -178,16 +180,16 @@ async function authenticateHue(code, refreshToken, callback) {
   let authHeader = response.headers.get('www-authenticate');
   let realm = authHeader.match(/realm="(.+?)"/)[1];
   let nonce = authHeader.match(/nonce="(.+?)"/)[1];
-  let uriSuffix = code ? 'token' : 'refresh';
-  let digest = calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix);
+  let digest = calculateHueDigest(clientId, clientSecret, realm, urlSlug, nonce);
 
-  let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="/v2/oauth2/${uriSuffix}", response="${digest}"`;
+  let auth = `Digest username="${clientId}", realm="${realm}", nonce="${nonce}", uri="${urlSlug}", response="${digest}"`;
   let headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': auth
   };
 
-  let form = code ? `code=${code}&grant_type=authorization_code` : { refresh_token: refreshToken };
+  let form = code ? `code=${code}&grant_type=authorization_code` :
+    `refresh_token=${refreshToken}&grant_type=refresh_token`;
 
   const response2 = await fetch(url, {
     'method': 'post',
@@ -213,11 +215,11 @@ async function authenticateHue(code, refreshToken, callback) {
   });
 }
 
-function calculateHueDigest(clientId, clientSecret, realm, nonce, uriSuffix) {
+function calculateHueDigest(clientId, clientSecret, realm, urlSlug, nonce) {
   let hash1Data = `${clientId}:${realm}:${clientSecret}`;
   let hash1 = crypto.createHash('md5').update(hash1Data).digest('hex');
 
-  let hash2Data = `POST:/v2/oauth2/${uriSuffix}`;
+  let hash2Data = `POST:${urlSlug}`;
   let hash2 = crypto.createHash('md5').update(hash2Data).digest('hex');
 
   let digestData = `${hash1}:${nonce}:${hash2}`;
