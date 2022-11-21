@@ -1,10 +1,33 @@
 /* global resources */
 /* global cacheImages, checkLoadStatus, clearColors, clearImages, cookieEnabled, toggleDisplay, updateHue */
 
+let interval = 10000;
+let intervalId;
+
 function initMetadata() {
   // Start state update loop
   refreshState();
-  setInterval(refreshState, 3000);
+  intervalId = setInterval(refreshState, interval);
+
+  // Start interval update loop
+  updatePollInterval();
+  setInterval(updatePollInterval, 60000);
+}
+
+function updatePollInterval() {
+  $.ajax({
+    url: '/app/poll/interval',
+    timeout: 2000,
+    success: data => {
+      let lastfm = data.lastfm;
+      if (interval !== lastfm) {
+        interval = lastfm;
+        console.info(`Adjusting Last.fm poll interval to ${interval}`);
+        clearInterval(intervalId);
+        intervalId = setInterval(refreshState, interval);
+      }
+    }
+  });
 }
 
 function refreshState() {

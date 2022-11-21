@@ -10,6 +10,11 @@ app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/app/static/', express.static('public'));
 
+let pollIntervals = {
+  'lastfm': 10000
+};
+loadPollIntervals();
+
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
 
@@ -49,6 +54,10 @@ app.get('/:user', (req, res) => {
   let user = decodeURIComponent(req.params.user.substring(0, 20));
 
   res.render('now', { title, user });
+});
+
+app.get('/app/poll/interval', (req, res) => {
+  res.json(pollIntervals);
 });
 
 app.get('/app/config', (req, res) => {
@@ -129,6 +138,16 @@ app.post('/app/config/set', (req, res) => {
 
   res.redirect(`/${user}`);
 });
+
+/* System functionality */
+
+function loadPollIntervals() {
+  let lastfm = process.env.LASTFM_POLL_INTERVAL;
+  if (lastfm) {
+    console.info(`Setting Last.fm poll interval: ${lastfm}`);
+    pollIntervals.lastfm = lastfm;
+  }
+}
 
 /* Hue functionality */
 
