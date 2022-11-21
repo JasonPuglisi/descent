@@ -1,12 +1,12 @@
 extends template/layout
 
 block otherStylesheets
-  link(href='/now/app/static/stylesheets/landing.css', rel='stylesheet')
+  link(href='/app/static/stylesheets/landing.css', rel='stylesheet')
 
 block content
   .outer-container
     .bubbles
-      img(src='/now/app/static/images/bubbles.svg')
+      img(src='/app/static/images/bubbles.svg')
     .container
       h1= title
       form.userInputForm(method='post')
@@ -18,7 +18,7 @@ block content
             a(href='#' onclick='submitUser(); return false;')
               i.fas.fa-chevron-down
       .links
-        a(href='/now/app/config')
+        a(href='/app/config')
           | settings 
           i.fas.fa-sliders-h.fa-sm
         a(href='https://github.com/JasonPuglisi/descent')
@@ -26,4 +26,4 @@ block content
           i.fab.fa-github.fa-sm
 
 block otherJavascripts
-  script(src='/now/app/static/javascripts/landing.js')
+  script(src='/app/static/javascripts/landing.js')

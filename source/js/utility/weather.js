@@ -36,7 +36,7 @@ function getCoordinates(callback) {
 
 // Update weather display
 function updateWeather(coords) {
-  let url = '/now/app/weather';
+  let url = '/app/weather';
   let units = cookieExists('units') ? Cookies.get('units') : 'imperial';
   let urlUnits = encodeURIComponent(units);
   let body = `latitude=${coords.latitude}&longitude=${coords.longitude}&units=${urlUnits}`;

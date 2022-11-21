@@ -8,12 +8,17 @@ import fetch from 'node-fetch';
 let app = express();
 app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/now/app/static/', express.static('public'));
+app.use('/app/static/', express.static('public'));
 
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
 
-app.get('/now', (req, res) => {
+app.get('/now*', (req, res) => {
+  let path = req.originalUrl.substring(4);
+  res.redirect(path ? path : '/');
+});
+
+app.get('/', (req, res) => {
   let title = 'Descent';
   let users = [
     'iJason_',
@@ -33,26 +38,26 @@ app.get('/now', (req, res) => {
   res.render('landing', { title, user });
 });
 
-app.post('/now', (req, res) => {
+app.post('/', (req, res) => {
   let user = encodeURIComponent(req.body.user || req.body.defaultUser);
 
-  res.redirect(`/now/${user}`);
+  res.redirect(`/${user}`);
 });
 
-app.get('/now/:user', (req, res) => {
+app.get('/:user', (req, res) => {
   let title = 'Descent';
   let user = decodeURIComponent(req.params.user.substring(0, 20));
 
   res.render('now', { title, user });
 });
 
-app.get('/now/app/config', (req, res) => {
+app.get('/app/config', (req, res) => {
   let title = 'Descent Configuration';
 
   res.render('config', { title });
 });
 
-app.post('/now/app/config/set', (req, res) => {
+app.post('/app/config/set', (req, res) => {
   let cookies = [
     {
       'name': 'background',
@@ -118,23 +123,23 @@ app.post('/now/app/config/set', (req, res) => {
   let user = req.body.lastUser;
 
   if (user === undefined || user === null) {
-    res.redirect('/now');
+    res.redirect('/');
     return;
   }
 
-  res.redirect(`/now/${user}`);
+  res.redirect(`/${user}`);
 });
 
 /* Hue functionality */
 
-app.get('/now/app/hue', (req, res) => {
+app.get('/app/hue', (req, res) => {
   let title = 'Descent Hue Setup';
 
   res.render('hue', { title, hueClientId: process.env.HUE_CLIENT,
     hueAppId: process.env.HUE_ID });
 });
 
-app.get('/now/app/hue/authorize', (req, res) => {
+app.get('/app/hue/authorize', (req, res) => {
   let code = req.query.code;
   let refreshToken = req.query.refreshToken;
   let username = req.query.username;
@@ -145,7 +150,7 @@ app.get('/now/app/hue/authorize', (req, res) => {
       res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000 });
     }
 
-    res.redirect('/now/app/hue');
+    res.redirect('/app/hue');
   });
 });
 
@@ -258,7 +263,7 @@ async function hueWhitelistApplication(accessToken, username, callback) {
   callback(data[0].success.username);
 }
 
-app.post('/now/app/hue/api/groups', async (req, res) => {
+app.post('/app/hue/api/groups', async (req, res) => {
   let accessToken = req.body.accessToken;
   let username = req.body.username;
 
@@ -273,7 +278,7 @@ app.post('/now/app/hue/api/groups', async (req, res) => {
   res.json(data);
 });
 
-app.post('/now/app/hue/api/light', async (req, res) => {
+app.post('/app/hue/api/light', async (req, res) => {
   let accessToken = req.body.accessToken;
   let username = req.body.username;
 
@@ -342,7 +347,7 @@ async function authenticateSpotify(client, secret) {
   setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
 }
 
-app.post('/now/app/spotify/track', async (req, res) => {
+app.post('/app/spotify/track', async (req, res) => {
   if (!spotifyKey) {
     console.warn('Error getting Spotify track: No API key');
     res.json(new Track());
@@ -381,7 +386,7 @@ app.post('/now/app/spotify/track', async (req, res) => {
   res.json(track);
 });
 
-app.post('/now/app/spotify/artist', async (req, res) => {
+app.post('/app/spotify/artist', async (req, res) => {
   if (!spotifyKey) {
     console.warn('Error getting Spotify artist: No API key');
     res.json(new Artist());
@@ -420,7 +425,7 @@ class Weather {
   }
 }
 
-app.post('/now/app/weather', (req, res) => {
+app.post('/app/weather', (req, res) => {
   let lat = req.body.latitude;
   let lon = req.body.longitude;
   let units = decodeURIComponent(req.body.units);

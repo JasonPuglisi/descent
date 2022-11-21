@@ -25,7 +25,7 @@ function loadAuthorization() {
 }
 
 function refreshAccessToken(refreshToken, username, callback) {
-  let url = `/now/app/hue/authorize?refreshToken=${refreshToken}&username=${username}`;
+  let url = `/app/hue/authorize?refreshToken=${refreshToken}&username=${username}`;
   $.get(url, () => {
     callback();
   });
@@ -37,7 +37,7 @@ function authorizeApplication() {
 }
 
 function getRooms(accessToken, username) {
-  let url = '/now/app/hue/api/groups';
+  let url = '/app/hue/api/groups';
   $.post(url, { accessToken, username }, data => {
     $('.groupRooms').each(function() {
       $(this).remove();

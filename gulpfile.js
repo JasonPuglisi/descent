@@ -87,7 +87,7 @@ gulp.task('nodemon', function(done) {
 
 gulp.task('watch', gulp.series('nodemon', function(done) {
   browserSync.init({
-    proxy: `localhost:${process.env.DESCENT_PORT || 3000}/now`,
+    proxy: `localhost:${process.env.DESCENT_PORT || 3000}/`,
     port: 3333
   });
 

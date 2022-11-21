@@ -49,7 +49,7 @@ function updateHue() {
   let rooms = Cookies.get('hueRooms').split(',');
 
   // Get light information from Hue
-  let url = '/now/app/hue/api/groups';
+  let url = '/app/hue/api/groups';
   $.post(url, { accessToken, username }, data => {
     // Loop through lights and colors for selected groups
     let lights = [];
@@ -72,7 +72,7 @@ function updateHue() {
       let colorY = color.y;
 
       // Send state request
-      let url = '/now/app/hue/api/light';
+      let url = '/app/hue/api/light';
       $.post(url, { accessToken, username, id, colorX, colorY });
     }
   });
