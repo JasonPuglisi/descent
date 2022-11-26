@@ -67,6 +67,13 @@ block content
               b
                 span.scrobbleCount
               |  scrobbles
+            p.detailedScrobbles.hide
+              b
+                span.artistScrobbleCount
+              |  this artist •  
+              b
+                span.trackScrobbleCount
+              |  this track
             a.userLink(href=`http://last.fm/user/${user}`, target='_blank')
               i.fab.fa-lastfm
               | &nbsp;

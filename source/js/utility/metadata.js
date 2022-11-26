@@ -1,6 +1,8 @@
 /* global resources */
 /* global cacheImages, checkLoadStatus, clearColors, clearImages, cookieEnabled, toggleDisplay, updateHue */
 
+let user = $('.music .user').text();
+let key = 'c1797de6bf0b7e401b623118120cd9e1';
 let interval = 10000;
 let intervalId;
 
@@ -37,8 +39,6 @@ function refreshState() {
 
 function fetchMetadata() {
   // Query Last.fm for recent track information
-  let user = $('.music .user').text();
-  let key = 'c1797de6bf0b7e401b623118120cd9e1';
   let urlUser = encodeURIComponent(user);
   let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${urlUser}&api_key=${key}&limit=1&format=json`;
   $.ajax({
@@ -53,6 +53,40 @@ function fetchMetadata() {
       updateState();
     }
   });
+}
+
+function cacheScrobbles() {
+  let artist = resources.track.current.artist;
+  let title = resources.track.current.title;
+  let urlUser = encodeURIComponent(user);
+  let urlArtist = encodeURIComponent(artist);
+  let urlTitle = encodeURIComponent(title);
+
+  if (artist && title) {
+    // Get scrobble count for current artist
+    let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${urlArtist}&username=${urlUser}&api_key=${key}&limit=1&format=json`;
+    $.ajax({
+      url: url,
+      timeout: 2000,
+      success: data => {
+        // Handle successful response
+        resources.track.current.artistScrobbles = data.artist.stats.userplaycount;
+        checkLoadStatus();
+      }
+    });
+
+    // Get scrobble count for current track
+    url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${urlArtist}&track=${urlTitle}&username=${urlUser}&api_key=${key}&limit=1&format=json`;
+    $.ajax({
+      url: url,
+      timeout: 2000,
+      success: data => {
+        // Handle successful response
+        resources.track.current.trackScrobbles = data.track.userplaycount;
+        checkLoadStatus();
+      }
+    });
+  }
 }
 
 function updateState(data) {
@@ -105,6 +139,8 @@ function setMetadata(playing, error, metadata) {
   resources.track.current.link = metadata.link ? metadata.link : '';
   resources.track.current.cover = metadata.cover ? metadata.cover : '';
   resources.track.current.scrobbles = metadata.scrobbles ? metadata.scrobbles : '';
+  resources.track.current.artistScrobbles = '';
+  resources.track.current.trackScrobbles = '';
 }
 
 function handleStateChange() {
@@ -120,13 +156,15 @@ function handleStateChange() {
       clearImages();
       updateMetadata();
     } else {
-      // State changed from unloaded to playing (fetch images; update colors, lights, images, text)
+      // State changed from unloaded to playing (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
       cacheImages();
+      cacheScrobbles();
     }
   } else if (!previous.playing) {
     if (current.playing) {
-      // State changed from idle to playing (fetch images; update colors, lights, images, text)
+      // State changed from idle to playing (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
       cacheImages();
+      cacheScrobbles();
     } else {
       // State unchanged from idle (check idle timeout)
       if (checkIdleTimeout()) {
@@ -139,8 +177,9 @@ function handleStateChange() {
   } else {
     if (current.playing) {
       if (current.artist !== previous.artist || current.title !== previous.title) {
-        // State changed from playing to playing new song (fetch images; update colors, lights, images, text)
+        // State changed from playing to playing new song (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
         cacheImages();
+        cacheScrobbles();
       }
     } else {
       // State changed from playing to idle (start idle timeout)
@@ -194,6 +233,8 @@ function updateMetadata() {
   let title = resources.track.current.title;
   let link = resources.track.current.link;
   let scrobbles = resources.track.current.scrobbles;
+  let artistScrobbles = resources.track.current.artistScrobbles;
+  let trackScrobbles = resources.track.current.trackScrobbles;
 
   // Update track metadata text
   $('.music .artist').text(artist || 'Nothing in the air...');
@@ -202,7 +243,10 @@ function updateMetadata() {
 
   // Update scrobbles
   $('.scrobbles .scrobbleCount').text(scrobbles ? scrobbles : '');
+  $('.detailedScrobbles .artistScrobbleCount').text(artistScrobbles ? artistScrobbles : '');
+  $('.detailedScrobbles .trackScrobbleCount').text(trackScrobbles ? trackScrobbles : '');
   toggleDisplay('.scrobbles', scrobbles);
+  toggleDisplay('.detailedScrobbles', artistScrobbles && trackScrobbles);
 
   // Update document title and show/hide extended info as necessary
   if (playing) {

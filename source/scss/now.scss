@@ -38,10 +38,14 @@ h2 {
   margin-bottom: 0.65em;
 }
 
-.scrobbles {
+.scrobbles, .detailedScrobbles {
   color: $light-gray;
   font-size: 0.6em;
   margin-bottom: 0.3em;
+}
+
+.detailedScrobbles {
+  font-size: 0.5em;
 }
 
 .artist {
