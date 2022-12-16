@@ -1,9 +1,8 @@
 language: node_js
-node_js:
-- node
+node_js: lts/*
 arch: amd64
 os: linux
-dist: focal
+dist: jammy
 deploy:
   skip_cleanup: true
   provider: elasticbeanstalk
