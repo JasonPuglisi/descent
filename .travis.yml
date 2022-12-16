@@ -4,6 +4,8 @@ arch: amd64
 os: linux
 dist: focal
 deploy:
+  skip_cleanup: true
+  cleanup: false
   provider: elasticbeanstalk
   access_key_id: $AWS_ACCESS_KEY_ID
   secret_access_key: $AWS_SECRET_ACCESS_KEY
