@@ -2,16 +2,15 @@ language: node_js
 node_js: lts/*
 arch: amd64
 os: linux
-dist: jammy
+dist: focal
 deploy:
-  skip_cleanup: true
   provider: elasticbeanstalk
   access_key_id: $AWS_ACCESS_KEY_ID
   secret_access_key: $AWS_SECRET_ACCESS_KEY
   region: $AWS_REGION
   app: $AWS_APP
   env: $AWS_ENV
-  bucket_name: $AWS_BUCKET_NAME
+  bucket: $AWS_BUCKET_NAME
   on:
     repo: JasonPuglisi/descent
     branch: main
