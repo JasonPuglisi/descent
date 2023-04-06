@@ -1,6 +1,6 @@
 # Descent
 
-[![Build Status](https://app.travis-ci.com/JasonPuglisi/descent.svg?branch=main)](https://app.travis-ci.com/JasonPuglisi/descent)
+[![Deploy to AWS Elastic Beanstalk](https://github.com/JasonPuglisi/descent/actions/workflows/deploy-elastic-beanstalk.yml/badge.svg?branch=main)](https://github.com/JasonPuglisi/descent/actions/workflows/deploy-elastic-beanstalk.yml)
 
 Elegant now playing display for Last.fm showing song metadata and local weather.
 

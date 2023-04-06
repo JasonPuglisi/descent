@@ -45,7 +45,7 @@ jobs:
       - name: Deploy to AWS Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
-          version_label: github-actions-${{ github.run_attempt }}
+          version_label: github-actions-${{ github.run_id }}-${{ github.run_attempt }}
           deployment_package: deploy.zip
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
           aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
