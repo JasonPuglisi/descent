@@ -32,7 +32,7 @@ function refreshAccessToken(refreshToken, username, callback) {
 }
 
 function authorizeApplication() {
-  let hueClientId = $('.hueClientId').text();
+  let hueClientId = encodeURIComponent($('.hueClientId').text());
   $('.appAuth').attr('href', `https://api.meethue.com/v2/oauth2/authorize?client_id=${hueClientId}&response_type=code`);
 }
 
@@ -69,7 +69,7 @@ function getRooms(accessToken, username) {
 
       if (selectedRooms.length > 0) {
         $('#hue-step-done').show();
-        Cookies.set('hueRooms', selectedRooms.join(','), { expires: 3650 });
+        Cookies.set('hueRooms', selectedRooms.join(','), { expires: 3650, secure: true });
       } else {
         $('#hue-step-done').hide();
         Cookies.remove('hueRooms');
@@ -120,7 +120,7 @@ function processOptions() {
     $(`#hue-${option}`).on('click', function() {
       selected = !selected;
       $(this).toggleClass('selected');
-      Cookies.set(option, selected, { expires: 3650 });
+      Cookies.set(option, selected, { expires: 3650, secure: true });
     });
   });
 }

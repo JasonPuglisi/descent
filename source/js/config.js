@@ -15,14 +15,14 @@ function processBackground() {
   $('.selectGroup.groupBg').on('click', function() {
     $('.selectGroup.groupBg.selected').each(function() { $(this).removeClass('selected'); });
     $(this).addClass('selected');
-    Cookies.set('background', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650 });
+    Cookies.set('background', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
   });
 
   selected = !cookieExists('blur') || cookieEnabled('blur');
   $('#bgopt-blur').toggleClass('selected', selected).on('click', function() {
     selected = !selected;
     $(this).toggleClass('selected');
-    Cookies.set('blur', selected, { expires: 365 });
+    Cookies.set('blur', selected, { expires: 365, secure: true });
   });
 
   $('#bgopt-default').val(Cookies.get('defaultBackground'));
@@ -33,7 +33,7 @@ function processBackground() {
   $('a.backgroundInputSave').on('click', function() {
     $(this).hide();
 
-    Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650 });
+    Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650, secure: true });
   });
 }
 
@@ -68,8 +68,8 @@ function processLocation() {
   $('a.locationInputSave').on('click', function() {
     $(this).hide();
 
-    Cookies.set('latitude', $('#loc-latitude').val(), { expires: 3650 });
-    Cookies.set('longitude', $('#loc-longitude').val(), { expires: 3650 });
+    Cookies.set('latitude', $('#loc-latitude').val(), { expires: 3650, secure: true });
+    Cookies.set('longitude', $('#loc-longitude').val(), { expires: 3650, secure: true });
   });
 }
 
@@ -80,7 +80,7 @@ function processUnits() {
   $('.selectGroup.groupUnits').on('click', function() {
     $('.selectGroup.groupUnits.selected').each(function() { $(this).removeClass('selected'); });
     $(this).addClass('selected');
-    Cookies.set('units', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650 });
+    Cookies.set('units', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
   });
 }
 
@@ -93,7 +93,7 @@ function processDatetime() {
     $(`#datetime-${option}`).on('click', function() {
       selected = !selected;
       $(this).toggleClass('selected');
-      Cookies.set(option, selected, { expires: 3650 });
+      Cookies.set(option, selected, { expires: 3650, secure: true });
     });
   });
 }

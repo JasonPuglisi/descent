@@ -43,8 +43,8 @@ function cookieEnabled(name) {
 function toggleCookie(name) {
   // Enable/disable a cookie
   if (cookieEnabled(name)) {
-    Cookies.set(name, 'false', { expires: 3650 });
+    Cookies.set(name, 'false', { expires: 3650, secure: true });
   } else {
-    Cookies.set(name, 'true', { expires: 3650 });
+    Cookies.set(name, 'true', { expires: 3650, secure: true });
   }
 }

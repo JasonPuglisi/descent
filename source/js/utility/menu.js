@@ -25,7 +25,7 @@ function initMenu() {
   setTimeout(() => { toggleDisplay('.help', false); }, 3600);
 
   // Save current user to populate index input
-  Cookies.set('lastUser', $('.music .user').text(), { expires: 3650 });
+  Cookies.set('lastUser', $('.music .user').text(), { expires: 3650, secure: true });
 
   // Apply transparent background if required
   if (getBackgroundType() === 'transparent')
