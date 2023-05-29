@@ -126,10 +126,10 @@ app.post('/app/config/set', (req, res) => {
     if (selected === undefined || (options !== undefined && !options.includes(selected)))
       continue;
 
-    res.cookie(name, selected, { maxAge: 315360000000 });
+    res.cookie(name, selected, { maxAge: 315360000000, secure: true });
   }
 
-  let user = req.body.lastUser;
+  let user = encodeURIComponent(req.body.lastUser);
 
   if (user === undefined || user === null) {
     res.redirect('/');
@@ -164,9 +164,9 @@ app.get('/app/hue/authorize', (req, res) => {
   let username = req.query.username;
   authenticateHue(code, refreshToken, username, auth => {
     if (auth) {
-      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry });
-      res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000 });
-      res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000 });
+      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
+      res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
+      res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
     }
 
     res.redirect('/app/hue');
@@ -284,7 +284,7 @@ async function hueWhitelistApplication(accessToken, username, callback) {
 
 app.post('/app/hue/api/groups', async (req, res) => {
   let accessToken = req.body.accessToken;
-  let username = req.body.username;
+  let username = encodeURIComponent(req.body.username);
 
   let url = `https://api.meethue.com/bridge/${username}/groups`;
   let headers = { 'Authorization': `Bearer ${accessToken}` };
@@ -299,9 +299,9 @@ app.post('/app/hue/api/groups', async (req, res) => {
 
 app.post('/app/hue/api/light', async (req, res) => {
   let accessToken = req.body.accessToken;
-  let username = req.body.username;
+  let username = encodeURIComponent(req.body.username);
 
-  let id = req.body.id;
+  let id = encodeURIComponent(req.body.id);
   let colorX = req.body.colorX;
   let colorY = req.body.colorY;
 
