@@ -58,7 +58,7 @@ jobs:
       - name: Deploy to GCP App Engine
         uses: google-github-actions/deploy-appengine@v1
         with:
-          version: default
+          version: main
           env_vars: |-
             HUE_CLIENT=${{ vars.HUE_CLIENT }}
             HUE_ID=${{ vars.HUE_ID }}
