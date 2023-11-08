@@ -566,4 +566,4 @@ async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
 
 /* Application runtime */
 
-app.listen(process.env.DESCENT_PORT || 3000);
+app.listen(process.env.DESCENT_PORT || process.env.PORT || 3000);
