@@ -26,7 +26,7 @@
     "express": "^4.19.2",
     "gulp": "^4.0.2",
     "node-fetch": "^3.3.2",
-    "pug": "^3.0.2"
+    "pug": "^3.0.3"
   },
   "devDependencies": {
     "browser-sync": "^3.0.2",
