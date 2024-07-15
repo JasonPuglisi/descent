@@ -24,18 +24,18 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "node-fetch": "^3.3.2",
-    "pug": "^3.0.2"
+    "pug": "^3.0.3"
   },
   "devDependencies": {
     "browser-sync": "^3.0.2",
-    "eslint": "^8.56.0",
+    "eslint": "^9.7.0",
     "gulp-autoprefixer": "^9.0.0",
     "gulp-nodemon": "^2.5.0",
     "gulp-sass": "^5.1.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-uglify-es": "^3.0.0",
-    "sass": "^1.70.0"
+    "sass": "^1.77.8"
   }
 }

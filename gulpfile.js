@@ -4,7 +4,7 @@ import gulp from 'gulp';
 import autoprefixer from 'gulp-autoprefixer';
 import browserSyncBase from 'browser-sync';
 import nodemon from 'gulp-nodemon';
-import dartSass from 'sass';
+import * as dartSass from 'sass';
 import gulpSass from 'gulp-sass';
 import sourcemaps from 'gulp-sourcemaps';
 import uglifyBase from 'gulp-uglify-es';
