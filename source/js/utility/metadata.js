@@ -90,6 +90,9 @@ function cacheScrobbles() {
 }
 
 function updateState(data) {
+  let scrobbleMode = cookieExists('scrobbleMode') ? Cookies.get('scrobbleMode') : false;
+  let ignoreCurrent = (scrobbleMode === 'lastScrobbled');
+
   // Update current state
   let playing = false;
   let error = false;
@@ -102,7 +105,8 @@ function updateState(data) {
   } else {
     // Valid response with recent track data
     let track = data.recenttracks.track[0];
-    if (!track['@attr'] || !track['@attr'].nowplaying) {
+
+    if (!ignoreCurrent && (!track['@attr'] || !track['@attr'].nowplaying)) {
       // No currently playing track
     } else {
       // Currently playing track present
@@ -129,7 +133,7 @@ function updateState(data) {
 
 function setMetadata(playing, error, metadata) {
   // Set global state
-  resources.track.current.playing = playing;
+  resources.track.current.playing = playing; // True if track is *currently* playing
   resources.track.current.error = error;
 
   // Set global track metadata

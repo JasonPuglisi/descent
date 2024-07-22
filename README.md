@@ -87,6 +87,9 @@ You can import settings through a POST request to
 [`/app/config/set`](https://descent.live/app/config/set). Each post
 parameter correponds to a cookie. Valid parameters and values are as follows:
 
+**Scrobble mode**
+`scrobbleMode`: `lastScrobbled`, `currentlyPlaying`
+
 **Background type**  
 `background`: `artist`, `album`, `transparent`, `none`
 
