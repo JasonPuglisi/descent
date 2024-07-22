@@ -81,6 +81,11 @@ function processKey(event) {
       toggleDisplay('.weather', showW);
       break;
     }
+    // Handle S to show settings page
+    case 83: {
+      window.location.href = '/app/config';
+      break;
+    }
   }
 }
 
