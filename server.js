@@ -69,6 +69,10 @@ app.get('/app/config', (req, res) => {
 app.post('/app/config/set', (req, res) => {
   let cookies = [
     {
+      'name': 'scrobbleMode',
+      'options': ['lastScrobbled', 'currentlyPlaying']
+    },
+    {
       'name': 'background',
       'options': ['artist', 'album', 'transparent', 'none']
     },
