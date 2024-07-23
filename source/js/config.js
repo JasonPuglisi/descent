@@ -3,6 +3,7 @@
 
 $(() => {
   processBackground();
+  setScrobbleMode();
   processLocation();
   processUnits();
   processDatetime();
@@ -22,7 +23,7 @@ function processBackground() {
   $('#bgopt-blur').toggleClass('selected', selected).on('click', function() {
     selected = !selected;
     $(this).toggleClass('selected');
-    Cookies.set('blur', selected, { expires: 365, secure: true });
+    Cookies.set('blur', selected, { expires: 3650, secure: true });
   });
 
   $('#bgopt-default').val(Cookies.get('defaultBackground'));
@@ -35,6 +36,18 @@ function processBackground() {
 
     Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650, secure: true });
   });
+}
+
+function setScrobbleMode() {
+  let selected = Cookies.get('scrobbleMode') || 'currentlyPlaying';
+  $(`#scrobbleMode-${selected}`).addClass('selected');
+
+  $('.selectGroup.groupScrobbleMode').on('click', function() {
+    $('.selectGroup.groupScrobbleMode.selected').each(function() { $(this).removeClass('selected'); });
+    $(this).addClass('selected');
+    Cookies.set('scrobbleMode', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
+  });
+
 }
 
 function validateCoordinate(coordinate) {

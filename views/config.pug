@@ -6,6 +6,11 @@ block otherStylesheets
 block content
   .container
     h1= title
+    h2 Scrobble Mode
+    div.selectGroups
+      div.scrobbleNotice Choose whether Descent should display the most recent scrobble or only the currently playing track
+      div.selectGroup.groupScrobbleMode#scrobbleMode-lastScrobbled Last Scrobbled
+      div.selectGroup.groupScrobbleMode#scrobbleMode-currentlyPlaying Currently Playing
     h2 Background Type
     div.selectGroups
       div.selectGroup.groupBg#bg-artist Artist
