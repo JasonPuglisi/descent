@@ -13,9 +13,9 @@ jobs:
       matrix:
         node-version: [latest]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
@@ -25,7 +25,7 @@ jobs:
       - name: Generate deployment package
         run: zip -r deploy.zip . -x '*.git'
       - name: Upload deployment package artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-engine
           path: deploy.zip
@@ -42,13 +42,13 @@ jobs:
       id-token: 'write'
     steps:
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
           project_id: ${{ vars.GCP_PROJECT_ID }}
       - name: Download deployment package artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: app-engine
       - name: Unzip deployment package
@@ -56,7 +56,7 @@ jobs:
       - name: Cleanup build files
         run: rm -rf deploy.zip .git
       - name: Deploy to GCP App Engine
-        uses: google-github-actions/deploy-appengine@v1
+        uses: google-github-actions/deploy-appengine@v2
         with:
           version: main
           env_vars: |-
