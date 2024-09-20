@@ -22,7 +22,7 @@
   },
   "private": true,
   "dependencies": {
-    "body-parser": "^1.20.2",
+    "body-parser": "^1.20.3",
     "express": "^4.19.2",
     "gulp": "^5.0.0",
     "node-fetch": "^3.3.2",
