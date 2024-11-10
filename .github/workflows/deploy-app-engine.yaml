@@ -1,6 +1,10 @@
 name: Deploy to GCP App Engine
 
-on: [push, pull_request_target]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 concurrency:
   group: "ae"
@@ -31,7 +35,7 @@ jobs:
           path: deploy.zip
 
   deploy:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     environment:
