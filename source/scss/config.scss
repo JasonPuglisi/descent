@@ -1,8 +1,9 @@
 /* Sass imports */
 
-@import 'reset';
-@import 'variables';
-@import 'typography';
+@use 'sass:color';
+@use 'reset';
+@use 'variables';
+@use 'typography';
 
 /* Layout styles */
 
@@ -49,12 +50,12 @@ i.fas.fa-circle-notch {
 /* Layout styles */
 
 .selectGroup {
-  background-color: $gray;
-  border-color: $primary-color-text;
+  background-color: variables.$gray;
+  border-color: variables.$primary-color-text;
   border-radius: 0.2em;
   border-style: solid;
   border-width: 0.1em;
-  box-shadow: 0.2em 0.3em darken($black, 10);
+  box-shadow: 0.2em 0.3em color.adjust(variables.$black, $lightness: -10%);
   cursor: pointer;
   display: inline-block;
   margin: 0.7em 1.4em 0.7em 0;
@@ -63,18 +64,18 @@ i.fas.fa-circle-notch {
 }
 
 .selectGroup:hover, .selectGroup:active {
-  background-color: $primary-color-light;
-  box-shadow: 0.15em 0.2em darken($black, 10);
-  color: $black;
+  background-color: variables.$primary-color-light;
+  box-shadow: 0.15em 0.2em color.adjust(variables.$black, $lightness: -10%);
+  color: variables.$black;
 }
 
 .selectGroup.selected {
-  background-color: $primary-color;
-  box-shadow: 0.15em 0.2em darken($black, 10);
+  background-color: variables.$primary-color;
+  box-shadow: 0.15em 0.2em color.adjust(variables.$black, $lightness: -10%);
 }
 
 .selectGroup.selected:hover, .selectGroup.selected:active {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
 }
 
 .selectGroupsLoading {
@@ -90,7 +91,7 @@ i.fas.fa-circle-notch {
 }
 
 .coordinateNotice, .scrobbleNotice {
-  color: $primary-color-dull;
+  color: variables.$primary-color-dull;
   padding: 0 0 0.5em 0;
   font-size: 0.85em;
 }
