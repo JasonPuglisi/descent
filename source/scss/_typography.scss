@@ -1,25 +1,27 @@
+@use "variables";
+
 /* Font families */
 
 .font-default {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   font-family: 'Open Sans', Arial, sans-serif;
   font-weight: 400;
 }
 
 .font-heading {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   font-family: 'Oswald', 'Open Sans', Arial, sans-serif;
   font-weight: 700;
 }
 
 .font-subheading {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   font-family: 'Noto Serif', Georgia, serif;
   font-weight: 400;
 }
 
 .font-code {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   font-family: 'Source Code Pro', monospace;
   font-weight: 400;
 }
@@ -27,7 +29,7 @@
 /* Links */
 
 a {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   opacity: .8;
   text-decoration: none;
   transition: opacity .2s linear;
@@ -54,18 +56,18 @@ input {
   @extend .font-default;
 
   background-color: transparent;
-  border-color: $primary-color-text;
+  border-color: variables.$primary-color-text;
   border-radius: 0px;
   border-style: none none solid none;
   border-width: 0.1em;
-  box-shadow: 0em 0.15em $absolute-black;
-  color: $primary-color-text;
+  box-shadow: 0em 0.15em variables.$absolute-black;
+  color: variables.$primary-color-text;
   font-size: 1em;
   letter-spacing: 0.015em;
 }
 
 input::placeholder {
-  color: $primary-color-text;
+  color: variables.$primary-color-text;
   opacity: 0.3;
 }
 
@@ -92,9 +94,9 @@ b {
 body {
   @extend .font-default;
 
-  background-color: $black;
+  background-color: variables.$black;
 }
 
 ::selection {
-  background: $primary-color-light;
+  background: variables.$primary-color-light;
 }
