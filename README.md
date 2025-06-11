@@ -4,6 +4,11 @@
 
 Elegant now playing display for Last.fm showing song metadata and local weather.
 
+> [!WARNING]
+> This project is not under active development. I welcome pull requests, but
+> generally won't be developing new features. I may still occasionally update
+> dependencies and deployments to keep it running.
+
 ## Overview
 
 Fetches now playing song information from Last.fm and displays album artwork
