@@ -1,6 +1,6 @@
 {
   "name": "descent",
-  "version": "1.8.13",
+  "version": "1.8.14",
   "description": "Elegant now playing display for Last.fm showing song metadata and local weather.",
   "keywords": [
     "descent",
@@ -22,20 +22,20 @@
   },
   "private": true,
   "dependencies": {
-    "body-parser": "^1.20.3",
-    "express": "^4.21.1",
-    "gulp": "^5.0.0",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "gulp": "^5.0.1",
     "node-fetch": "^3.3.2",
     "pug": "^3.0.3"
   },
   "devDependencies": {
-    "browser-sync": "^3.0.3",
-    "eslint": "^9.14.0",
+    "browser-sync": "^3.0.4",
+    "eslint": "^9.28.0",
     "gulp-autoprefixer": "^9.0.0",
     "gulp-nodemon": "^2.5.0",
-    "gulp-sass": "^5.1.0",
+    "gulp-sass": "^6.0.1",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-uglify-es": "^3.0.0",
-    "sass": "^1.80.6"
+    "sass": "^1.89.2"
   }
 }

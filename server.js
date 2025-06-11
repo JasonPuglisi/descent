@@ -18,7 +18,7 @@ loadPollIntervals();
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
 
-app.get('/now*', (req, res) => {
+app.get('/now{*splat}', (req, res) => {
   let path = req.originalUrl.substring(4);
   res.redirect(path ? path : '/');
 });
