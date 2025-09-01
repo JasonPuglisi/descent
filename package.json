@@ -30,12 +30,12 @@
   },
   "devDependencies": {
     "browser-sync": "^3.0.4",
-    "eslint": "^9.28.0",
+    "eslint": "^9.34.0",
     "gulp-autoprefixer": "^9.0.0",
     "gulp-nodemon": "^2.5.0",
     "gulp-sass": "^6.0.1",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-uglify-es": "^3.0.0",
-    "sass": "^1.89.2"
+    "sass": "^1.91.0"
   }
 }
