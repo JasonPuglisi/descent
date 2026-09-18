@@ -116,6 +116,7 @@ function updateState(data) {
       metadata = {
         artist: track.artist['#text'],
         artistId: track.artist.mbid,
+        album: track.album ? track.album['#text'] : '',
         title: track.name,
         link: track.url,
         cover: track.image[track.image.length - 1]['#text'],
@@ -139,6 +140,7 @@ function setMetadata(playing, error, metadata) {
   // Set global track metadata
   resources.track.current.artist = metadata.artist !== undefined ? metadata.artist : '';
   resources.track.current.artistId = metadata.artistId ? metadata.artistId : '';
+  resources.track.current.album = metadata.album ? metadata.album : '';
   resources.track.current.title = metadata.title !== undefined ? metadata.title : '';
   resources.track.current.link = metadata.link ? metadata.link : '';
   resources.track.current.cover = metadata.cover ? metadata.cover : '';
