@@ -1,5 +1,5 @@
 /* global resources, chroma, ColorThief, Cookies */
-/* global clearColors, cookieEnabled, cookieExists, getHueColors, newTrack, nowPlaying, updateHue, updateMetadata */
+/* global clearColors, cookieEnabled, cookieExists, getHueColors, newTrack, nowPlaying, updateHue, updateMetadata, updateTextColors */
 
 function cacheImages() {
   // Set blank images as default
@@ -33,12 +33,12 @@ function cacheImages() {
           resources.track.current.albumImage = albumUrl;
           resources.track.current.albumImageLoaded = true;
           checkLoadStatus();
-        }
+        };
         albumCache.onerror = () => {
           // Album image failed to load - leave default image
           resources.track.current.albumImageLoaded = true;
           checkLoadStatus();
-        }
+        };
         albumCache.src = albumUrl;
 
         // Query Spotify for artist image
@@ -62,12 +62,12 @@ function cacheImages() {
                 resources.track.current.artistImage = artistUrl;
                 resources.track.current.artistImageLoaded = true;
                 checkLoadStatus();
-              }
+              };
               artistCache.onerror = () => {
                 // Artist image failed to load - leave default image
                 resources.track.current.artistImageLoaded = true;
                 checkLoadStatus();
-              }
+              };
               artistCache.src = artistUrl;
             } else {
               // Artist image not found - leave default
@@ -149,11 +149,11 @@ function updateColors() {
         updateTextColors();
         updateHue();
       });
-    }
+    };
     img.onerror = () => {
       clearColors();
       updateHue();
-    }
+    };
     img.crossOrigin = 'Anonymous';
     img.src = url;
   } else {
@@ -276,7 +276,7 @@ function updateBackground() {
   let blur = !cookieExists('blur') || cookieEnabled('blur');
   $('.background').toggleClass('blur', blur);
 
-  backgroundType = getBackgroundType();
+  let backgroundType = getBackgroundType();
   let albumImage = resources.track.current.albumImage;
   let artistImage = resources.track.current.artistImage;
   if (backgroundType == 'artist') {

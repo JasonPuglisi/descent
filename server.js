@@ -243,6 +243,9 @@ async function hueWhitelistApplication(accessToken, username, callback) {
     'headers': headers
   });
 
+  if (!response.ok)
+    console.warn(`Error allowlisting with Hue: ${response.status} ${await response.text()}`);
+
   url = 'https://api.meethue.com/route/api';
   body = JSON.stringify({ devicetype: 'Descent' });
 

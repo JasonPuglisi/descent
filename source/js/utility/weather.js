@@ -3,7 +3,7 @@
 
 // Initialize weather display
 function initWeather() {
-  coords = getCoordinates((coords) => {
+  getCoordinates((coords) => {
     // Update weather display immediately
     updateWeather(coords);
 
