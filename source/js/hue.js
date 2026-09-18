@@ -25,7 +25,13 @@ function loadAuthorization() {
 }
 
 function refreshAccessToken(refreshToken, username, callback) {
-  let url = `/app/hue/authorize?refreshToken=${refreshToken}&username=${username}`;
+  let url = `/app/hue/authorize?refreshToken=${encodeURIComponent(refreshToken)}`;
+
+  // Only send a username when we actually have one, or the server stores the
+  // string "undefined" as the Hue username and skips allowlisting
+  if (username)
+    url += `&username=${encodeURIComponent(username)}`;
+
   $.get(url, () => {
     callback();
   });
@@ -77,23 +83,6 @@ function getRooms(accessToken, username) {
       }
     });
   });
-}
-
-function restoreState() {
-  let ip = Cookies.get('hueIp');
-  let username = Cookies.get('hueUsername');
-  let name = Cookies.get('hueName');
-  let rooms = Cookies.get('hueRooms');
-
-  if (ip !== undefined && username !== undefined && name !== undefined) {
-    $('#select-group-bridge-' + ip.replace(/\./g, '_')).html(name).addClass(
-      'selected');
-    $('#hue-step-button').show();
-    $('#hue-step-rooms').show();
-    $('#hue-options').show();
-
-    getRooms(ip, username);
-  }
 }
 
 function restoreRooms() {

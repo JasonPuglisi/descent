@@ -213,8 +213,8 @@ function checkIdleTimeout() {
 
 function clearColors() {
   // Set default colors
-  hexColors = [ '#f6f5f7', '#f6f5f7' ];
-  hueColors = [ { x: (1 / 3), y: (1 / 3) } ];
+  let hexColors = [ '#f6f5f7', '#f6f5f7' ];
+  let hueColors = [ { x: (1 / 3), y: (1 / 3) } ];
 
   resources.colors.hex = hexColors;
   resources.colors.hue = hueColors;

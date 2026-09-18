@@ -34,9 +34,10 @@ function colorsChanged(last, current) {
   if (last == undefined)
     return true;
 
-  return !(last[0].x == current[0].x && last[0].y == current[0].y &&
-    last[1].x == current[1].x && last[1].y == current[1].y &&
-    last[2].x == current[2].x && last[2].y == current[2].y);
+  if (last.length !== current.length)
+    return true;
+
+  return last.some((color, i) => color.x !== current[i].x || color.y !== current[i].y);
 }
 
 function updateHue() {
@@ -62,7 +63,10 @@ function updateHue() {
   // Set Hue credentials
   let accessToken = Cookies.get('hueAccessToken');
   let username = Cookies.get('hueUsername');
-  let rooms = Cookies.get('hueRooms').split(',');
+  let rooms = (Cookies.get('hueRooms') || '').split(',').filter(room => room);
+
+  if (!rooms.length)
+    return;
 
   // Get light information from Hue
   let url = '/app/hue/api/groups';

@@ -65,7 +65,7 @@ function cacheImages() {
               }
               artistCache.onerror = () => {
                 // Artist image failed to load - leave default image
-                resource.track.current.artistImageLoaded = true;
+                resources.track.current.artistImageLoaded = true;
                 checkLoadStatus();
               }
               artistCache.src = artistUrl;

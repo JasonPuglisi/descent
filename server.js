@@ -210,7 +210,7 @@ async function authenticateHue(code, refreshToken, username, callback) {
   });
 
   if (!response.ok) {
-    console.warn(`Error authenticating with Hue: Token failure`);
+    console.warn(`Error authenticating with Hue: Token failure: ${response.status} ${await response.text()}`);
     callback();
     return;
   }
@@ -461,7 +461,7 @@ app.post('/app/spotify/artist', async (req, res) => {
   });
 
   if (!response.ok) {
-    console.warn(`Error getting Spotify artist: Invalid response: ${err}`);
+    console.warn(`Error getting Spotify artist: ${response.status} ${await response.text()}`);
     res.json(new Artist());
     return;
   }
@@ -518,7 +518,8 @@ async function getWeatherDarkSky(key, lat, lon, units, callback) {
   const response = await fetch(url);
 
   if (!response.ok) {
-    callback(`Invalid response: ${err}`, new Weather());
+    callback(`Invalid response: ${response.status}`, new Weather());
+    return;
   }
 
   let data = await response.json();
@@ -552,12 +553,12 @@ async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
   let urlLat = encodeURIComponent(lat);
   let urlLon = encodeURIComponent(lon);
   let urlUnits = encodeURIComponent(units);
-  let url = `http://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
+  let url = `https://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
 
   const response = await fetch(url);
 
   if (!response.ok) {
-    return callback(`Invalid response: ${err}`, new Weather());
+    return callback(`Invalid response: ${response.status}`, new Weather());
   }
 
   let data = await response.json();
