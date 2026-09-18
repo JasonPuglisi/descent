@@ -194,7 +194,7 @@ async function authenticateHue(code, refreshToken, username, callback) {
     return;
   }
 
-  let urlParams = code ? 'code=${code}&grant_type=authorization_code' : 'grant_type=refresh_token';
+  let urlParams = code ? `code=${code}&grant_type=authorization_code` : 'grant_type=refresh_token';
   let urlSlug = '/v2/oauth2/token'
   let url = `https://api.meethue.com${urlSlug}?${urlParams}`;
 
