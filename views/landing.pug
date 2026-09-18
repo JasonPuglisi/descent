@@ -1,7 +1,7 @@
 extends template/layout
 
 block otherStylesheets
-  link(href='/app/static/stylesheets/landing.css', rel='stylesheet')
+  link(href=`/app/static/stylesheets/landing.css?v=${version}`, rel='stylesheet')
 
 block content
   .outer-container
@@ -26,4 +26,4 @@ block content
           i.fab.fa-github.fa-sm
 
 block otherJavascripts
-  script(src='/app/static/javascripts/landing.js')
+  script(src=`/app/static/javascripts/landing.js?v=${version}`)

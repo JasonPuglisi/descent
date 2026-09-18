@@ -2,7 +2,7 @@ extends template/layout
 
 block otherStylesheets
   +weatherIcons
-  link(href='/app/static/stylesheets/now.css', rel='stylesheet')
+  link(href=`/app/static/stylesheets/now.css?v=${version}`, rel='stylesheet')
 
 block content
   .background.blur
@@ -88,11 +88,11 @@ block content
 block otherJavascripts
   +colorThief
   +chroma
-  script(src='/app/static/javascripts/utility/general.js')
-  script(src='/app/static/javascripts/utility/hue.js')
-  script(src='/app/static/javascripts/utility/images.js')
-  script(src='/app/static/javascripts/utility/menu.js')
-  script(src='/app/static/javascripts/utility/metadata.js')
-  script(src='/app/static/javascripts/utility/time.js')
-  script(src='/app/static/javascripts/utility/weather.js')
-  script(src='/app/static/javascripts/now.js')
+  script(src=`/app/static/javascripts/utility/general.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/hue.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/images.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/menu.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/metadata.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/time.js?v=${version}`)
+  script(src=`/app/static/javascripts/utility/weather.js?v=${version}`)
+  script(src=`/app/static/javascripts/now.js?v=${version}`)
