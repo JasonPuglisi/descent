@@ -65,6 +65,7 @@ jobs:
             HUE_CLIENT=${{ vars.HUE_CLIENT }}
             HUE_ID=${{ vars.HUE_ID }}
             HUE_SECRET=${{ secrets.HUE_SECRET }}
+            LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}
             LASTFM_POLL_INTERVAL=${{ vars.LASTFM_POLL_INTERVAL }}
             OPENWEATHERMAP_KEY=${{ secrets.OPENWEATHERMAP_KEY }}
             SPOTIFY_CLIENT=${{ vars.SPOTIFY_CLIENT }}
