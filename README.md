@@ -50,16 +50,12 @@ isn't loading, increase the interval.
 
 ### Weather
 
-Weather is powered by the [Dark Sky API](https://darksky.net/dev/), or the
-[OpenWeatherMap API](https://openweathermap.org/api). To use either, you will
-need to provide an API key. For Dark Sky, set your key as the `DARK_SKY_KEY`
-environment variable. For OpenWeatherMap, set your key as the
-`OPENWEATHERMAP_KEY` environment variable.
+Weather is powered by the
+[OpenWeatherMap API](https://openweathermap.org/api). You will need to provide
+an API key, set as the `OPENWEATHERMAP_KEY` environment variable.
 
-Dark Sky will take precedence, and OpenWeatherMap will be used if no Dark Sky
-API key is provided, or if a Dark Sky API request fails. Dark Sky provides more
-detailed weather summaries, but the officialy-hosted Descent uses
-OpenWeatherMap to avoid fees.
+Descent used to support the Dark Sky API as well, but Apple shut that service
+down, so it's been removed.
 
 For users to enable weather display, they must allow the Descent website to
 access their location. This feature relies on HTML5 geolocation, so it may only
@@ -87,9 +83,9 @@ and your client secret as the `HUE_SECRET` environment variable.
 ### Descent Configuration
 
 To configure the background, weather, and time displays, visit
-[`/app/config`](https://descent.live/app/config). Dark Sky can
-automatically determine weather units, but OpenWeatherMap cannot, so Descent
-defaults to imperial units unless otherwise specified.
+[`/app/config`](https://descent.live/app/config). OpenWeatherMap can't
+determine weather units automatically, so Descent defaults to imperial units
+unless otherwise specified.
 
 #### Descent Configuration Import
 

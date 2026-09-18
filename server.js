@@ -557,7 +557,7 @@ app.post('/app/spotify/artist', async (req, res) => {
   res.json(data);
 });
 
-/* Weather (OpenWeatherMap and DarkSky) functionality */
+/* Weather (OpenWeatherMap) functionality */
 
 class Weather {
   constructor(success) {
@@ -570,17 +570,9 @@ app.post('/app/weather', (req, res) => {
   let lon = req.body.longitude;
   let units = decodeURIComponent(req.body.units);
 
-  let dsKey = process.env.DARK_SKY_KEY;
   let owmKey = process.env.OPENWEATHERMAP_KEY;
 
-  if (dsKey)
-    getWeatherDarkSky(dsKey, lat, lon, units, (err, weather) => {
-      if (err)
-        console.warn(`Error getting Dark Sky weather: ${err}`);
-
-      res.json(weather);
-    });
-  else if (owmKey)
+  if (owmKey)
     getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
       if (err)
         console.warn(`Error getting OpenWeatherMap weather: ${err}`);
@@ -592,46 +584,6 @@ app.post('/app/weather', (req, res) => {
     res.json(new Weather());
   }
 });
-
-async function getWeatherDarkSky(key, lat, lon, units, callback) {
-  units = units === 'imperial' ? 'us' : 'si';
-  let urlLat = encodeURIComponent(lat);
-  let urlLon = encodeURIComponent(lon);
-  let url = `https://api.darksky.net/forecast/${key}/${urlLat},${urlLon}?units=${units}`;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    callback(`Invalid response: ${response.status}`, new Weather());
-    return;
-  }
-
-  let data = await response.json();
-  let icons = {
-    'clear-day': 'day-sunny',
-    'clear-night': 'night-clear',
-    'rain': 'rain',
-    'snow': 'snow',
-    'sleet': 'sleet',
-    'wind': 'cloudy-gusts',
-    'fog': 'fog',
-    'cloudy': 'cloudy',
-    'partly-cloudy-day': 'day-cloudy',
-    'partly-cloudy-night': 'night-alt-cloudy',
-    'hail': 'hail',
-    'thunderstorm': 'thunderstorm',
-    'tornado': 'tornado'
-  };
-
-  let weather = new Weather(true);
-  weather.summary = data.minutely.summary;
-  weather.temperature = Math.round(data.currently.temperature);
-  weather.apparentTemperature = Math.round(data.currently.apparentTemperature);
-  weather.unit = units === 'us' ? 'F' : 'C';
-  weather.icon = icons[data.currently.icon];
-
-  callback(null, weather);
-}
 
 async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
   let urlLat = encodeURIComponent(lat);
