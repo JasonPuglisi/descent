@@ -1,4 +1,4 @@
-/* global initCursor, initDatetime, initMenu, initMetadata, initWeather*/
+/* global initCursor, initDatetime, initMenu, initMetadata, initWakeLock, initWeather*/
 
 $(() => {
   // Set globals
@@ -25,6 +25,7 @@ $(() => {
 });
 
 function init() {
+  initWakeLock();
   initCursor();
   initMenu();
   initMetadata();

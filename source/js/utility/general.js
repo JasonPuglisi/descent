@@ -1,5 +1,38 @@
 /* global resources, Cookies, */
 
+let wakeLock;
+
+// Kiosks running this full screen shouldn't let the display sleep. The browser
+// drops the lock whenever the page is hidden and never restores it on its own,
+// so it has to be taken again on the way back rather than just once at startup.
+function initWakeLock() {
+  if (!('wakeLock' in navigator))
+    return;
+
+  requestWakeLock();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible')
+      requestWakeLock();
+  });
+}
+
+async function requestWakeLock() {
+  if (wakeLock || document.visibilityState !== 'visible')
+    return;
+
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+
+    // The system can drop the lock on its own, usually on low battery
+    wakeLock.addEventListener('release', () => {
+      wakeLock = undefined;
+    });
+  } catch (e) {
+    console.warn(`Error requesting wake lock: ${e.name}, ${e.message}`);
+  }
+}
+
 function initCursor() {
   // Show cursor on any mouse activity
   $('body').on('ready click contextmenu mousemove', showCursor);
