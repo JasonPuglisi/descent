@@ -15,6 +15,8 @@ let pollIntervals = {
 };
 loadPollIntervals();
 
+let lastfmKey = process.env.LASTFM_API_KEY;
+
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
 
@@ -53,7 +55,7 @@ app.get('/:user', (req, res) => {
   let title = 'Descent';
   let user = decodeURIComponent(req.params.user.substring(0, 20));
 
-  res.render('now', { title, user });
+  res.render('now', { title, user, lastfmKey });
 });
 
 app.get('/app/poll/interval', (req, res) => {
