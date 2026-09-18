@@ -43,19 +43,15 @@ function authorizeApplication() {
 }
 
 function getRooms(accessToken, username) {
-  let url = '/app/hue/api/groups';
+  let url = '/app/hue/api/rooms';
   $.post(url, { accessToken, username }, data => {
     $('.groupRooms').each(function() {
       $(this).remove();
     });
     $('#select-groups-loading-rooms').hide();
-    for (let i in data) {
-      let room = data[i];
-      if (room.type === 'Room') {
-        let name = room.name;
-        $('#select-groups-rooms').append('<div class="selectGroup ' +
-          'groupRooms" id="select-group-rooms-' + i + '">' + name + '</div>');
-      }
+    for (let room of data) {
+      $('#select-groups-rooms').append('<div class="selectGroup ' +
+        'groupRooms" id="select-group-rooms-' + room.id + '">' + room.name + '</div>');
     }
 
     restoreRooms();

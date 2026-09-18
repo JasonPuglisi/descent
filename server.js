@@ -256,41 +256,125 @@ async function hueWhitelistApplication(accessToken, username, callback) {
   callback(data[0].success.username);
 }
 
-app.post('/app/hue/api/groups', async (req, res) => {
-  let accessToken = req.body.accessToken;
-  let username = encodeURIComponent(req.body.username);
+// Hue API v2. The cloud gateway mirrors the local bridge under /route, so the
+// same CLIP v2 resource paths work remotely with the app key as a header.
+async function hueRequest(accessToken, applicationKey, path, body) {
+  if (!accessToken || !applicationKey) {
+    console.warn('Error calling Hue API: Missing access token or application key');
+    return null;
+  }
 
-  let url = `https://api.meethue.com/bridge/${username}/groups`;
-  let headers = { 'Authorization': `Bearer ${accessToken}` };
+  let url = `https://api.meethue.com/route/clip/v2/resource/${path}`;
+  let headers = {
+    'Authorization': `Bearer ${accessToken}`,
+    'hue-application-key': applicationKey,
+    'Content-Type': 'application/json'
+  };
 
   const response = await fetch(url, {
+    'method': body ? 'put' : 'get',
+    'body': body ? JSON.stringify(body) : undefined,
     'headers': headers
   });
 
+  if (!response.ok) {
+    console.warn(`Error calling Hue API: ${path}: ${response.status} ${await response.text()}`);
+    return null;
+  }
+
   let data = await response.json();
-  res.json(data);
+
+  return data.data || [];
+}
+
+app.post('/app/hue/api/rooms', async (req, res) => {
+  let rooms = await hueRequest(req.body.accessToken, req.body.username, 'room');
+
+  if (!rooms) {
+    res.json([]);
+    return;
+  }
+
+  res.json(rooms.map(room => ({ id: room.id, name: room.metadata.name })));
+});
+
+// Rooms hold devices and devices expose light services, so the three resources
+// get joined here to keep the display to a single request per update. Each
+// light carries its own gamut, which the client needs to clamp colors properly.
+app.post('/app/hue/api/lights', async (req, res) => {
+  let accessToken = req.body.accessToken;
+  let username = req.body.username;
+  let selected = (req.body.rooms || '').split(',').filter(room => room);
+
+  let [rooms, devices, lights] = await Promise.all([
+    hueRequest(accessToken, username, 'room'),
+    hueRequest(accessToken, username, 'device'),
+    hueRequest(accessToken, username, 'light')
+  ]);
+
+  if (!rooms || !devices || !lights) {
+    res.json([]);
+    return;
+  }
+
+  let deviceIds = new Set();
+  for (let room of rooms)
+    if (selected.includes(room.id))
+      for (let child of room.children || [])
+        if (child.rtype === 'device')
+          deviceIds.add(child.rid);
+
+  let lightIds = new Set();
+  for (let device of devices)
+    if (deviceIds.has(device.id))
+      for (let service of device.services || [])
+        if (service.rtype === 'light')
+          lightIds.add(service.rid);
+
+  // White-only bulbs reject a color payload but still take a color temperature,
+  // so report each light's gamut and mirek range and let the display pick
+  res.json(lights.filter(light => lightIds.has(light.id) && (light.color || light.color_temperature))
+    .map(light => {
+      let schema = light.color_temperature ? light.color_temperature.mirek_schema : undefined;
+
+      return {
+        id: light.id,
+        gamut: light.color ? light.color.gamut : undefined,
+        mirek: schema ? { min: schema.mirek_minimum, max: schema.mirek_maximum } : undefined
+      };
+    }));
 });
 
 app.post('/app/hue/api/light', async (req, res) => {
-  let accessToken = req.body.accessToken;
-  let username = encodeURIComponent(req.body.username);
+  let body;
 
-  let id = encodeURIComponent(req.body.id);
-  let colorX = req.body.colorX;
-  let colorY = req.body.colorY;
+  if (req.body.mirek !== undefined) {
+    let mirek = parseInt(req.body.mirek);
 
-  let url = `https://api.meethue.com/bridge/${username}/lights/${id}/state`;
-  let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
-  let body = `{"xy": [${colorX},${colorY}]}`;
+    if (!Number.isFinite(mirek)) {
+      console.warn(`Error setting Hue light: Invalid color temperature (${req.body.mirek})`);
+      res.status(400).json([]);
+      return;
+    }
 
-  const response = await fetch(url, {
-    'method': 'put',
-    'body': body,
-    'headers': headers
-  });
+    body = { color_temperature: { mirek } };
+  } else {
+    let colorX = parseFloat(req.body.colorX);
+    let colorY = parseFloat(req.body.colorY);
 
-  let data = await response.json();
-  res.json(data);
+    if (!Number.isFinite(colorX) || !Number.isFinite(colorY)) {
+      console.warn(`Error setting Hue light: Invalid color (${req.body.colorX}, ${req.body.colorY})`);
+      res.status(400).json([]);
+      return;
+    }
+
+    body = { color: { xy: { x: colorX, y: colorY } } };
+  }
+
+  let path = `light/${encodeURIComponent(req.body.id)}`;
+  let data = await hueRequest(req.body.accessToken, req.body.username, path, body);
+
+  res.json(data || []);
 });
 
 /* Spotify functionality */
