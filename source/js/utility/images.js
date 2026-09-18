@@ -14,7 +14,8 @@ function cacheImages() {
   let url = '/app/spotify/track';
   let urlArtist = encodeURIComponent(resources.track.current.artist);
   let urlTitle = encodeURIComponent(resources.track.current.title);
-  let body = `artist=${urlArtist}&title=${urlTitle}`;
+  let urlAlbum = encodeURIComponent(resources.track.current.album);
+  let body = `artist=${urlArtist}&title=${urlTitle}&album=${urlAlbum}`;
 
   $.ajax({
     method: 'POST',

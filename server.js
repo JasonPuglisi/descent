@@ -347,10 +347,57 @@ app.post('/app/spotify/track', async (req, res) => {
     return;
   }
 
-  let artist = encodeURIComponent(req.body.artist);
-  let title = encodeURIComponent(req.body.title);
-  let query = `${artist}%20-%20${title}`;
-  let url = `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`;
+  let track = await searchSpotifyTrack(req.body.artist || '', req.body.title || '',
+    req.body.album || '');
+
+  if (!track) {
+    console.warn('Error getting Spotify track: No matching results');
+    res.json(new Track());
+    return;
+  }
+
+  track.success = true;
+
+  res.json(track);
+});
+
+// Search narrows from album-qualified to free text, preferring a result that
+// matches the Last.fm artist and album. Matching only ranks candidates - it never
+// discards them, because scrobbles from low-quality sources often carry metadata
+// that can't match exactly, and Spotify's fuzzy ranking beats showing nothing.
+async function searchSpotifyTrack(artist, title, album) {
+  let queries = [];
+
+  if (album)
+    queries.push(`track:"${title}" album:"${album}"`);
+  queries.push(`artist:"${artist}" track:"${title}"`);
+  queries.push(`${artist} - ${title}`);
+
+  let fallback;
+
+  for (let query of queries) {
+    let tracks = await searchSpotifyTracks(query);
+
+    if (!tracks)
+      return null;
+
+    if (tracks.length)
+      fallback = tracks[0];
+
+    let match = matchTrack(tracks, artist, album);
+
+    if (match)
+      return match;
+  }
+
+  // Nothing matched, so defer to Spotify's best guess from the fuzziest query
+  return fallback;
+}
+
+// Spotify ranks differently at limit=1 than at higher limits, returning a worse
+// top result, so always request a page and pick from it
+async function searchSpotifyTracks(query) {
+  let url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`;
   let headers = {
     'Authorization': `Bearer ${spotifyKey}`
   };
@@ -360,24 +407,40 @@ app.post('/app/spotify/track', async (req, res) => {
   });
 
   if (!response.ok) {
-    console.warn(`Error getting Spotify track: Invalid response: ${err}`);
-    res.json(new Track());
-    return;
+    console.warn(`Error getting Spotify track: ${response.status} ${await response.text()}`);
+    return null;
   }
 
   const data = await response.json();
 
-  if (data.tracks.total < 1) {
-    console.warn('Error getting Spotify track: No results');
-    res.json(new Track());
-    return;
+  return data.tracks.items;
+}
+
+function matchTrack(tracks, artist, album) {
+  let matches = tracks.filter(track => matchesArtist(track, artist));
+
+  if (album) {
+    let exact = matches.find(track => normalizeName(track.album.name) === normalizeName(album));
+
+    if (exact)
+      return exact;
   }
 
-  let track = data.tracks.items[0];
-  track.success = true;
+  return matches[0];
+}
 
-  res.json(track);
-});
+function normalizeName(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function matchesArtist(track, artist) {
+  let credit = normalizeName(artist);
+
+  return track.artists.some(a => {
+    let name = normalizeName(a.name);
+    return name.length >= 3 && credit.includes(name);
+  });
+}
 
 app.post('/app/spotify/artist', async (req, res) => {
   if (!spotifyKey) {
