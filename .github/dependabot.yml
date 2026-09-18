@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # Split by dependency type so each PR is cleanly one side of the release
+  # policy in AGENTS.md: runtime changes are release-worthy and need a version
+  # bump, dev-only changes are not. Grouping them together would mean opening
+  # every PR to work out which it is.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      runtime:
+        dependency-type: production
+        patterns: ["*"]
+      development:
+        dependency-type: development
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      all:
+        patterns: ["*"]
