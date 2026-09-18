@@ -3,10 +3,9 @@
 import gulp from 'gulp';
 import autoprefixer from 'gulp-autoprefixer';
 import browserSyncBase from 'browser-sync';
-import nodemon from 'gulp-nodemon';
+import nodemon from 'nodemon';
 import * as dartSass from 'sass';
 import gulpSass from 'gulp-sass';
-import sourcemaps from 'gulp-sourcemaps';
 import uglifyBase from 'gulp-uglify-es';
 
 const browserSync = browserSyncBase.create();
@@ -15,10 +14,8 @@ const uglify = uglifyBase.default;
 
 gulp.task('build-css', function(done) {
   gulp.src('source/scss/*.scss')
-    .pipe(sourcemaps.init())
     .pipe(sass({ outputStyle: 'compressed' }).on('error', sass.logError))
     .pipe(autoprefixer())
-    .pipe(sourcemaps.write('./sourcemaps'))
     .pipe(gulp.dest('public/stylesheets'));
 
   done();
@@ -26,9 +23,7 @@ gulp.task('build-css', function(done) {
 
 gulp.task('build-js', function(done) {
   gulp.src('source/js/*.js')
-    .pipe(sourcemaps.init())
     .pipe(uglify())
-    .pipe(sourcemaps.write('./sourcemaps'))
     .pipe(gulp.dest('public/javascripts'));
 
   done();
@@ -36,9 +31,7 @@ gulp.task('build-js', function(done) {
 
 gulp.task('build-js-utility', function(done) {
   gulp.src('source/js/utility/*.js')
-    .pipe(sourcemaps.init())
     .pipe(uglify())
-    .pipe(sourcemaps.write('./sourcemaps'))
     .pipe(gulp.dest('public/javascripts/utility'));
 
   done();
