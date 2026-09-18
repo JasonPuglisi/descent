@@ -1,5 +1,5 @@
-/* global resources */
-/* global cacheImages, checkLoadStatus, clearColors, clearImages, cookieEnabled, toggleDisplay, updateHue */
+/* global resources, Cookies */
+/* global cacheImages, checkLoadStatus, clearImages, cookieEnabled, cookieExists, toggleDisplay, updateHue */
 
 let user = $('.music .user').text();
 let key = $('.lastfmKey').text() || 'c1797de6bf0b7e401b623118120cd9e1';
@@ -151,8 +151,8 @@ function setMetadata(playing, error, metadata) {
 
 function handleStateChange() {
   // Get current and previous state
-  current = resources.track.current;
-  previous = resources.track.previous;
+  let current = resources.track.current;
+  let previous = resources.track.previous;
 
   if (previous.playing === undefined) {
     if (!current.playing) {
