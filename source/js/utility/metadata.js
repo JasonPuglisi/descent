@@ -3,13 +3,22 @@
 
 let user = $('.music .user').text();
 let key = $('.lastfmKey').text() || 'c1797de6bf0b7e401b623118120cd9e1';
-let interval = 10000;
+let baseInterval = 10000;
+let pollInterval = 10000;
 let intervalId;
+
+// Last.fm rate limits per API key rather than per IP, so every display sharing
+// this key draws on one budget. A client that backs off when it gets throttled
+// frees capacity for all the others, which is why this is worth doing at all.
+let backoff = 1;
+let backoffMax = 8;
+let backoffRecoveryPolls = 20;
+let consecutiveSuccesses = 0;
 
 function initMetadata() {
   // Start state update loop
   refreshState();
-  intervalId = setInterval(refreshState, interval);
+  applyPollInterval();
 
   // Start interval update loop
   updatePollInterval();
@@ -21,15 +30,55 @@ function updatePollInterval() {
     url: '/app/poll/interval',
     timeout: 2000,
     success: data => {
-      let lastfm = data.lastfm;
-      if (interval !== lastfm) {
-        interval = lastfm;
-        console.info(`Adjusting Last.fm poll interval to ${interval}`);
-        clearInterval(intervalId);
-        intervalId = setInterval(refreshState, interval);
-      }
+      let lastfm = parseInt(data.lastfm, 10);
+
+      if (!Number.isFinite(lastfm) || lastfm <= 0 || lastfm === baseInterval)
+        return;
+
+      console.info(`Adjusting Last.fm poll interval to ${lastfm}`);
+      baseInterval = lastfm;
+      applyPollInterval();
     }
   });
+}
+
+// Re-arm the poll timer, but only when the effective delay actually moved
+function applyPollInterval() {
+  let effective = baseInterval * backoff;
+
+  if (effective === pollInterval && intervalId)
+    return;
+
+  pollInterval = effective;
+  clearInterval(intervalId);
+  intervalId = setInterval(refreshState, pollInterval);
+}
+
+// Back off on rate limiting, then walk it back down once responses recover
+function handleRateLimit() {
+  consecutiveSuccesses = 0;
+
+  if (backoff >= backoffMax)
+    return;
+
+  backoff *= 2;
+  console.warn(`Last.fm rate limited, backing off to ${baseInterval * backoff}ms`);
+  applyPollInterval();
+}
+
+function handlePollSuccess() {
+  if (backoff === 1)
+    return;
+
+  consecutiveSuccesses++;
+
+  if (consecutiveSuccesses < backoffRecoveryPolls)
+    return;
+
+  consecutiveSuccesses = 0;
+  backoff /= 2;
+  console.info(`Last.fm recovered, easing poll interval to ${baseInterval * backoff}ms`);
+  applyPollInterval();
 }
 
 function refreshState() {
@@ -103,6 +152,10 @@ function updateState(data) {
   if (!data || data.error) {
     // Invalid or error response
     error = true;
+
+    // 29 is Last.fm's rate limit code
+    if (data && data.error === 29)
+      handleRateLimit();
   } else if (!data.recenttracks || !data.recenttracks.track || !data.recenttracks.track[0]) {
     // Valid response but missing recent track data
   } else {
@@ -127,6 +180,9 @@ function updateState(data) {
       };
     }
   }
+
+  if (!error)
+    handlePollSuccess();
 
   // Update global state and metadata
   setMetadata(playing, error, metadata);
