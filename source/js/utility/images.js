@@ -170,6 +170,7 @@ function updateColors() {
 let maskNearWhite = 230;
 let maskNearBlack = 25;
 let maskLuminanceFloor = 40;
+let maskSaturatedChannelGap = 30;
 let maskMinimumFraction = 0.01;
 
 function maskBackground(image, callback) {
@@ -207,9 +208,14 @@ function maskBackground(image, callback) {
     let b = data[i + 2];
     let luminance = (r * 299 + g * 587 + b * 114) / 1000;
 
+    // The luminance floor clears shadow that would otherwise skew the palette,
+    // but it weights blue at only 114/1000, so a saturated deep blue reads as
+    // shadow and would be thrown away with it. Colorful pixels are exempt.
+    let channelGap = Math.max(r, g, b) - Math.min(r, g, b);
+
     if ((r > maskNearWhite && g > maskNearWhite && b > maskNearWhite) ||
         (r < maskNearBlack && g < maskNearBlack && b < maskNearBlack) ||
-        luminance < maskLuminanceFloor)
+        (luminance < maskLuminanceFloor && channelGap <= maskSaturatedChannelGap))
       data[i + 3] = 0;
     else
       kept++;
