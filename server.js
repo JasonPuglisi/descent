@@ -1,9 +1,16 @@
 import express from 'express';
+import { readFileSync } from 'fs';
 
 /* Base application functionality */
 
 let app = express();
 app.set('view engine', 'pug');
+
+// Static assets sit behind a CDN with a day-long cache at fixed URLs, so a
+// deploy would serve fresh markup against stale scripts until someone purged by
+// hand. Tying the URLs to the release means a version bump misses the cache on
+// its own.
+app.locals.version = JSON.parse(readFileSync(new URL('package.json', import.meta.url))).version;
 app.use(express.urlencoded({ extended: true }));
 app.use('/app/static/', express.static('public'));
 

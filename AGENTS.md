@@ -111,8 +111,10 @@ job is gated to `refs/heads/main`. A merge to `main` ships to production
 immediately; there is no staging.
 
 Cloudflare sits in front. The rendered HTML is never cached, but static assets
-are cached for 24 hours at unversioned URLs, so a deploy serves fresh HTML
-against stale JavaScript until the cache is purged (#220).
+are cached for 24 hours, so their URLs carry `?v=<package.json version>` and a
+version bump misses the cache on its own. That means a release needs no manual
+purge, but it also means a source change shipped *without* a version bump will
+keep serving the cached asset until the day is up.
 
 ## Gotchas
 

@@ -1,7 +1,7 @@
 extends template/layout
 
 block otherStylesheets
-  link(href='/app/static/stylesheets/config.css', rel='stylesheet')
+  link(href=`/app/static/stylesheets/config.css?v=${version}`, rel='stylesheet')
 
 block content
   .container
@@ -58,5 +58,5 @@ block content
         i.fas.fa-lightbulb.fa-sm
 
 block otherJavascripts
-  script(src='/app/static/javascripts/utility/general.js')
-  script(src='/app/static/javascripts/config.js')
+  script(src=`/app/static/javascripts/utility/general.js?v=${version}`)
+  script(src=`/app/static/javascripts/config.js?v=${version}`)
