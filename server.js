@@ -1,12 +1,10 @@
-import bodyParser from 'body-parser';
 import express from 'express';
-import fetch from 'node-fetch';
 
 /* Base application functionality */
 
 let app = express();
 app.set('view engine', 'pug');
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use('/app/static/', express.static('public'));
 
 let pollIntervals = {
