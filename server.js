@@ -153,10 +153,21 @@ app.post('/app/config/set', (req, res) => {
 
 function loadPollIntervals() {
   let lastfm = process.env.LASTFM_POLL_INTERVAL;
-  if (lastfm) {
-    console.info(`Setting Last.fm poll interval: ${lastfm}`);
-    pollIntervals.lastfm = lastfm;
+
+  if (!lastfm)
+    return;
+
+  // Without parsing this the endpoint hands clients a string, and they compare
+  // it against a number
+  let parsed = parseInt(lastfm, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.warn(`Ignoring invalid Last.fm poll interval: ${lastfm}`);
+    return;
   }
+
+  console.info(`Setting Last.fm poll interval: ${parsed}`);
+  pollIntervals.lastfm = parsed;
 }
 
 /* Hue functionality */
