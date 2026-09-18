@@ -2,7 +2,7 @@
 /* global cacheImages, checkLoadStatus, clearColors, clearImages, cookieEnabled, toggleDisplay, updateHue */
 
 let user = $('.music .user').text();
-let key = $('.lastfmKey').text() || 'c1797de6bf0b7e401b623118120cd9e1';
+let key = $('.lastfmKey').text();
 let interval = 10000;
 let intervalId;
 
