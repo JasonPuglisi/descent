@@ -1,0 +1,53 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release:
+    name: Create release on version bump
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # create the tag and release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Check for version bump
+        id: version
+        run: |
+          current=$(node -p "require('./package.json').version")
+          previous=""
+          if git show HEAD~1:package.json > /tmp/previous.json 2>/dev/null; then
+            previous=$(node -p "require('/tmp/previous.json').version")
+          fi
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$current" ] && [ "$current" != "$previous" ]; then
+            echo "Version changed: ${previous:-none} -> $current"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version unchanged at $current, no release"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.version.outputs.current }}"
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag already exists, skipping."
+          else
+            gh release create "$tag" --generate-notes --title "Stable Release $tag"
+          fi
