@@ -83,6 +83,9 @@ function cacheScrobbles() {
       success: data => {
         // Handle successful response
         resources.track.current.trackScrobbles = data.track.userplaycount;
+
+        // Last.fm reports this as a "0" or "1" string on the same call
+        resources.track.current.trackLoved = data.track.userloved === '1';
         checkLoadStatus();
       }
     });
@@ -147,6 +150,7 @@ function setMetadata(playing, error, metadata) {
   resources.track.current.scrobbles = metadata.scrobbles ? metadata.scrobbles : '';
   resources.track.current.artistScrobbles = '';
   resources.track.current.trackScrobbles = '';
+  resources.track.current.trackLoved = false;
 }
 
 function handleStateChange() {
@@ -241,6 +245,7 @@ function updateMetadata() {
   let scrobbles = resources.track.current.scrobbles;
   let artistScrobbles = resources.track.current.artistScrobbles;
   let trackScrobbles = resources.track.current.trackScrobbles;
+  let trackLoved = resources.track.current.trackLoved;
 
   // Update track metadata text
   $('.music .artist').text(artist || 'Nothing in the air...');
@@ -253,6 +258,7 @@ function updateMetadata() {
   $('.detailedScrobbles .trackScrobbleCount').text(trackScrobbles ? trackScrobbles : '');
   toggleDisplay('.scrobbles', scrobbles);
   toggleDisplay('.detailedScrobbles', artistScrobbles && trackScrobbles);
+  toggleDisplay('.detailedScrobbles .loved', trackLoved);
 
   // Update document title and show/hide extended info as necessary
   if (playing) {
