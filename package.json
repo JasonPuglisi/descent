@@ -28,7 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "browser-sync": "^3.0.4",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "globals": "^17.12.0",
     "gulp": "^5.0.1",
     "gulp-autoprefixer": "^10.0.0",
