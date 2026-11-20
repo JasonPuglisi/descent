@@ -3,9 +3,6 @@ name: Deploy to GCP App Engine
 on:
   push:
   pull_request:
-  # Env vars only reach App Engine on deploy, so rotating a secret needs a way
-  # to redeploy main without a commit
-  workflow_dispatch:
 
 concurrency:
   group: "ae"
