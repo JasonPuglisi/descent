@@ -3,3 +3,8 @@ instance_class: F1
 automatic_scaling:
   max_instances: 1
   min_instances: 1
+  # Open now playing pages each hold a request for up to 50 seconds, and those
+  # count toward concurrency. The default of 10, with the scheduler reacting at
+  # 60% of it, would queue everyone else behind them.
+  max_concurrent_requests: 500
+  target_throughput_utilization: 0.95

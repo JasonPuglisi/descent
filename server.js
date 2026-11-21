@@ -1,4 +1,5 @@
 import express from 'express';
+import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { createLastfm } from './lib/lastfm.js';
 import { searchSpotifyTrack } from './lib/spotify.js';
@@ -15,8 +16,30 @@ app.disable('x-powered-by');
 app.use((req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.set('Content-Security-Policy', contentSecurityPolicy());
   next();
 });
+
+// Scripts only come from here and cdnjs. Cloudflare injects an inline bot
+// detection script into every page, and it reads the nonce from this header
+// to tag that script, so the nonce is what lets it run without allowing
+// inline scripts in general. Images are open to any HTTPS host because album
+// art comes from Spotify and the default background can be any URL.
+function contentSecurityPolicy() {
+  let nonce = randomBytes(16).toString('base64');
+
+  return [
+    'default-src \'self\'',
+    `script-src 'self' 'nonce-${nonce}' https://cdnjs.cloudflare.com`,
+    'style-src \'self\' https://fonts.googleapis.com https://cdnjs.cloudflare.com',
+    'font-src \'self\' https://fonts.gstatic.com https://cdnjs.cloudflare.com',
+    'img-src \'self\' data: https:',
+    'connect-src \'self\'',
+    'object-src \'none\'',
+    'base-uri \'self\'',
+    'form-action \'self\''
+  ].join('; ');
+}
 
 // Static assets sit behind a CDN with a day-long cache at fixed URLs, so a
 // deploy would serve fresh markup against stale scripts until someone purged by
@@ -191,7 +214,17 @@ function queryString(value, maxLength) {
 // Express tags each with an ETag, so the browser revalidates on every poll and
 // gets an empty 304 back when nothing has changed. Errors aren't kept at all.
 async function sendLastfm(res, request) {
-  let { status, body } = await request;
+  let { status, body, etag } = await request;
+
+  // The page may have gone while the request was held
+  if (res.writableEnded || res.destroyed)
+    return;
+
+  // Our own ETag rather than Express's, so a held request and the browser
+  // agree on what "unchanged" means. Express still answers 304 when it
+  // matches the browser's If-None-Match.
+  if (etag)
+    res.set('ETag', etag);
 
   res.set('Cache-Control', status === 200 ? 'no-cache' : 'no-store');
   res.status(status).json(body);
@@ -205,7 +238,17 @@ app.get('/app/lastfm/recent', (req, res) => {
     return;
   }
 
-  sendLastfm(res, lastfm.recentTracks(user));
+  // Pages that pass wait get held until the answer changes, so they can ask
+  // again straight away instead of polling on a timer. Without it this answers
+  // immediately, which is what pages from before this change expect.
+  let controller = new AbortController();
+  res.on('close', () => controller.abort());
+
+  sendLastfm(res, lastfm.recentTracks(user, {
+    etag: req.get('If-None-Match'),
+    wait: req.query.wait === '1',
+    signal: controller.signal
+  }));
 });
 
 app.get('/app/lastfm/artist', (req, res) => {
