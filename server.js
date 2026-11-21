@@ -52,6 +52,13 @@ function contentSecurityPolicy() {
 app.locals.version = JSON.parse(readFileSync(new URL('package.json', import.meta.url))).version;
 app.locals.assets = `/app/static/${app.locals.version}`;
 app.use(express.urlencoded({ extended: true }));
+
+// Express 5 leaves the body undefined for a request without one, and every
+// POST route reads fields straight off it
+app.use((req, res, next) => {
+  req.body ??= {};
+  next();
+});
 app.use(app.locals.assets, express.static('public'));
 app.use('/app/static/', express.static('public'));
 
@@ -105,9 +112,9 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  let user = encodeURIComponent(req.body.user || req.body.defaultUser);
+  let user = req.body.user || req.body.defaultUser;
 
-  res.redirect(`/${user}`);
+  res.redirect(user ? `/${encodeURIComponent(user)}` : '/');
 });
 
 app.get('/:user', (req, res) => {
@@ -198,14 +205,11 @@ app.post('/app/config/set', (req, res) => {
     res.cookie(name, selected, { maxAge: 315360000000, secure: true });
   }
 
-  let user = encodeURIComponent(req.body.lastUser);
+  // Encoding first used to turn a missing user into the string "undefined",
+  // which slipped past the check and sent people to /undefined
+  let user = req.body.lastUser;
 
-  if (user === undefined || user === null) {
-    res.redirect('/');
-    return;
-  }
-
-  res.redirect(`/${user}`);
+  res.redirect(user ? `/${encodeURIComponent(user)}` : '/');
 });
 
 /* Last.fm functionality */
