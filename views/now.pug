@@ -88,6 +88,4 @@ block content
           h2.artist
 
 block otherJavascripts
-  +colorThief
-  +chroma
-  script(type='module', src=`${assets}/javascripts/now.js`)
+  script(type='module', src=`${assets}/javascripts/now.js`, nonce=nonce)

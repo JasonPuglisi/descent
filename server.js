@@ -16,23 +16,25 @@ app.set('view engine', 'pug');
 // and dashboards.
 app.disable('x-powered-by');
 app.use((req, res, next) => {
+  res.locals.nonce = randomBytes(16).toString('base64');
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.set('Content-Security-Policy', contentSecurityPolicy());
+  res.set('Content-Security-Policy', contentSecurityPolicy(res.locals.nonce));
   next();
 });
 
-// Scripts only come from here and cdnjs. Cloudflare injects an inline bot
-// detection script into every page, and it reads the nonce from this header
-// to tag that script, so the nonce is what lets it run without allowing
-// inline scripts in general. Images are open to any HTTPS host because album
-// art comes from Spotify and the default background can be any URL.
-function contentSecurityPolicy() {
-  let nonce = randomBytes(16).toString('base64');
-
+// Every script tag carries the nonce, and 'strict-dynamic' trusts whatever
+// those scripts load in turn, like our module imports. Cloudflare injects a
+// bot detection script into every page and tags it with the nonce from this
+// header, but that script then writes another inline script into a hidden
+// iframe, which only 'strict-dynamic' lets run. Browsers that support it
+// ignore 'self' in script-src, and older ones ignore 'strict-dynamic' and fall
+// back to 'self' and the nonce. Images are open to any HTTPS host because
+// album art comes from Spotify and the default background can be any URL.
+function contentSecurityPolicy(nonce) {
   return [
     'default-src \'self\'',
-    `script-src 'self' 'nonce-${nonce}' https://cdnjs.cloudflare.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     'style-src \'self\' https://fonts.googleapis.com https://cdnjs.cloudflare.com',
     'font-src \'self\' https://fonts.gstatic.com https://cdnjs.cloudflare.com',
     'img-src \'self\' data: https:',

@@ -144,3 +144,71 @@ export function colorsChanged(last, current) {
 
   return last.some((color, i) => color.x !== current[i].x || color.y !== current[i].y);
 }
+
+// Text colors come from the artwork, brightened in CIE Lab until they read on
+// the dark background, with darker colors brightened more. These two are the
+// only parts of chroma.js the page used, so they live here instead of loading
+// the whole library, and the tests check them against chroma.js itself.
+
+// WCAG relative luminance, from 0 for black to 1 for white
+export function getLuminance(color) {
+  let [r, g, b] = color.slice(0, 3).map(channel => {
+    channel /= 255;
+    return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+  });
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// D65 reference white and the Lab constants chroma.js uses, so brightening by
+// one step means the same 18 units of lightness it did there
+let labWhite = { x: 0.950470, y: 1, z: 1.088830 };
+let labStep = 18;
+let labT0 = 4 / 29;
+let labT1 = 6 / 29;
+let labT2 = 3 * labT1 * labT1;
+let labT3 = labT1 * labT1 * labT1;
+
+function toLinear(channel) {
+  channel /= 255;
+  return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+}
+
+function fromLinear(channel) {
+  return 255 * (channel <= 0.00304 ? 12.92 * channel : 1.055 * Math.pow(channel, 1 / 2.4) - 0.055);
+}
+
+function toLab(color) {
+  let [r, g, b] = color.slice(0, 3).map(toLinear);
+  let scale = t => t > labT3 ? Math.cbrt(t) : t / labT2 + labT0;
+
+  let x = scale((0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / labWhite.x);
+  let y = scale((0.2126729 * r + 0.7151522 * g + 0.0721750 * b) / labWhite.y);
+  let z = scale((0.0193339 * r + 0.1191920 * g + 0.9503041 * b) / labWhite.z);
+  let lightness = 116 * y - 16;
+
+  return [lightness < 0 ? 0 : lightness, 500 * (x - y), 200 * (y - z)];
+}
+
+function fromLab([lightness, a, b]) {
+  let unscale = t => t > labT1 ? t * t * t : labT2 * (t - labT0);
+  let y = (lightness + 16) / 116;
+  let x = labWhite.x * unscale(y + a / 500);
+  let z = labWhite.z * unscale(y - b / 200);
+  y = labWhite.y * unscale(y);
+
+  return [
+    3.2404542 * x - 1.5371385 * y - 0.4985314 * z,
+    -0.9692660 * x + 1.8760108 * y + 0.0415560 * z,
+    0.0556434 * x - 0.2040259 * y + 1.0572252 * z
+  ].map(fromLinear);
+}
+
+// A color made lighter by some number of Lab steps, as a hex string
+export function brightenHex(color, amount) {
+  let lab = toLab(color);
+  lab[0] += labStep * amount;
+
+  return `#${fromLab(lab).map(channel =>
+    Math.round(Math.min(255, Math.max(0, channel))).toString(16).padStart(2, '0')).join('')}`;
+}

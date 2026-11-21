@@ -1,5 +1,5 @@
-/* global chroma, ColorThief */
-
+import { getPaletteSync } from '../vendor/colorthief/index.browser.js';
+import { brightenHex, getLuminance } from './color.js';
 import { cookieEnabled, cookieExists, getCookie } from './cookies.js';
 import { hide, show } from './general.js';
 import { getHueColors, updateHue } from './hue.js';
@@ -85,7 +85,15 @@ async function updateColors(current) {
   if (!current())
     return;
 
-  let colors = new ColorThief().getPalette(source, 3);
+  let palette = getPaletteSync(source, { colorCount: 3 });
+
+  if (!palette || !palette.length) {
+    clearColors();
+    updateHue();
+    return;
+  }
+
+  let colors = palette.map(color => color.array());
 
   resources.colors.regular = colors;
   resources.colors.hex = getHexColors();
@@ -161,11 +169,7 @@ async function maskBackground(image) {
 }
 
 function getHexColors() {
-  return resources.colors.regular.map(color => {
-    let brightenFactor = 3 * (1 - chroma(color).luminance());
-
-    return chroma(color).brighten(brightenFactor).hex();
-  });
+  return resources.colors.regular.map(color => brightenHex(color, 3 * (1 - getLuminance(color))));
 }
 
 function updateCover() {

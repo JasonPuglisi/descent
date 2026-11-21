@@ -44,6 +44,15 @@ gulp.task('build-js-utility', function() {
     .pipe(gulp.dest('public/javascripts/utility'));
 });
 
+// Color Thief ships a single file browser module, so it's copied in next to our
+// own modules and served from here rather than a CDN. Dependabot keeps the npm
+// package current, and the next build picks the new version up.
+gulp.task('build-js-vendor', function() {
+  return gulp.src('node_modules/colorthief/dist/index.browser.js')
+    .pipe(uglify({ module: true }))
+    .pipe(gulp.dest('public/javascripts/vendor/colorthief'));
+});
+
 gulp.task('sync-css', gulp.series(function watchCss() {
   return buildCss(true);
 }, function(done) {
@@ -103,5 +112,5 @@ gulp.task('watch', gulp.series('nodemon', function(done) {
   done();
 }));
 
-gulp.task('build', gulp.series('build-css', 'build-js', 'build-js-utility'));
+gulp.task('build', gulp.series('build-css', 'build-js', 'build-js-utility', 'build-js-vendor'));
 gulp.task('default', gulp.series('build', 'watch'));
