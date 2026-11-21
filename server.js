@@ -35,8 +35,8 @@ function contentSecurityPolicy(nonce) {
   return [
     'default-src \'self\'',
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
-    'style-src \'self\' https://fonts.googleapis.com https://cdnjs.cloudflare.com',
-    'font-src \'self\' https://fonts.gstatic.com https://cdnjs.cloudflare.com',
+    'style-src \'self\'',
+    'font-src \'self\'',
     'img-src \'self\' data: https:',
     'connect-src \'self\'',
     'object-src \'none\'',
