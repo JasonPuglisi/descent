@@ -1,3 +1,5 @@
 node_modules/
 public/javascripts
 public/stylesheets
+test-results/
+playwright-report/

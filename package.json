@@ -21,7 +21,8 @@
     "start": "node server.js",
     "dev": "gulp",
     "lint": "eslint .",
-    "test": "gulp build && eslint . && node --test 'test/**/*.test.js'"
+    "test": "gulp build && eslint . && node --test 'test/**/*.test.js'",
+    "smoke": "playwright test"
   },
   "private": true,
   "dependencies": {
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "browser-sync": "^3.0.4",
     "eslint": "^10.15.0",
     "globals": "^17.14.0",
