@@ -57,9 +57,9 @@ export async function updateHue() {
   });
 }
 
-// Trade the refresh token for a new access token. The server answers with
-// cookies and a redirect to the setup page, so the redirect isn't followed;
-// whether it worked is down to whether an access token cookie came back.
+// Trade the refresh token for a new access token, which the server sets as a
+// cookie. The token goes in the body rather than the URL, where request logs
+// would keep a copy of it.
 //
 // The username has to go along whenever there is one. Without it the server
 // treats this as a first connection and registers another application key on
@@ -71,16 +71,12 @@ export async function refreshHueToken() {
   if (!refreshToken)
     return false;
 
-  let params = new URLSearchParams({ refreshToken });
+  let fields = { refreshToken };
 
   if (username)
-    params.set('username', username);
+    fields.username = username;
 
-  try {
-    await fetch(`/app/hue/authorize?${params}`, { 'redirect': 'manual' });
-  } catch {
-    return false;
-  }
+  let result = await postForm('/app/hue/authorize', fields, 10000);
 
-  return cookieExists('hueAccessToken');
+  return Boolean(result && result.success) && cookieExists('hueAccessToken');
 }
