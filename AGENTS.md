@@ -44,7 +44,7 @@ silently won't exist in production.
 
 ```
 yarn                 # install
-yarn build           # compile scss and js into public/
+yarn gulp build      # compile scss and js into public/
 yarn dev             # build, then watch with browsersync on :3333 and nodemon
 yarn start           # run the server on the last build
 yarn test            # build, lint, then unit tests, the same thing CI runs
@@ -58,9 +58,11 @@ testing should be pure enough to import without a DOM, a server, or
 credentials. Pass dependencies like a search function in, or split the logic
 into its own module, the way `lib/spotify.js` and `utility/color.js` are.
 
-`package.json` has an empty `gcp-build` script on purpose. App Engine runs any
-`build` script on deploy unless `gcp-build` overrides it, and CI has already
-built `public/`, so rebuilding there would only slow the deploy down.
+Don't add a `build` or `gcp-build` script to `package.json`. App Engine runs
+either one during deploy, and CI has already built `public/`. An empty
+`gcp-build`, which Google suggests for turning this off, breaks the deploy
+under Yarn 1 with "Script must exist". That's why building on its own is
+`yarn gulp build`.
 
 ## Code Conventions
 
