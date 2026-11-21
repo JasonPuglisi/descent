@@ -3,7 +3,7 @@ import { toggleDisplay } from './general.js';
 import { updateHue } from './hue.js';
 import { cacheImages, clearImages } from './images.js';
 import { getJson } from './request.js';
-import { resources, user } from './state.js';
+import { pageVersion, resources, user } from './state.js';
 
 // The server sends the real interval within a second or two of loading
 let baseInterval = 3000;
@@ -39,6 +39,8 @@ async function updatePollInterval() {
   if (!data)
     return;
 
+  checkVersion(data.version);
+
   let lastfm = parseInt(data.lastfm, 10);
 
   if (!Number.isFinite(lastfm) || lastfm <= 0 || lastfm === baseInterval)
@@ -47,6 +49,22 @@ async function updatePollInterval() {
   console.info(`Adjusting Last.fm poll interval to ${lastfm}`);
   baseInterval = lastfm;
   applyPollInterval();
+}
+
+// Kiosks leave this page open for weeks, so without this they'd keep running
+// whatever code they loaded with, including how they talk to the server. When
+// a deploy changes the version, reload to pick it up. The delay is random so
+// every open display doesn't come back in the same second.
+let reloadScheduled = false;
+let reloadSpread = 30000;
+
+function checkVersion(version) {
+  if (!version || !pageVersion || version === pageVersion || reloadScheduled)
+    return;
+
+  reloadScheduled = true;
+  console.info(`Descent ${version} is out, reloading from ${pageVersion}`);
+  setTimeout(() => window.location.reload(), Math.random() * reloadSpread);
 }
 
 // Re-arm the poll timer, but only when the effective delay actually moved

@@ -8,6 +8,16 @@ import { searchSpotifyTrack } from './lib/spotify.js';
 let app = express();
 app.set('view engine', 'pug');
 
+// A few headers that cost nothing and close off old browser footguns. There's
+// no frame restriction, since people embed the now playing page in streams
+// and dashboards.
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // Static assets sit behind a CDN with a day-long cache at fixed URLs, so a
 // deploy would serve fresh markup against stale scripts until someone purged by
 // hand. Tying the URLs to the release means a version bump misses the cache on
@@ -83,7 +93,7 @@ app.get('/:user', (req, res) => {
 // keep up with at that rate.
 app.get('/app/poll/interval', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json({ 'lastfm': lastfm.pollInterval() });
+  res.json({ 'lastfm': lastfm.pollInterval(), 'version': app.locals.version });
 });
 
 app.get('/app/config', (req, res) => {
