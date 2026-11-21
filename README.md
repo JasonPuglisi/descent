@@ -39,11 +39,12 @@ Get an API key from [Last.fm API](https://www.last.fm/api) and set it as the
 `LASTFM_API_KEY` environment variable. Descent makes its Last.fm calls from the
 server, so the key never reaches the browser.
 
-To avoid Last.fm rate limiting, you can adjust the API polling interval. Set
-the `LASTFM_POLL_INTERVAL` environment variable to an integer in milliseconds.
-The default is `10000` (10 seconds), but a more reasonable value could be
-`5000` (5 seconds). If Last.fm calls start failing, and playing data isn't
-loading, increase the interval.
+Browsers check for track changes every 3 seconds by default. Set the
+`LASTFM_POLL_INTERVAL` environment variable to a different number of
+milliseconds to change that. The server keeps its Last.fm calls under a fixed
+budget, and if more people are being watched than that budget can refresh at
+the configured interval, it slows everyone down evenly rather than getting
+rate limited.
 
 Thank you to [djryan](https://github.com/djryan) for donating an API key used
 on the official hosted site!

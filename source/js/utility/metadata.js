@@ -5,8 +5,9 @@ import { cacheImages, clearImages } from './images.js';
 import { getJson } from './request.js';
 import { resources, user } from './state.js';
 
-let baseInterval = 10000;
-let pollInterval = 10000;
+// The server sends the real interval within a second or two of loading
+let baseInterval = 3000;
+let pollInterval = 3000;
 let intervalId;
 
 // Last.fm rate limits per API key rather than per IP, so every display sharing
@@ -115,14 +116,12 @@ async function cacheScrobbles(current) {
 
   let track = resources.track.current;
 
-  if (artistInfo && artistInfo.artist)
-    track.artistScrobbles = artistInfo.artist.stats.userplaycount;
+  if (artistInfo && !artistInfo.error)
+    track.artistScrobbles = artistInfo.playcount;
 
-  if (trackInfo && trackInfo.track) {
-    track.trackScrobbles = trackInfo.track.userplaycount;
-
-    // Last.fm reports this as a "0" or "1" string on the same call
-    track.trackLoved = trackInfo.track.userloved === '1';
+  if (trackInfo && !trackInfo.error) {
+    track.trackScrobbles = trackInfo.playcount;
+    track.trackLoved = trackInfo.loved;
   }
 
   // Images haven't landed yet, so leave it to them to update the text
@@ -144,20 +143,18 @@ function updateState(data) {
     if (data && data.error === 29)
       handleRateLimit();
   } else {
-    let track = data.recenttracks?.track?.[0];
-    let nowPlaying = track?.['@attr']?.nowplaying;
+    // The server trims Last.fm's answer down to the latest track and total
+    let track = data.track;
 
-    if (track && (ignoreCurrent || nowPlaying)) {
+    if (track && (ignoreCurrent || track.nowPlaying)) {
       playing = true;
 
       metadata = {
-        artist: track.artist['#text'],
-        artistId: track.artist.mbid,
-        album: track.album ? track.album['#text'] : '',
-        title: track.name,
+        artist: track.artist,
+        album: track.album,
+        title: track.title,
         link: track.url,
-        cover: track.image[track.image.length - 1]['#text'],
-        scrobbles: data.recenttracks['@attr'].total
+        scrobbles: data.total
       };
     }
   }
@@ -181,11 +178,9 @@ function setMetadata(playing, error, metadata) {
     playing, // True if track is *currently* playing
     error,
     artist: metadata.artist ?? '',
-    artistId: metadata.artistId || '',
     album: metadata.album || '',
     title: metadata.title ?? '',
     link: metadata.link || '',
-    cover: metadata.cover || '',
     scrobbles: metadata.scrobbles || ''
   });
 }
