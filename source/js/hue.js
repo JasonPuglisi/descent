@@ -17,14 +17,20 @@ async function loadAuthorization() {
   if (!hueAuthorized() && hueRefreshable())
     await refreshHueToken();
 
+  let rooms = hueAuthorized() ? await getRooms() : undefined;
+
   hide('#loading');
 
-  if (hueAuthorized()) {
+  if (Array.isArray(rooms)) {
     show('#hue-step-rooms');
     show('#hue-options');
-    getRooms();
+    showRooms(rooms);
   } else {
+    // Saved tokens that Hue turned down still count as connected by their
+    // cookies, which used to leave this page offering options with no rooms.
+    // Connecting again issues new tokens and registers a new bridge key.
     show('#connect');
+    show('#connect-again', rooms !== undefined);
     authorizeApplication();
   }
 }
@@ -36,17 +42,27 @@ function authorizeApplication() {
   document.querySelector('.appAuth').setAttribute('href', `https://api.meethue.com/v2/oauth2/authorize?${params}`);
 }
 
+// The rooms, or the error when Hue won't list them. An expired access token
+// gets one refresh first.
 async function getRooms() {
   let rooms = await postForm('/app/hue/api/rooms', {}, 10000);
 
+  if (rooms && rooms.error === 'expired' && await refreshHueToken())
+    rooms = await postForm('/app/hue/api/rooms', {}, 10000);
+
+  return Array.isArray(rooms) ? rooms : rooms || { error: 'unavailable' };
+}
+
+function showRooms(rooms) {
   hide('#select-groups-loading-rooms');
+  show('#no-rooms', !rooms.length);
 
   let container = document.querySelector('#select-groups-rooms');
 
   for (let existing of container.querySelectorAll('.groupRooms'))
     existing.remove();
 
-  for (let room of rooms || []) {
+  for (let room of rooms) {
     // Room names come from the user's Hue account, so they go in as text
     let element = document.createElement('button');
     element.type = 'button';

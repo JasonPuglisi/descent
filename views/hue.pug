@@ -13,6 +13,7 @@ block content
             i.fas.fa-circle-notch.fa-spin(aria-hidden='true')
             | Loading...
         li.hide.hueStep#connect
+          p.hide#connect-again Hue didn't accept the saved connection, so it needs connecting again.
           h2
             a.appAuth Click here
             |  to connect your Hue account.
@@ -22,6 +23,7 @@ block content
             h2
               i.fas.fa-circle-notch.fa-spin(aria-hidden='true')
               | Loading...
+          p.hide#no-rooms This Hue account doesn't have any rooms yet. Add some in the Hue app, then come back.
           div.selectGroups#select-groups-rooms(role='group' aria-labelledby='heading-rooms')
         li.hide.hueStep#hue-step-done All set. Hit 
           span.code l

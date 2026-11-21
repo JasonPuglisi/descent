@@ -23,6 +23,7 @@ function watchErrors(page) {
 
 test.beforeEach(async ({ request }) => {
   await setTrack(request, { artist: 'Taio Cruz', title: 'Higher', album: 'Rokstarr', playing: true });
+  await request.post(`${fake}/hue`, { data: { failure: 0, times: 0 } });
 });
 
 test('the landing page offers a user to try', async ({ page }) => {
@@ -147,6 +148,7 @@ test('the Hue page reissues old readable tokens as httpOnly and lists rooms', as
 });
 
 test('lights follow the art once Hue is on', async ({ page, context, request, baseURL }) => {
+  let errors = watchErrors(page);
   await addOldHueCookies(context, baseURL);
   await context.addCookies([
     { name: 'hueRooms', value: 'room-1', url: baseURL },
@@ -162,4 +164,30 @@ test('lights follow the art once Hue is on', async ({ page, context, request, ba
   let put = (await hueRequests(request)).filter(call => call.method === 'put').at(-1);
   expect(put).toMatchObject({ authorization: 'Bearer access-2', key: 'bridge-key' });
   expect(JSON.parse(put.body).color.xy.x).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
+test('the Hue page asks to connect again when Hue rejects the saved bridge key', async ({ page, context, request, baseURL }) => {
+  let errors = watchErrors(page);
+  await addOldHueCookies(context, baseURL);
+  await request.post(`${fake}/hue`, { data: { failure: 403, times: 100 } });
+
+  await page.goto('/app/hue');
+
+  await expect(page.locator('#connect-again')).toBeVisible();
+  await expect(page.locator('.appAuth')).toBeVisible();
+  await expect(page.locator('#hue-options')).toBeHidden();
+  // The rejection shows up as a failed request, which isn't a page error
+  expect(errors.filter(error => !error.includes('401'))).toEqual([]);
+});
+
+test('the Hue page refreshes an access token Hue says has expired', async ({ page, context, request, baseURL }) => {
+  await addOldHueCookies(context, baseURL);
+  await context.addCookies([{ name: 'hueAccess', value: 'true', url: baseURL }]);
+  await request.post(`${fake}/hue`, { data: { failure: 401, times: 1 } });
+
+  await page.goto('/app/hue');
+
+  await expect(page.locator('#select-groups-rooms button', { hasText: 'Living Room' })).toBeVisible();
+  await expect(page.locator('#connect-again')).toBeHidden();
 });

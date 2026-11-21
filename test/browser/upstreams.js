@@ -6,6 +6,7 @@
 //   POST /delay   { spotify }                          slow Spotify down, up to 10 s
 //   GET  /calls                                       upstream calls so far
 //   GET  /hue                                         Hue requests so far, with the credentials they carried
+//   POST /hue         { failure, times }                  fail Hue resource calls with 401 or 403
 
 import { createServer } from 'node:http';
 import { deflateSync } from 'node:zlib';
@@ -14,7 +15,8 @@ let state = {
   track: { artist: 'Taio Cruz', title: 'Higher', album: 'Rokstarr', playing: true },
   spotifyDelay: 0,
   calls: [],
-  hue: []
+  hue: [],
+  hueFailure: { status: 0, times: 0 }
 };
 
 // A solid square as a PNG data URL. The page's CSP allows data: images, and
@@ -133,6 +135,11 @@ async function hue(url, options = {}) {
   if (url.pathname === '/route/api')
     return json([{ success: { username: 'bridge-key' } }]);
 
+  if (state.hueFailure.times > 0) {
+    state.hueFailure.times--;
+    return json({ errors: [{ description: 'unauthorized' }] }, state.hueFailure.status);
+  }
+
   let resources = {
     room: [{ id: 'room-1', metadata: { name: 'Living Room' }, children: [{ rid: 'device-1', rtype: 'device' }] }],
     device: [{ id: 'device-1', services: [{ rid: 'light-1', rtype: 'light' }] }],
@@ -182,6 +189,8 @@ createServer((req, res) => {
 
     if (req.url === '/track')
       Object.assign(state.track, fields);
+    else if (req.url === '/hue' && req.method === 'POST')
+      state.hueFailure = { status: Number(fields.failure) || 0, times: Math.min(Number(fields.times) || 0, 100) };
     else if (req.url === '/delay')
       state.spotifyDelay = Math.min(Math.max(Number(fields.spotify) || 0, 0), 10000);
 
