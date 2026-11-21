@@ -3,7 +3,7 @@
 // keys or network. A small control server lets the test change what's playing.
 //
 //   POST /track   { title, artist, album, playing }   change the track
-//   POST /delay   { spotify }                          slow Spotify down, in ms
+//   POST /delay   { spotify }                          slow Spotify down, up to 10 s
 //   GET  /calls                                       upstream calls so far
 
 import { createServer } from 'node:http';
@@ -144,9 +144,11 @@ createServer((req, res) => {
     if (req.url === '/track')
       Object.assign(state.track, fields);
     else if (req.url === '/delay')
-      state.spotifyDelay = fields.spotify || 0;
+      state.spotifyDelay = Math.min(Math.max(Number(fields.spotify) || 0, 0), 10000);
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(req.url === '/calls' ? state.calls : state.track));
   });
-}).listen(process.env.DESCENT_FAKE_PORT || 3999);
+// Only this machine, since anything that can reach it can change what the
+// server thinks is playing
+}).listen(process.env.DESCENT_FAKE_PORT || 3999, '127.0.0.1');

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { fakePort } from '../../playwright.config.js';
 
-let fake = `http://localhost:${fakePort}`;
+let fake = `http://127.0.0.1:${fakePort}`;
 
 async function setTrack(request, track) {
   await request.post(`${fake}/track`, { data: track });
