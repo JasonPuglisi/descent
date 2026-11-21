@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { createLastfm } from './lib/lastfm.js';
 import { searchSpotifyTrack } from './lib/spotify.js';
+import { createWeather } from './lib/weather.js';
 
 /* Base application functionality */
 
@@ -669,84 +670,14 @@ app.post('/app/spotify/artist', async (req, res) => {
 
 /* Weather (OpenWeatherMap) functionality */
 
-class Weather {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
+if (!process.env.OPENWEATHERMAP_KEY)
+  console.warn('No OpenWeatherMap key set, so weather will not show');
 
-app.post('/app/weather', (req, res) => {
-  let lat = req.body.latitude;
-  let lon = req.body.longitude;
-  let units = decodeURIComponent(req.body.units);
+let weather = createWeather({ key: process.env.OPENWEATHERMAP_KEY });
 
-  let owmKey = process.env.OPENWEATHERMAP_KEY;
-
-  if (owmKey)
-    getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
-      if (err)
-        console.warn(`Error getting OpenWeatherMap weather: ${err}`);
-
-      res.json(weather);
-    });
-  else {
-    console.warn('Error getting weather: No API key');
-    res.json(new Weather());
-  }
+app.post('/app/weather', async (req, res) => {
+  res.json(await weather.get(req.body.latitude, req.body.longitude, req.body.units));
 });
-
-async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
-  let urlLat = encodeURIComponent(lat);
-  let urlLon = encodeURIComponent(lon);
-  let urlUnits = encodeURIComponent(units);
-  let url = `https://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    return callback(`Invalid response: ${response.status}`, new Weather());
-  }
-
-  let data = await response.json();
-
-  let icons = {
-    '01d': 'day-sunny',
-    '01n': 'night-clear',
-    '02d': 'day-cloudy',
-    '02n': 'night-cloudy',
-    '03d': 'cloud',
-    '03n': 'cloud',
-    '04d': 'cloudy',
-    '04n': 'cloudy',
-    '09d': 'rain',
-    '09n': 'rain',
-    '10d': 'day-rain',
-    '10n': 'night-rain',
-    '11d': 'thunderstorm',
-    '11n': 'thunderstorm',
-    '13d': 'snow',
-    '13n': 'snow',
-    '50d': 'windy',
-    '50n': 'windy'
-  };
-  let apparent;
-  if (units === 'imperial')
-    apparent = 35.74 + 0.6215 * data.main.temp - 35.75 * Math.pow(data.wind.speed, 0.16)
-      + 0.4275 * data.main.temp * Math.pow(data.wind.speed, 0.16);
-  else
-    apparent = 13.12 + 0.6215 * data.main.temp - 11.37 * Math.pow(data.wind.speed, 0.16)
-      + 0.3965 * data.main.temp * Math.pow(data.wind.speed, 0.16);
-
-  let weather = new Weather(true);
-  weather.summary = `${data.weather[0].description} currently`;
-  weather.summary = `${weather.summary.substring(0, 1).toUpperCase()}${weather.summary.substring(1)}`;
-  weather.temperature = Math.round(data.main.temp);
-  weather.apparentTemperature = Math.round(apparent);
-  weather.unit = units === 'imperial' ? 'F' : 'C';
-  weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
-
-  callback(null, weather);
-}
 
 /* Application runtime */
 
