@@ -1,5 +1,6 @@
 import express from 'express';
 import { readFileSync } from 'fs';
+import { createLastfm } from './lib/lastfm.js';
 import { searchSpotifyTrack } from './lib/spotify.js';
 
 /* Base application functionality */
@@ -24,10 +25,14 @@ let pollIntervals = {
 };
 loadPollIntervals();
 
-let lastfmKey = process.env.LASTFM_API_KEY;
-
-if (!lastfmKey)
+if (!process.env.LASTFM_API_KEY)
   console.warn('No Last.fm API key set, so the now playing page will not load any tracks');
+
+// Last.fm asks API clients to send an identifiable User-Agent
+let lastfm = createLastfm({
+  key: process.env.LASTFM_API_KEY,
+  userAgent: `Descent/${app.locals.version} (+https://descent.live)`
+});
 
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
@@ -68,7 +73,7 @@ app.get('/:user', (req, res) => {
   let title = 'Descent';
   let user = decodeURIComponent(req.params.user.substring(0, 20));
 
-  res.render('now', { title, user, lastfmKey });
+  res.render('now', { title, user });
 });
 
 app.get('/app/poll/interval', (req, res) => {
@@ -156,6 +161,58 @@ app.post('/app/config/set', (req, res) => {
   }
 
   res.redirect(`/${user}`);
+});
+
+/* Last.fm functionality */
+
+// Query values arrive as arrays when a name repeats, and as nothing when it's
+// missing, so only take a single string of a sane length
+function queryString(value, maxLength) {
+  return typeof value === 'string' && value && value.length <= maxLength ? value : undefined;
+}
+
+async function sendLastfm(res, request) {
+  let { status, body } = await request;
+
+  // Every poll has to reach Last.fm, or track changes would wait out a cache
+  res.set('Cache-Control', 'no-store');
+  res.status(status).json(body);
+}
+
+app.get('/app/lastfm/recent', (req, res) => {
+  let user = queryString(req.query.user, 64);
+
+  if (!user) {
+    res.status(400).json({ error: 6, message: 'Missing user' });
+    return;
+  }
+
+  sendLastfm(res, lastfm.recentTracks(user));
+});
+
+app.get('/app/lastfm/artist', (req, res) => {
+  let artist = queryString(req.query.artist, 512);
+  let user = queryString(req.query.user, 64);
+
+  if (!artist || !user) {
+    res.status(400).json({ error: 6, message: 'Missing artist or user' });
+    return;
+  }
+
+  sendLastfm(res, lastfm.artistInfo(artist, user));
+});
+
+app.get('/app/lastfm/track', (req, res) => {
+  let artist = queryString(req.query.artist, 512);
+  let track = queryString(req.query.track, 512);
+  let user = queryString(req.query.user, 64);
+
+  if (!artist || !track || !user) {
+    res.status(400).json({ error: 6, message: 'Missing artist, track or user' });
+    return;
+  }
+
+  sendLastfm(res, lastfm.trackInfo(artist, track, user));
 });
 
 /* System functionality */

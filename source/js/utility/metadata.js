@@ -3,7 +3,7 @@ import { toggleDisplay } from './general.js';
 import { updateHue } from './hue.js';
 import { cacheImages, clearImages } from './images.js';
 import { getJson } from './request.js';
-import { lastfmKey, resources, user } from './state.js';
+import { resources, user } from './state.js';
 
 let baseInterval = 10000;
 let pollInterval = 10000;
@@ -87,14 +87,16 @@ function handlePollSuccess() {
   applyPollInterval();
 }
 
-function lastfmUrl(method, params) {
-  let query = new URLSearchParams({ method, ...params, 'api_key': lastfmKey, 'format': 'json' });
+// Last.fm goes through the server, which holds the API key. The timeout gives
+// the server's own upstream timeout room to answer first with a proper error.
+let lastfmTimeout = 5000;
 
-  return `https://ws.audioscrobbler.com/2.0/?${query}`;
+function getLastfm(path, params) {
+  return getJson(`/app/lastfm/${path}?${new URLSearchParams(params)}`, lastfmTimeout);
 }
 
 async function fetchMetadata() {
-  updateState(await getJson(lastfmUrl('user.getrecenttracks', { user, 'limit': 1 })));
+  updateState(await getLastfm('recent', { user }));
 }
 
 async function cacheScrobbles(current) {
@@ -104,8 +106,8 @@ async function cacheScrobbles(current) {
     return;
 
   let [artistInfo, trackInfo] = await Promise.all([
-    getJson(lastfmUrl('artist.getInfo', { artist, 'username': user })),
-    getJson(lastfmUrl('track.getInfo', { artist, 'track': title, 'username': user }))
+    getLastfm('artist', { artist, user }),
+    getLastfm('track', { artist, 'track': title, user })
   ]);
 
   if (!current())
