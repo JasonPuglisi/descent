@@ -28,15 +28,13 @@ export async function updateHue() {
       .map(({ value }) => value);
   }
 
-  let accessToken = getCookie('hueAccessToken');
-  let username = getCookie('hueUsername');
   let rooms = (getCookie('hueRooms') || '').split(',').filter(room => room);
 
   if (!rooms.length)
     return;
 
   // Get the color-capable lights in the selected rooms, each with its own gamut
-  let lights = await postForm('/app/hue/api/lights', { accessToken, username, rooms: rooms.join(',') }, 5000);
+  let lights = await postForm('/app/hue/api/lights', { rooms: rooms.join(',') }, 5000);
 
   if (!Array.isArray(lights))
     return;
@@ -49,34 +47,37 @@ export async function updateHue() {
       // Clamp against this light's gamut rather than one assumed for all of them
       let point = clampToGamut(color, light.gamut);
 
-      postForm(url, { accessToken, username, id: light.id, colorX: point.x, colorY: point.y }, 5000);
+      postForm(url, { id: light.id, colorX: point.x, colorY: point.y }, 5000);
     } else if (light.mirek) {
       // White-only bulbs can still follow the warmth of the artwork
-      postForm(url, { accessToken, username, id: light.id, mirek: getMirek(color, light.mirek) }, 5000);
+      postForm(url, { id: light.id, mirek: getMirek(color, light.mirek) }, 5000);
     }
   });
 }
 
-// Trade the refresh token for a new access token, which the server sets as a
-// cookie. The token goes in the body rather than the URL, where request logs
-// would keep a copy of it.
-//
-// The username has to go along whenever there is one. Without it the server
-// treats this as a first connection and registers another application key on
-// the bridge, which the now playing page used to do on every refresh.
-export async function refreshHueToken() {
-  let refreshToken = getCookie('hueRefreshToken');
-  let username = getCookie('hueUsername');
+// The Hue tokens are in httpOnly cookies the page can't read, which the
+// server uses on every Hue request. These two say whether there's a current
+// access token and whether there's a refresh token to get a new one with.
+export function hueAuthorized() {
+  return cookieExists('hueAccess');
+}
 
-  if (!refreshToken)
+// Cookies from before 2.13.2 were readable, so a refresh token the page can
+// see is one that still needs reissuing as httpOnly
+export function hueRefreshable() {
+  return cookieExists('hueLinked') || cookieExists('hueRefreshToken');
+}
+
+// Trade the refresh token for a new access token. The server reads the
+// refresh token and bridge username from their cookies and sets new ones, so
+// nothing secret goes through the page. The username matters: without it the
+// server would register another application key on the bridge, which the now
+// playing page used to do on every refresh.
+export async function refreshHueToken() {
+  if (!hueRefreshable())
     return false;
 
-  let fields = { refreshToken };
+  let result = await postForm('/app/hue/authorize', {}, 10000);
 
-  if (username)
-    fields.username = username;
-
-  let result = await postForm('/app/hue/authorize', fields, 10000);
-
-  return Boolean(result && result.success) && cookieExists('hueAccessToken');
+  return Boolean(result && result.success) && hueAuthorized();
 }

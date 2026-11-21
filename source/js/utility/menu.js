@@ -1,6 +1,6 @@
 import { cookieEnabled, cookieExists, setCookie, toggleCookie } from './cookies.js';
 import { show, toggleDisplay } from './general.js';
-import { refreshHueToken, updateHue } from './hue.js';
+import { hueAuthorized, hueRefreshable, refreshHueToken, updateHue } from './hue.js';
 import { getBackgroundType } from './images.js';
 import { resources, user } from './state.js';
 
@@ -29,8 +29,9 @@ export async function initMenu() {
   enableHue();
 
   // The access token cookie expires well before the refresh token, so get a
-  // new one if that's all that's missing
-  if (!resources.features.hue && cookieExists('hueRefreshToken') && await refreshHueToken()) {
+  // new one if that's all that's missing. Cookies from before 2.13.2 have no
+  // access flag, so they get refreshed too, which reissues them as httpOnly.
+  if (!resources.features.hue && hueRefreshable() && await refreshHueToken()) {
     resources.features.hue = hueConfigured();
     enableHue();
     updateHue();
@@ -38,7 +39,7 @@ export async function initMenu() {
 }
 
 function hueConfigured() {
-  return cookieExists('hueAccessToken') && cookieExists('hueUsername') && cookieExists('hueRooms');
+  return hueAuthorized() && cookieExists('hueRooms');
 }
 
 function processKey(event) {

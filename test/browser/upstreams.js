@@ -5,6 +5,7 @@
 //   POST /track   { title, artist, album, playing }   change the track
 //   POST /delay   { spotify }                          slow Spotify down, up to 10 s
 //   GET  /calls                                       upstream calls so far
+//   GET  /hue                                         Hue requests so far, with the credentials they carried
 
 import { createServer } from 'node:http';
 import { deflateSync } from 'node:zlib';
@@ -12,7 +13,8 @@ import { deflateSync } from 'node:zlib';
 let state = {
   track: { artist: 'Taio Cruz', title: 'Higher', album: 'Rokstarr', playing: true },
   spotifyDelay: 0,
-  calls: []
+  calls: [],
+  hue: []
 };
 
 // A solid square as a PNG data URL. The page's CSP allows data: images, and
@@ -104,6 +106,43 @@ async function spotify(url) {
   return json({ id: 'artist', images: [{ url: artistArt }] });
 }
 
+// One room with one color bulb. Tokens are fixed, so the tests can check the
+// server sent the ones from the cookies.
+async function hue(url, options = {}) {
+  let headers = options.headers || {};
+  let body = typeof options.body === 'string' ? options.body : '';
+  state.hue.push({
+    method: (options.method || 'get').toLowerCase(), path: url.pathname, body,
+    authorization: headers.Authorization || headers.authorization || '',
+    key: headers['hue-application-key'] || ''
+  });
+
+  if (url.pathname === '/v2/oauth2/token') {
+    let form = new URLSearchParams(body);
+    let valid = form.get('code') === 'good-code' || form.get('refresh_token') === 'refresh-1';
+
+    if (!valid)
+      return json({ error: 'invalid_grant' }, 400);
+
+    return json({ 'access_token': 'access-2', 'refresh_token': 'refresh-1', 'expires_in': 604800, 'token_type': 'bearer' });
+  }
+
+  if (url.pathname === '/route/api/0/config')
+    return json([{ success: {} }]);
+
+  if (url.pathname === '/route/api')
+    return json([{ success: { username: 'bridge-key' } }]);
+
+  let resources = {
+    room: [{ id: 'room-1', metadata: { name: 'Living Room' }, children: [{ rid: 'device-1', rtype: 'device' }] }],
+    device: [{ id: 'device-1', services: [{ rid: 'light-1', rtype: 'light' }] }],
+    light: [{ id: 'light-1', color: { gamut: { red: { x: 0.68, y: 0.31 }, green: { x: 0.17, y: 0.7 }, blue: { x: 0.15, y: 0.06 } } } }]
+  };
+  let resource = url.pathname.split('/')[5];
+
+  return json({ data: options.method === 'put' ? [{ rid: 'light-1' }] : resources[resource] || [] });
+}
+
 function weather() {
   return json({ weather: [{ description: 'clear sky', icon: '01d' }], main: { 'temp': 71.6, 'feels_like': 72.4 }, wind: { speed: 5 } });
 }
@@ -116,18 +155,18 @@ globalThis.fetch = async (input, options) => {
     'ws.audioscrobbler.com': lastfm,
     'accounts.spotify.com': spotify,
     'api.spotify.com': spotify,
-    'api.openweathermap.org': weather
+    'api.openweathermap.org': weather,
+    'api.meethue.com': hue
   };
 
   if (!handlers[url.hostname])
     return realFetch(input, options);
 
   state.calls.push(`${url.hostname}${url.pathname} ${url.searchParams.get('method') || ''}`.trim());
-  return handlers[url.hostname](url);
+  return handlers[url.hostname](url, options);
 };
 
-// Every upstream needs a key to be called at all. Hue isn't faked, since the
-// tests never connect an account, but its page needs a client ID to render.
+// Every upstream needs a key to be called at all
 process.env.LASTFM_API_KEY ||= 'fake';
 process.env.SPOTIFY_CLIENT ||= 'fake';
 process.env.SPOTIFY_SECRET ||= 'fake';
@@ -147,7 +186,8 @@ createServer((req, res) => {
       state.spotifyDelay = Math.min(Math.max(Number(fields.spotify) || 0, 0), 10000);
 
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(req.url === '/calls' ? state.calls : state.track));
+    let replies = { '/calls': state.calls, '/hue': state.hue };
+    res.end(JSON.stringify(replies[req.url] || state.track));
   });
 // Only this machine, since anything that can reach it can change what the
 // server thinks is playing

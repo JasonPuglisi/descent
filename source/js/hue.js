@@ -1,6 +1,6 @@
 import { cookieEnabled, getCookie, removeCookie, setCookie } from './utility/cookies.js';
 import { hide, setPressed, show } from './utility/general.js';
-import { refreshHueToken } from './utility/hue.js';
+import { hueAuthorized, hueRefreshable, refreshHueToken } from './utility/hue.js';
 import { postForm } from './utility/request.js';
 
 let roomPrefix = 'select-group-rooms-';
@@ -12,12 +12,14 @@ async function loadAuthorization() {
   // A failed refresh leaves no access token behind, and trying again would
   // just fail again, so fall through to connecting from scratch. This used to
   // retry with no limit, which left the page loading forever.
-  if (!getCookie('hueAccessToken') && getCookie('hueRefreshToken'))
+  // Cookies from before 2.13.2 have no access flag, so they get refreshed
+  // here too, which is what reissues them as httpOnly
+  if (!hueAuthorized() && hueRefreshable())
     await refreshHueToken();
 
   hide('#loading');
 
-  if (getCookie('hueAccessToken')) {
+  if (hueAuthorized()) {
     show('#hue-step-rooms');
     show('#hue-options');
     getRooms();
@@ -35,9 +37,7 @@ function authorizeApplication() {
 }
 
 async function getRooms() {
-  let accessToken = getCookie('hueAccessToken');
-  let username = getCookie('hueUsername');
-  let rooms = await postForm('/app/hue/api/rooms', { accessToken, username }, 10000);
+  let rooms = await postForm('/app/hue/api/rooms', {}, 10000);
 
   hide('#select-groups-loading-rooms');
 

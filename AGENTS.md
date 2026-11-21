@@ -23,6 +23,10 @@ Cloudflare.
 
 The browser never talks to Last.fm, Spotify, Hue, or the weather provider
 directly. Those all proxy through `server.js` so the keys stay server side.
+Hue's per-user tokens and bridge key live in httpOnly cookies that the server
+reads on each Hue request, so the page never sees them. It goes by two
+readable flags instead: `hueAccess` while the access token is current and
+`hueLinked` while there's a refresh token.
 Last.fm used to be the exception, with its key handed to the page, which is how
 it got copied into other projects and rate limited (#203). The now playing
 page doesn't poll on a timer. It asks `/app/lastfm/recent?wait=1` with the
