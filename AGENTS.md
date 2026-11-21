@@ -30,7 +30,8 @@ readable flags instead: `hueAccess` while the access token is current and
 Last.fm used to be the exception, with its key handed to the page, which is how
 it got copied into other projects and rate limited (#203). The now playing
 page doesn't poll on a timer. It asks `/app/lastfm/recent?wait=1` with the
-ETag of what it already shows, and `lib/lastfm.js` holds that request until
+ETag of what it already shows, which it keeps and sends itself rather than
+leaving to the browser's cache, and `lib/lastfm.js` holds that request until
 the answer changes or 50 seconds pass. While anyone is waiting on a user, one
 server loop polls Last.fm for them and answers every waiting page at once.
 Upstream calls share one budget, the loop slows down evenly when more people

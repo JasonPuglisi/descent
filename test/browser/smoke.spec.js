@@ -208,3 +208,22 @@ test('the Hue page refreshes an access token Hue says has expired', async ({ pag
   await expect(page.locator('#select-groups-rooms button', { hasText: 'Living Room' })).toBeVisible();
   await expect(page.locator('#connect-again')).toBeHidden();
 });
+
+// The page has to hold its own ETag. The smoke tests reach the server through
+// a self-signed certificate, which browsers won't cache responses from, so
+// this is also what a browser with its cache off sees.
+test('an open page waits on the server instead of asking over and over', async ({ page }) => {
+  let asked = 0;
+  page.on('request', request => {
+    if (request.url().includes('/app/lastfm/recent'))
+      asked++;
+  });
+
+  await page.goto('/djryan');
+  await expect(page.locator('.music .title')).toHaveText('Higher');
+  await page.waitForTimeout(8000);
+
+  // The first answer, maybe a second once the art and counts come in, and then
+  // one request held open
+  expect(asked).toBeLessThanOrEqual(4);
+});

@@ -19,9 +19,14 @@ export function initMetadata() {
 
 // Ask for the latest track and wait. The server holds the request until the
 // answer changes or about 50 seconds pass, so a new track shows up as soon as
-// the server sees it, with no polling timer here. The browser sends the ETag
-// of what it already has, and an unchanged answer comes back as an empty 304
-// that fetch turns back into the same data.
+// the server sees it, with no polling timer here. The ETag of what's showing
+// goes along so the server knows what counts as a change, and an unchanged
+// answer comes back as an empty 304.
+//
+// The page keeps that ETag itself. It used to leave it to the browser's cache
+// to add, but a browser that isn't caching, like Safari with the Web
+// Inspector's caches turned off, sent none, got an immediate answer every
+// time, and asked again in a tight loop until Cloudflare rate limited it.
 let holdTimeout = 65000;
 
 // After a failure, wait before asking again, doubling up to a minute
@@ -29,9 +34,19 @@ let retryDelay = 0;
 let retryMin = 3000;
 let retryMax = 60000;
 
+// An unchanged answer should only come back after a full hold. One that comes
+// back quickly means the server isn't holding for some reason, so slow down
+// rather than spin.
+let quickAnswer = 1000;
+let quickDelay = 0;
+
+let etag;
+let lastAnswer;
+
 async function watchRecentTracks() {
   for (;;) {
-    let data = await getJson(`/app/lastfm/recent?${new URLSearchParams({ user, 'wait': 1 })}`, holdTimeout);
+    let started = Date.now();
+    let { data, unchanged } = await getRecentTracks();
     let failed = !data || data.error;
 
     updateState(data);
@@ -39,9 +54,52 @@ async function watchRecentTracks() {
     if (failed) {
       retryDelay = Math.min(retryMax, Math.max(retryMin, retryDelay * 2));
       await new Promise(resolve => setTimeout(resolve, retryDelay));
-    } else {
-      retryDelay = 0;
+      continue;
     }
+
+    retryDelay = 0;
+
+    if (unchanged && Date.now() - started < quickAnswer) {
+      quickDelay = Math.min(retryMax, Math.max(retryMin, quickDelay * 2));
+      await new Promise(resolve => setTimeout(resolve, quickDelay));
+    } else {
+      quickDelay = 0;
+    }
+  }
+}
+
+async function getRecentTracks() {
+  let controller = new AbortController();
+  let timer = setTimeout(() => controller.abort(), holdTimeout);
+  let url = `/app/lastfm/recent?${new URLSearchParams({ user, 'wait': 1 })}`;
+
+  try {
+    // no-store keeps the browser's cache out of it, so the If-None-Match
+    // here is the only one sent and a 304 comes through as a 304
+    let response = await fetch(url, {
+      'headers': etag ? { 'If-None-Match': etag } : {},
+      'cache': 'no-store',
+      'signal': controller.signal
+    });
+
+    if (response.status === 304)
+      return { data: lastAnswer, unchanged: true };
+
+    let data = await response.json();
+
+    if (response.ok) {
+      let previous = etag;
+      etag = response.headers.get('ETag') || undefined;
+      lastAnswer = data;
+
+      return { data, unchanged: Boolean(etag) && etag === previous };
+    }
+
+    return { data };
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timer);
   }
 }
 
