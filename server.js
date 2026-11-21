@@ -305,25 +305,51 @@ app.get('/app/hue', (req, res) => {
   res.render('hue', { title, hueClientId: process.env.HUE_CLIENT });
 });
 
-app.get('/app/hue/authorize', (req, res) => {
-  let code = req.query.code;
-  let refreshToken = req.query.refreshToken;
-  let username = req.query.username;
-  authenticateHue(code, refreshToken, username, auth => {
-    if (auth) {
-      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
-      res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
-      res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
-    }
+// Hue sends people back here with an authorization code after they approve
+// Descent. Pages from before 2.13.0 also refresh tokens through this route,
+// with the refresh token in the query string, so that still works until they
+// reload.
+app.get('/app/hue/authorize', async (req, res) => {
+  await authorizeHue(res, queryString(req.query.code, 512), queryString(req.query.refreshToken, 512),
+    queryString(req.query.username, 128));
 
-    res.redirect('/app/hue');
-  });
+  res.redirect('/app/hue');
 });
 
-async function authenticateHue(code, refreshToken, username, callback) {
+// Refreshing posts the token instead, so it stays out of the URL and with it
+// out of App Engine's and Cloudflare's request logs
+app.post('/app/hue/authorize', async (req, res) => {
+  let success = await authorizeHue(res, undefined, queryString(req.body.refreshToken, 512),
+    queryString(req.body.username, 128));
+
+  res.set('Cache-Control', 'no-store');
+  res.json({ success });
+});
+
+async function authorizeHue(res, code, refreshToken, username) {
+  let auth;
+
+  // A failure here used to reject with nobody listening, which left the
+  // request hanging until App Engine gave up on it
+  try {
+    auth = await authenticateHue(code, refreshToken, username);
+  } catch (e) {
+    console.warn(`Error authenticating with Hue: ${e}`);
+  }
+
+  if (!auth)
+    return false;
+
+  res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
+  res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
+  res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
+
+  return true;
+}
+
+async function authenticateHue(code, refreshToken, username) {
   if (!code && !refreshToken) {
     console.warn('Error authenticating with Hue: No authorization code or refresh token');
-    callback();
     return;
   }
 
@@ -331,7 +357,6 @@ async function authenticateHue(code, refreshToken, username, callback) {
   let clientSecret = process.env.HUE_SECRET;
   if (!clientId || !clientSecret) {
     console.warn('Error authenticating with Hue: Missing client ID or secret');
-    callback();
     return;
   }
 
@@ -342,8 +367,8 @@ async function authenticateHue(code, refreshToken, username, callback) {
     'Authorization': `Basic ${auth}`
   };
 
-  // Both values arrive straight from the query string, so encode them rather
-  // than let a stray & or = rewrite the token request
+  // Both values come from the browser, so encode them rather than let a stray
+  // & or = rewrite the token request
   let form = new URLSearchParams(code ?
     { 'code': code, 'grant_type': 'authorization_code' } :
     { 'refresh_token': refreshToken, 'grant_type': 'refresh_token' }).toString();
@@ -356,7 +381,6 @@ async function authenticateHue(code, refreshToken, username, callback) {
 
   if (!response.ok) {
     console.warn(`Error authenticating with Hue: Token failure: ${response.status} ${await response.text()}`);
-    callback();
     return;
   }
 
@@ -365,18 +389,14 @@ async function authenticateHue(code, refreshToken, username, callback) {
   let expiry = (parseInt(data.expires_in) - 300) * 1000;
   let refreshTokenNew = data.refresh_token;
   let tokenType = data.token_type;
+  let usernameNew = await hueWhitelistApplication(accessToken, username);
 
-  hueWhitelistApplication(accessToken, username, (usernameNew) => {
-    let auth = { accessToken, expiry, refreshTokenNew, tokenType, usernameNew };
-    callback(auth);
-  });
+  return { accessToken, expiry, refreshTokenNew, tokenType, usernameNew };
 }
 
-async function hueWhitelistApplication(accessToken, username, callback) {
-  if (username) {
-    callback(username);
-    return;
-  }
+async function hueWhitelistApplication(accessToken, username) {
+  if (username)
+    return username;
 
   let url = 'https://api.meethue.com/route/api/0/config';
   let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
@@ -401,7 +421,8 @@ async function hueWhitelistApplication(accessToken, username, callback) {
   });
 
   let data = await response2.json();
-  callback(data[0].success.username);
+
+  return data[0].success.username;
 }
 
 // Hue API v2. The cloud gateway mirrors the local bridge under /route, so the
