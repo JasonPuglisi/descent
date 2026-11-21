@@ -16,8 +16,8 @@ export default [
   },
   js.configs.recommended,
   {
-    // Server and build tooling
-    files: ['*.js'],
+    // Server, build tooling and tests
+    files: ['*.js', 'lib/**/*.js', 'test/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

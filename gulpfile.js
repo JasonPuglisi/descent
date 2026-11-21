@@ -12,13 +12,24 @@ const browserSync = browserSyncBase.create();
 const sass = gulpSass(dartSass);
 const uglify = uglifyBase.default;
 
-// Returning the stream lets gulp wait for the files to be written, so a
-// dependent task or the build itself can't finish ahead of its output
-gulp.task('build-css', function() {
+// While watching, a Sass error should be logged and wait for the next save.
+// Anywhere else it has to fail the build, or CI ships a missing stylesheet.
+function buildCss(watching) {
+  let compile = sass({ outputStyle: 'compressed' });
+
+  if (watching)
+    compile.on('error', sass.logError);
+
+  // Returning the stream lets gulp wait for the files to be written, so a
+  // dependent task or the build itself can't finish ahead of its output
   return gulp.src('source/scss/*.scss')
-    .pipe(sass({ outputStyle: 'compressed' }).on('error', sass.logError))
+    .pipe(compile)
     .pipe(autoprefixer())
     .pipe(gulp.dest('public/stylesheets'));
+}
+
+gulp.task('build-css', function() {
+  return buildCss(false);
 });
 
 gulp.task('build-js', function() {
@@ -33,7 +44,9 @@ gulp.task('build-js-utility', function() {
     .pipe(gulp.dest('public/javascripts/utility'));
 });
 
-gulp.task('sync-css', gulp.series('build-css', function(done) {
+gulp.task('sync-css', gulp.series(function watchCss() {
+  return buildCss(true);
+}, function(done) {
   browserSync.reload();
 
   done();
