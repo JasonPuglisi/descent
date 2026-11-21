@@ -21,17 +21,19 @@ app.use(app.locals.assets, express.static('public'));
 app.use('/app/static/', express.static('public'));
 
 let pollIntervals = {
-  'lastfm': 10000
+  'lastfm': 3000
 };
 loadPollIntervals();
 
 if (!process.env.LASTFM_API_KEY)
   console.warn('No Last.fm API key set, so the now playing page will not load any tracks');
 
-// Last.fm asks API clients to send an identifiable User-Agent
+// Every request comes from this one server now, so identify it in case
+// Last.fm ever needs to know whose traffic it is
 let lastfm = createLastfm({
   key: process.env.LASTFM_API_KEY,
-  userAgent: `Descent/${app.locals.version} (+https://descent.live)`
+  userAgent: `Descent/${app.locals.version} (+https://descent.live)`,
+  baseInterval: pollIntervals.lastfm
 });
 
 let spotifyKey;
@@ -76,8 +78,12 @@ app.get('/:user', (req, res) => {
   res.render('now', { title, user });
 });
 
+// The configured interval is the fastest browsers will poll. The proxy
+// stretches it when more people are being watched than its Last.fm budget can
+// keep up with at that rate.
 app.get('/app/poll/interval', (req, res) => {
-  res.json(pollIntervals);
+  res.set('Cache-Control', 'no-store');
+  res.json({ 'lastfm': lastfm.pollInterval() });
 });
 
 app.get('/app/config', (req, res) => {
@@ -171,11 +177,13 @@ function queryString(value, maxLength) {
   return typeof value === 'string' && value && value.length <= maxLength ? value : undefined;
 }
 
+// Successful answers can be kept, but must be checked with us every time.
+// Express tags each with an ETag, so the browser revalidates on every poll and
+// gets an empty 304 back when nothing has changed. Errors aren't kept at all.
 async function sendLastfm(res, request) {
   let { status, body } = await request;
 
-  // Every poll has to reach Last.fm, or track changes would wait out a cache
-  res.set('Cache-Control', 'no-store');
+  res.set('Cache-Control', status === 200 ? 'no-cache' : 'no-store');
   res.status(status).json(body);
 }
 
