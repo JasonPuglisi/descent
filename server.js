@@ -461,11 +461,18 @@ async function hueWhitelistApplication(accessToken, username) {
 
 // Hue API v2. The cloud gateway mirrors the local bridge under /route, so the
 // same CLIP v2 resource paths work remotely with the app key as a header.
+//
+// Failures come back as { error } so the page can tell what to do about them:
+// "expired" means the access token needs refreshing, and "unlinked" means the
+// bridge no longer knows the application key, which only connecting again
+// fixes. Returning an empty list for both used to leave the setup page with no
+// rooms and no explanation.
 async function hueRequest(accessToken, applicationKey, path, body) {
-  if (!accessToken || !applicationKey) {
-    console.warn('Error calling Hue API: Missing access token or application key');
-    return null;
-  }
+  if (!accessToken)
+    return { error: 'expired' };
+
+  if (!applicationKey)
+    return { error: 'unlinked' };
 
   let url = `https://api.meethue.com/route/clip/v2/resource/${path}`;
   let headers = {
@@ -474,32 +481,47 @@ async function hueRequest(accessToken, applicationKey, path, body) {
     'Content-Type': 'application/json'
   };
 
-  const response = await fetch(url, {
-    'method': body ? 'put' : 'get',
-    'body': body ? JSON.stringify(body) : undefined,
-    'headers': headers
-  });
+  let response;
+  let data;
 
-  if (!response.ok) {
-    console.warn(`Error calling Hue API: ${path}: ${response.status} ${await response.text()}`);
-    return null;
+  try {
+    response = await fetch(url, {
+      'method': body ? 'put' : 'get',
+      'body': body ? JSON.stringify(body) : undefined,
+      'headers': headers,
+      'signal': AbortSignal.timeout(8000)
+    });
+
+    data = await response.json();
+  } catch (e) {
+    console.warn(`Error calling Hue API: ${path}: ${e.name}`);
+    return { error: 'unavailable' };
   }
 
-  let data = await response.json();
+  if (!response.ok) {
+    console.warn(`Error calling Hue API: ${path}: ${response.status} ${JSON.stringify(data).slice(0, 200)}`);
 
-  return data.data || [];
+    let errors = { 401: 'expired', 403: 'unlinked' };
+    return { error: errors[response.status] || 'unavailable' };
+  }
+
+  return { data: data.data || [] };
+}
+
+function sendHueError(res, error) {
+  res.status(error === 'unavailable' ? 502 : 401).json({ error });
 }
 
 app.post('/app/hue/api/rooms', async (req, res) => {
   let { accessToken, username } = hueCredentials(req);
   let rooms = await hueRequest(accessToken, username, 'room');
 
-  if (!rooms) {
-    res.json([]);
+  if (rooms.error) {
+    sendHueError(res, rooms.error);
     return;
   }
 
-  res.json(rooms.map(room => ({ id: room.id, name: room.metadata.name })));
+  res.json(rooms.data.map(room => ({ id: room.id, name: room.metadata?.name || 'Unnamed room' })));
 });
 
 // Rooms hold devices and devices expose light services, so the three resources
@@ -509,16 +531,19 @@ app.post('/app/hue/api/lights', async (req, res) => {
   let { accessToken, username } = hueCredentials(req);
   let selected = (req.body.rooms || '').split(',').filter(room => room);
 
-  let [rooms, devices, lights] = await Promise.all([
+  let results = await Promise.all([
     hueRequest(accessToken, username, 'room'),
     hueRequest(accessToken, username, 'device'),
     hueRequest(accessToken, username, 'light')
   ]);
+  let failed = results.find(result => result.error);
 
-  if (!rooms || !devices || !lights) {
-    res.json([]);
+  if (failed) {
+    sendHueError(res, failed.error);
     return;
   }
+
+  let [rooms, devices, lights] = results.map(result => result.data);
 
   let deviceIds = new Set();
   for (let room of rooms)
@@ -576,9 +601,14 @@ app.post('/app/hue/api/light', async (req, res) => {
 
   let path = `light/${encodeURIComponent(req.body.id)}`;
   let { accessToken, username } = hueCredentials(req);
-  let data = await hueRequest(accessToken, username, path, body);
+  let result = await hueRequest(accessToken, username, path, body);
 
-  res.json(data || []);
+  if (result.error) {
+    sendHueError(res, result.error);
+    return;
+  }
+
+  res.json(result.data);
 });
 
 /* Spotify functionality */

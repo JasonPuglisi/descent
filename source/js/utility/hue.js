@@ -16,7 +16,9 @@ export async function updateHue() {
 
   let colors = resources.colors.hue;
 
-  if (!colorsChanged(resources.colors.last, colors))
+  // Nothing to show yet, which happens when a token refresh finishes before
+  // the first track's colors are in. Sending lights colors[i % 0] crashed.
+  if (!colors.length || !colorsChanged(resources.colors.last, colors))
     return;
 
   resources.colors.last = colors;
@@ -34,10 +36,13 @@ export async function updateHue() {
     return;
 
   // Get the color-capable lights in the selected rooms, each with its own gamut
-  let lights = await postForm('/app/hue/api/lights', { rooms: rooms.join(',') }, 5000);
+  let lights = await getLights(rooms);
 
-  if (!Array.isArray(lights))
+  if (!Array.isArray(lights)) {
+    // Let the next change try again rather than treating these as sent
+    resources.colors.last = undefined;
     return;
+  }
 
   lights.forEach((light, i) => {
     let color = colors[i % colors.length];
@@ -53,6 +58,18 @@ export async function updateHue() {
       postForm(url, { id: light.id, mirek: getMirek(color, light.mirek) }, 5000);
     }
   });
+}
+
+// An access token can run out while the page is open, so refresh it once and
+// try again before giving up on this update
+async function getLights(rooms) {
+  let fields = { rooms: rooms.join(',') };
+  let lights = await postForm('/app/hue/api/lights', fields, 10000);
+
+  if (lights && lights.error === 'expired' && await refreshHueToken())
+    lights = await postForm('/app/hue/api/lights', fields, 10000);
+
+  return lights;
 }
 
 // The Hue tokens are in httpOnly cookies the page can't read, which the
