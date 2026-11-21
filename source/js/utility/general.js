@@ -21,14 +21,50 @@ async function requestWakeLock() {
 
   try {
     wakeLock = await navigator.wakeLock.request('screen');
+    console.info('Keeping the screen awake');
 
     // The system can drop the lock on its own, usually on low battery
     wakeLock.addEventListener('release', () => {
       wakeLock = undefined;
     });
   } catch (e) {
+    if (e.name === 'NotAllowedError' && !retriedOnGesture) {
+      retryOnGesture();
+      return;
+    }
+
     console.warn(`Error requesting wake lock: ${e.name}, ${e.message}`);
   }
+}
+
+// Safari only grants the lock to a page someone has interacted with, so a
+// display that loads on its own gets refused. Ask again from inside the first
+// tap, click or key press, which is usually whoever sets up the kiosk. Only
+// once, though: a browser that still refuses after that always will, and
+// asking on every key press would just fill the console.
+let gestures = ['pointerdown', 'keydown', 'touchend'];
+let waitingForGesture = false;
+let retriedOnGesture = false;
+
+function retryOnGesture() {
+  if (waitingForGesture)
+    return;
+
+  waitingForGesture = true;
+  console.info('The screen can sleep until the page is tapped or a key is pressed');
+
+  let retry = () => {
+    waitingForGesture = false;
+    retriedOnGesture = true;
+
+    for (let event of gestures)
+      document.removeEventListener(event, retry, true);
+
+    requestWakeLock();
+  };
+
+  for (let event of gestures)
+    document.addEventListener(event, retry, true);
 }
 
 let cursorDelay = 3;
