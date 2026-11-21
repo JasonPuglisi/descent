@@ -227,3 +227,31 @@ test('an open page waits on the server instead of asking over and over', async (
   // one request held open
   expect(asked).toBeLessThanOrEqual(4);
 });
+
+// Headless browsers never grant a wake lock, which is the case this covers: a
+// refusal waits for the first key press, tries once more, and then stops
+// rather than asking on every key press after
+test('the wake lock asks again once after a key press, then gives up', async ({ page }) => {
+  let messages = [];
+  page.on('console', message => messages.push(message.text()));
+
+  await page.goto('/djryan');
+  await expect(page.locator('.music .title')).toHaveText('Higher');
+
+  let waiting = () => messages.filter(text => text.includes('until the page is tapped')).length;
+  let refused = () => messages.filter(text => text.includes('Error requesting wake lock')).length;
+  let held = () => messages.filter(text => text.includes('Keeping the screen awake')).length;
+
+  // A browser that grants it straight away has nothing to retry
+  test.skip(held() > 0, 'This browser granted the wake lock without a gesture');
+
+  await expect.poll(waiting).toBe(1);
+  await page.keyboard.press('x');
+  await expect.poll(() => refused() + held()).toBe(1);
+
+  await page.keyboard.press('x');
+  await page.keyboard.press('x');
+  await page.waitForTimeout(500);
+  expect(waiting()).toBe(1);
+  expect(refused() + held()).toBe(1);
+});
