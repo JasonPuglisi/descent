@@ -114,3 +114,10 @@ function fadeElement(element, visible) {
     animation.cancel();
   }, () => {});
 }
+
+// Options on the settings pages are buttons that stay pressed while they're
+// on, so the state goes in aria-pressed as well as the class that styles it
+export function setPressed(element, pressed) {
+  element.classList.toggle('selected', pressed);
+  element.setAttribute('aria-pressed', String(pressed));
+}

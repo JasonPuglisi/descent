@@ -6,56 +6,60 @@ block otherStylesheets
 block content
   .container
     h1= title
-    h2 Scrobble Mode
-    div.selectGroups
-      div.scrobbleNotice Choose whether Descent should display the most recent scrobble or only the currently playing track
-      div.selectGroup.groupScrobbleMode#scrobbleMode-lastScrobbled Last Scrobbled
-      div.selectGroup.groupScrobbleMode#scrobbleMode-currentlyPlaying Currently Playing
-    h2 Background Type
-    div.selectGroups
-      div.selectGroup.groupBg#bg-artist Artist
-      div.selectGroup.groupBg#bg-album Album
-      div.selectGroup.groupBg#bg-transparent Transparent
-      div.selectGroup.groupBg#bg-none None
-    h2 Background Options
-    div.selectGroups
-      div.selectGroup.groupBgopt#bgopt-blur Blur
+    h2#heading-scrobble Scrobble Mode
+    div.selectGroups(role='group' aria-labelledby='heading-scrobble' aria-describedby='notice-scrobble')
+      div.scrobbleNotice#notice-scrobble Choose whether Descent should display the most recent scrobble or only the currently playing track
+      button.selectGroup.groupScrobbleMode#scrobbleMode-lastScrobbled(type='button' aria-pressed='false') Last Scrobbled
+      button.selectGroup.groupScrobbleMode#scrobbleMode-currentlyPlaying(type='button' aria-pressed='false') Currently Playing
+    h2#heading-bg Background Type
+    div.selectGroups(role='group' aria-labelledby='heading-bg')
+      button.selectGroup.groupBg#bg-artist(type='button' aria-pressed='false') Artist
+      button.selectGroup.groupBg#bg-album(type='button' aria-pressed='false') Album
+      button.selectGroup.groupBg#bg-transparent(type='button' aria-pressed='false') Transparent
+      button.selectGroup.groupBg#bg-none(type='button' aria-pressed='false') None
+    h2#heading-bgopt Background Options
+    div.selectGroups(role='group' aria-labelledby='heading-bgopt')
+      button.selectGroup.groupBgopt#bgopt-blur(type='button' aria-pressed='false') Blur
       span.inputLine
-        small Default image URL:&nbsp;
+        small
+          label(for='bgopt-default') Default image URL:
+          | &nbsp;
           input.inputGroup.groupBgopt#bgopt-default(name='defaultBackground', type='text', size='20', maxlength='300', placeholder='None')
           | &nbsp;
-          a.backgroundInputSave.hide(href='#')
-            i.fas.fa-save.fa-sm
+          button.linkButton.backgroundInputSave.hide(type='button')
+            i.fas.fa-save.fa-sm(aria-hidden='true')
             |  save
     h2 Weather Location
     div.selectGroups
       span.inputLine
         small
           div.coordinateNotice Find coordinates by right-clicking a location in Google Maps
-          | Latitude:&nbsp;
+          label(for='loc-latitude') Latitude:
+          | &nbsp;
           input.inputGroup#loc-latitude(name='locationLatitude', type='text', size='12', maxlength='24', placeholder='Automatic')
-          | &nbsp;Longitude:&nbsp;
+          label(for='loc-longitude') Longitude:
+          | &nbsp;
           input.inputGroup#loc-longitude(name='locationLongitude', type='text', size='12', maxlength='24', placeholder='Automatic')
           | &nbsp;
-          a.locationInputSave.hide(href='#')
-            i.fas.fa-save.fa-sm
+          button.linkButton.locationInputSave.hide(type='button')
+            i.fas.fa-save.fa-sm(aria-hidden='true')
             |  save
-    h2 Weather Units
-    div.selectGroups
-      div.selectGroup.groupUnits#units-imperial Imperial (ºF)
-      div.selectGroup.groupUnits#units-metric Metric (ºC)
-    h2 Time and Date Options
-    div.selectGroups
-      div.selectGroup.groupDatetime#datetime-24hr 24-hour time
-      div.selectGroup.groupDatetime#datetime-weekday Show weekday
-      div.selectGroup.groupDatetime#datetime-seconds Show seconds
+    h2#heading-units Weather Units
+    div.selectGroups(role='group' aria-labelledby='heading-units')
+      button.selectGroup.groupUnits#units-imperial(type='button' aria-pressed='false') Imperial (ºF)
+      button.selectGroup.groupUnits#units-metric(type='button' aria-pressed='false') Metric (ºC)
+    h2#heading-datetime Time and Date Options
+    div.selectGroups(role='group' aria-labelledby='heading-datetime')
+      button.selectGroup.groupDatetime#datetime-24hr(type='button' aria-pressed='false') 24-hour time
+      button.selectGroup.groupDatetime#datetime-weekday(type='button' aria-pressed='false') Show weekday
+      button.selectGroup.groupDatetime#datetime-seconds(type='button' aria-pressed='false') Show seconds
     .links
       a(href='/')
         | home&nbsp;
-        i.fas.fa-home.fa-sm
+        i.fas.fa-home.fa-sm(aria-hidden='true')
       a(href='/app/hue')
         | hue settings&nbsp;
-        i.fas.fa-lightbulb.fa-sm
+        i.fas.fa-lightbulb.fa-sm(aria-hidden='true')
 
 block otherJavascripts
   script(type='module', src=`${assets}/javascripts/config.js`)

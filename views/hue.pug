@@ -8,35 +8,35 @@ block content
     h1= title
     div(data-hue-client-id=hueClientId)
       ol
-        li.hueStep#loading
+        li.hueStep#loading(role='status')
           h2
-            i.fas.fa-circle-notch.fa-spin
+            i.fas.fa-circle-notch.fa-spin(aria-hidden='true')
             | Loading...
         li.hide.hueStep#connect
           h2
             a.appAuth Click here
             |  to connect your Hue account.
         li.hide.hueStep#hue-step-rooms
-          h2 Select one or more  rooms to control.
-          div.hide.selectGroupsLoading#select-groups-loading-rooms
+          h2#heading-rooms Select one or more rooms to control.
+          div.hide.selectGroupsLoading#select-groups-loading-rooms(role='status')
             h2
-              i.fas.fa-circle-notch.fa-spin
+              i.fas.fa-circle-notch.fa-spin(aria-hidden='true')
               | Loading...
-          div.selectGroups#select-groups-rooms
+          div.selectGroups#select-groups-rooms(role='group' aria-labelledby='heading-rooms')
         li.hide.hueStep#hue-step-done All set. Hit 
           span.code l
           |  on your now playing page to toggle light control on and off.
     div.hide#hue-options
-      h2 Color Options
-      div.selectGroups
-        div.selectGroup.groupHue#hue-shuffle Shuffle order
+      h2#heading-color Color Options
+      div.selectGroups(role='group' aria-labelledby='heading-color')
+        button.selectGroup.groupHue#hue-shuffle(type='button' aria-pressed='false') Shuffle order
     .links
       a(href='/')
         | home 
-        i.fas.fa-home.fa-sm
+        i.fas.fa-home.fa-sm(aria-hidden='true')
       a(href='/app/config')
         | settings 
-        i.fas.fa-sliders-h.fa-sm
+        i.fas.fa-sliders-h.fa-sm(aria-hidden='true')
 
 block otherJavascripts
   script(type='module', src=`${assets}/javascripts/hue.js`)

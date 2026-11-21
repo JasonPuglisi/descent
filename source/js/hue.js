@@ -1,5 +1,5 @@
 import { cookieEnabled, getCookie, removeCookie, setCookie } from './utility/cookies.js';
-import { hide, show } from './utility/general.js';
+import { hide, setPressed, show } from './utility/general.js';
 import { refreshHueToken } from './utility/hue.js';
 import { postForm } from './utility/request.js';
 
@@ -48,12 +48,14 @@ async function getRooms() {
 
   for (let room of rooms || []) {
     // Room names come from the user's Hue account, so they go in as text
-    let element = document.createElement('div');
+    let element = document.createElement('button');
+    element.type = 'button';
     element.className = 'selectGroup groupRooms';
     element.id = `${roomPrefix}${room.id}`;
     element.textContent = room.name;
+    setPressed(element, false);
     element.addEventListener('click', () => {
-      element.classList.toggle('selected');
+      setPressed(element, !element.classList.contains('selected'));
       saveRooms();
     });
 
@@ -80,8 +82,12 @@ function saveRooms() {
 function restoreRooms() {
   let rooms = (getCookie('hueRooms') || '').split(',').filter(room => room);
 
-  for (let room of rooms)
-    document.getElementById(`${roomPrefix}${room}`)?.classList.add('selected');
+  for (let room of rooms) {
+    let element = document.getElementById(`${roomPrefix}${room}`);
+
+    if (element)
+      setPressed(element, true);
+  }
 
   if (rooms.length)
     show('#hue-step-done');
@@ -92,10 +98,10 @@ function processOptions() {
     let element = document.querySelector(`#hue-${option}`);
     let selected = cookieEnabled(option);
 
-    element.classList.toggle('selected', selected);
+    setPressed(element, selected);
     element.addEventListener('click', () => {
       selected = !selected;
-      element.classList.toggle('selected', selected);
+      setPressed(element, selected);
       setCookie(option, selected);
     });
   }

@@ -37,28 +37,28 @@ block content
               i.fas.fa-sliders-h.fa-sm
             a(href='https://github.com/JasonPuglisi/descent' target='_blank')
               | source 
-              i.fab.fa-github.fa-sm
+              i.fab.fa-github.fa-sm(aria-hidden='true')
           .menuItem
-            a(href='#' data-key='w')
+            button.linkButton(type='button' data-key='w')
               i.fas.fa-sun.fa-sm.fa-fw
               |  [w]eather
           .menuItem
-            a(href='#' data-key='t')
+            button.linkButton(type='button' data-key='t')
               i.fas.fa-clock.fa-sm.fa-fw
               |  [t]ime and date
           .menuItem
-            a(href='#' data-key='e')
+            button.linkButton(type='button' data-key='e')
               i.fas.fa-sticky-note.fa-sm.fa-fw
               |  [e]xtended info
           .menuItem
             span.hueHelp.hide
-              a(href='#' data-key='l')
+              button.linkButton(type='button' data-key='l')
                 i.fas.fa-lightbulb.fa-sm.fa-fw
                 |  [l]ights (
                 span.hueIndicator off
                 | )
           .menuItem
-            a(href='#' data-key='h')
+            button.linkButton(type='button' data-key='h')
               i.fas.fa-question.fa-sm.fa-fw
               |  [h]elp
       .corner.right
