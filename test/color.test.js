@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { clampToGamut, colorsChanged, getHuePoint, getMirek } from '../source/js/utility/color.js';
+import chroma from 'chroma-js';
+
+import { brightenHex, clampToGamut, colorsChanged, getHuePoint, getLuminance, getMirek } from '../source/js/utility/color.js';
 
 let whitePoint = { x: 0.3127, y: 0.3290 };
 let gamutC = {
@@ -118,5 +120,27 @@ describe('colorsChanged', () => {
   it('notices a different length or value', () => {
     assert.equal(colorsChanged(colors.slice(1), colors), true);
     assert.equal(colorsChanged([colors[0], { x: 0.3, y: 0.5 }], colors), true);
+  });
+});
+
+describe('text colors', () => {
+  // Every sixteenth step of each channel, plus the corners
+  let samples = [];
+  for (let r = 0; r <= 256; r += 32)
+    for (let g = 0; g <= 256; g += 32)
+      for (let b = 0; b <= 256; b += 32)
+        samples.push([Math.min(r, 255), Math.min(g, 255), Math.min(b, 255)]);
+
+  it('measures luminance the way chroma.js does', () => {
+    for (let color of samples)
+      assert.ok(Math.abs(getLuminance(color) - chroma(color).luminance()) < 1e-9, `${color}`);
+  });
+
+  it('brightens the way chroma.js does', () => {
+    for (let color of samples) {
+      // The same factor the page uses, so the comparison covers its range
+      let amount = 3 * (1 - chroma(color).luminance());
+      assert.equal(brightenHex(color, amount), chroma(color).brighten(amount).hex(), `${color}`);
+    }
   });
 });

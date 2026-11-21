@@ -99,8 +99,11 @@ siblings by relative path with the `.js` extension, like
 `import { getCookie } from './cookies.js'`. There is no jQuery or js-cookie:
 use the DOM directly, `utility/request.js` for JSON requests, `utility/cookies.js`
 for cookies, and `toggleDisplay` in `utility/general.js` for the fades. Color
-Thief and chroma.js still load from the CDN as classic scripts, so the files
-that call them declare them in a `/* global */` header.
+Thief comes from the `colorthief` npm package, whose single-file browser module
+gulp copies to `public/javascripts/vendor/`, so Dependabot updates it like any
+other dependency. The page needs no other third party scripts. The two bits of
+chroma.js it used, luminance and Lab brightening, live in `utility/color.js`,
+and chroma.js is only a dev dependency the tests check them against.
 
 Server-rendered values like the username reach the browser as `data-`
 attributes, never as inline script. Inline `onclick` handlers can't reach module
@@ -177,10 +180,13 @@ Deploys authenticate to GCP with GitHub's OIDC token. The provider only accepts
 tokens from this repo's `main` branch, which is the only place the deploy job
 runs.
 
-Every response carries a Content-Security-Policy with a fresh nonce. Cloudflare
-reads that nonce to tag the bot detection script it injects into pages, so
-keep the nonce if the policy changes, and add any new script, style or font
-host to it.
+Every response carries a Content-Security-Policy with a fresh nonce, and
+`script-src` uses `'strict-dynamic'`. Every `script` tag in the views needs
+`nonce=nonce` or it won't run, while anything those scripts load, like module
+imports, is trusted from them. Cloudflare reads the nonce to tag the bot
+detection script it injects into pages, which then writes another inline
+script into an iframe that only `'strict-dynamic'` allows. Keep both if the
+policy changes, and add any new style or font host to it.
 
 Open now playing pages check the server's version every minute and reload
 themselves, at a random point within 30 seconds, when a deploy changes it.

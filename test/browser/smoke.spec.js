@@ -45,6 +45,11 @@ test('the now playing page shows the track, art, counts and weather', async ({ p
   await expect(page).toHaveTitle('"Higher" by Taio Cruz');
   await expect(page.locator('.music .cover')).toHaveAttribute('src', /^data:image\/png/);
   await expect(page.locator('.artistScrobbleCount')).toHaveText('120');
+
+  // Colors come from the art through Color Thief, so this fails if it didn't
+  // load or the CSP blocked it. The fake album art is a solid red.
+  await expect(page.locator('.music .title')).toHaveCSS('color', /^rgb\(2\d\d, \d+, \d+\)$/);
+  await expect(page.locator('.music .title')).not.toHaveCSS('color', 'rgb(246, 245, 247)');
   await expect(page.locator('.weather .temperature')).toHaveText('72');
   await expect(page.locator('.weather .apparentTemperature')).toHaveText(/^\d+$/);
   expect(errors).toEqual([]);
