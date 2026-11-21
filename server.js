@@ -1,6 +1,7 @@
 import express from 'express';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
+import { readCookies } from './lib/cookies.js';
 import { createLastfm } from './lib/lastfm.js';
 import { createSpotify } from './lib/spotify.js';
 import { createWeather } from './lib/weather.js';
@@ -321,11 +322,12 @@ app.get('/app/hue/authorize', async (req, res) => {
   res.redirect('/app/hue');
 });
 
-// Refreshing posts the token instead, so it stays out of the URL and with it
-// out of App Engine's and Cloudflare's request logs
+// Refreshing uses the refresh token from its cookie. Pages from before 2.13.2
+// can read their tokens and post them instead, so the body still counts when
+// there's no cookie.
 app.post('/app/hue/authorize', async (req, res) => {
-  let success = await authorizeHue(res, undefined, queryString(req.body.refreshToken, 512),
-    queryString(req.body.username, 128));
+  let { refreshToken, username } = hueCredentials(req);
+  let success = await authorizeHue(res, undefined, refreshToken, username);
 
   res.set('Cache-Control', 'no-store');
   res.json({ success });
@@ -345,11 +347,35 @@ async function authorizeHue(res, code, refreshToken, username) {
   if (!auth)
     return false;
 
-  res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
-  res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
-  res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
+  // The tokens and the bridge's application key are httpOnly, so nothing
+  // running in the page can read them, and the server takes them from the
+  // cookies on each Hue request. The page only needs to know whether there's
+  // a current access token and whether one can be refreshed, which the two
+  // flags tell it. Lax keeps another site from posting to the Hue routes with
+  // these cookies attached.
+  let secret = { secure: true, httpOnly: true, sameSite: 'lax' };
+  let flag = { secure: true, sameSite: 'lax' };
+
+  res.cookie('hueAccessToken', auth.accessToken, { ...secret, maxAge: auth.expiry });
+  res.cookie('hueRefreshToken', auth.refreshTokenNew, { ...secret, maxAge: 315360000000 });
+  res.cookie('hueUsername', auth.usernameNew, { ...secret, maxAge: 315360000000 });
+  res.cookie('hueAccess', 'true', { ...flag, maxAge: auth.expiry });
+  res.cookie('hueLinked', 'true', { ...flag, maxAge: 315360000000 });
 
   return true;
+}
+
+// Cookies first. The body is what pages from before 2.13.2 send, which only
+// matters for someone whose cookies haven't been reissued as httpOnly yet.
+function hueCredentials(req) {
+  let cookies = readCookies(req.headers.cookie);
+  let pick = (name, maxLength) => queryString(cookies[name], maxLength) || queryString(req.body[name], maxLength);
+
+  return {
+    accessToken: pick('hueAccessToken', 512),
+    refreshToken: pick('hueRefreshToken', 512),
+    username: pick('hueUsername', 128)
+  };
 }
 
 async function authenticateHue(code, refreshToken, username) {
@@ -462,7 +488,8 @@ async function hueRequest(accessToken, applicationKey, path, body) {
 }
 
 app.post('/app/hue/api/rooms', async (req, res) => {
-  let rooms = await hueRequest(req.body.accessToken, req.body.username, 'room');
+  let { accessToken, username } = hueCredentials(req);
+  let rooms = await hueRequest(accessToken, username, 'room');
 
   if (!rooms) {
     res.json([]);
@@ -476,8 +503,7 @@ app.post('/app/hue/api/rooms', async (req, res) => {
 // get joined here to keep the display to a single request per update. Each
 // light carries its own gamut, which the client needs to clamp colors properly.
 app.post('/app/hue/api/lights', async (req, res) => {
-  let accessToken = req.body.accessToken;
-  let username = req.body.username;
+  let { accessToken, username } = hueCredentials(req);
   let selected = (req.body.rooms || '').split(',').filter(room => room);
 
   let [rooms, devices, lights] = await Promise.all([
@@ -546,7 +572,8 @@ app.post('/app/hue/api/light', async (req, res) => {
   }
 
   let path = `light/${encodeURIComponent(req.body.id)}`;
-  let data = await hueRequest(req.body.accessToken, req.body.username, path, body);
+  let { accessToken, username } = hueCredentials(req);
+  let data = await hueRequest(accessToken, username, path, body);
 
   res.json(data || []);
 });

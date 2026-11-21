@@ -103,3 +103,63 @@ test('the Hue page loads without an account connected', async ({ page }) => {
   await expect(page.locator('.appAuth')).toHaveAttribute('href', /api\.meethue\.com/);
   expect(errors).toEqual([]);
 });
+
+// Cookies the way pages before 2.13.2 left them, readable by the page
+async function addOldHueCookies(context, baseURL) {
+  let url = baseURL;
+  await context.addCookies([
+    { name: 'hueAccessToken', value: 'access-1', url },
+    { name: 'hueRefreshToken', value: 'refresh-1', url },
+    { name: 'hueUsername', value: 'bridge-key', url }
+  ]);
+}
+
+async function hueRequests(request) {
+  return (await request.get(`${fake}/hue`)).json();
+}
+
+test('the Hue page reissues old readable tokens as httpOnly and lists rooms', async ({ page, context, request, baseURL }) => {
+  let errors = watchErrors(page);
+  await addOldHueCookies(context, baseURL);
+
+  await page.goto('/app/hue');
+
+  let room = page.locator('#select-groups-rooms button', { hasText: 'Living Room' });
+  await expect(room).toBeVisible();
+
+  let cookies = Object.fromEntries((await context.cookies()).map(cookie => [cookie.name, cookie]));
+  expect(cookies.hueAccessToken).toMatchObject({ value: 'access-2', httpOnly: true });
+  expect(cookies.hueRefreshToken.httpOnly).toBe(true);
+  expect(cookies.hueUsername.httpOnly).toBe(true);
+  expect(cookies.hueAccess.httpOnly).toBe(false);
+
+  // Nothing secret is left for the page to read
+  let readable = await page.evaluate('document.cookie');
+  expect(readable).not.toMatch(/access-|refresh-|bridge-key/);
+
+  // The rooms came from the server using the reissued cookies
+  let calls = await hueRequests(request);
+  expect(calls.filter(call => call.path.endsWith('/room')).at(-1)).toMatchObject({ authorization: 'Bearer access-2', key: 'bridge-key' });
+
+  await room.click();
+  await expect(room).toHaveAttribute('aria-pressed', 'true');
+  expect(errors).toEqual([]);
+});
+
+test('lights follow the art once Hue is on', async ({ page, context, request, baseURL }) => {
+  await addOldHueCookies(context, baseURL);
+  await context.addCookies([
+    { name: 'hueRooms', value: 'room-1', url: baseURL },
+    { name: 'hueEnabled', value: 'true', url: baseURL }
+  ]);
+
+  await page.goto('/djryan');
+  await expect(page.locator('.hueIndicator')).toHaveText('on');
+
+  await expect.poll(async () => (await hueRequests(request))
+    .filter(call => call.method === 'put' && call.path.endsWith('/light/light-1')).length).toBeGreaterThan(0);
+
+  let put = (await hueRequests(request)).filter(call => call.method === 'put').at(-1);
+  expect(put).toMatchObject({ authorization: 'Bearer access-2', key: 'bridge-key' });
+  expect(JSON.parse(put.body).color.xy.x).toBeGreaterThan(0);
+});
