@@ -9,9 +9,13 @@ app.set('view engine', 'pug');
 // Static assets sit behind a CDN with a day-long cache at fixed URLs, so a
 // deploy would serve fresh markup against stale scripts until someone purged by
 // hand. Tying the URLs to the release means a version bump misses the cache on
-// its own.
+// its own. The version goes in the path rather than a query string because
+// browser modules import their siblings by relative URL, which carries the
+// path along but drops the query.
 app.locals.version = JSON.parse(readFileSync(new URL('package.json', import.meta.url))).version;
+app.locals.assets = `/app/static/${app.locals.version}`;
 app.use(express.urlencoded({ extended: true }));
+app.use(app.locals.assets, express.static('public'));
 app.use('/app/static/', express.static('public'));
 
 let pollIntervals = {
@@ -20,6 +24,9 @@ let pollIntervals = {
 loadPollIntervals();
 
 let lastfmKey = process.env.LASTFM_API_KEY;
+
+if (!lastfmKey)
+  console.warn('No Last.fm API key set, so the now playing page will not load any tracks');
 
 let spotifyKey;
 authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
@@ -176,8 +183,7 @@ function loadPollIntervals() {
 app.get('/app/hue', (req, res) => {
   let title = 'Descent Hue Setup';
 
-  res.render('hue', { title, hueClientId: process.env.HUE_CLIENT,
-    hueAppId: process.env.HUE_ID });
+  res.render('hue', { title, hueClientId: process.env.HUE_CLIENT });
 });
 
 app.get('/app/hue/authorize', (req, res) => {
@@ -217,8 +223,11 @@ async function authenticateHue(code, refreshToken, username, callback) {
     'Authorization': `Basic ${auth}`
   };
 
-  let form = code ? `code=${code}&grant_type=authorization_code` :
-    `refresh_token=${refreshToken}&grant_type=refresh_token`;
+  // Both values arrive straight from the query string, so encode them rather
+  // than let a stray & or = rewrite the token request
+  let form = new URLSearchParams(code ?
+    { 'code': code, 'grant_type': 'authorization_code' } :
+    { 'refresh_token': refreshToken, 'grant_type': 'refresh_token' }).toString();
 
   const response = await fetch(url, {
     'method': 'post',

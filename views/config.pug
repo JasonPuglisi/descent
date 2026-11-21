@@ -1,7 +1,7 @@
 extends template/layout
 
 block otherStylesheets
-  link(href=`/app/static/stylesheets/config.css?v=${version}`, rel='stylesheet')
+  link(href=`${assets}/stylesheets/config.css`, rel='stylesheet')
 
 block content
   .container
@@ -24,7 +24,7 @@ block content
         small Default image URL:&nbsp;
           input.inputGroup.groupBgopt#bgopt-default(name='defaultBackground', type='text', size='20', maxlength='300', placeholder='None')
           | &nbsp;
-          a.backgroundInputSave.hide(href='#' onclick='return false;')
+          a.backgroundInputSave.hide(href='#')
             i.fas.fa-save.fa-sm
             |  save
     h2 Weather Location
@@ -37,7 +37,7 @@ block content
           | &nbsp;Longitude:&nbsp;
           input.inputGroup#loc-longitude(name='locationLongitude', type='text', size='12', maxlength='24', placeholder='Automatic')
           | &nbsp;
-          a.locationInputSave.hide(href='#' onclick='return false;')
+          a.locationInputSave.hide(href='#')
             i.fas.fa-save.fa-sm
             |  save
     h2 Weather Units
@@ -58,5 +58,4 @@ block content
         i.fas.fa-lightbulb.fa-sm
 
 block otherJavascripts
-  script(src=`/app/static/javascripts/utility/general.js?v=${version}`)
-  script(src=`/app/static/javascripts/config.js?v=${version}`)
+  script(type='module', src=`${assets}/javascripts/config.js`)

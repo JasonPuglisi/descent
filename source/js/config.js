@@ -1,112 +1,95 @@
-/* global Cookies */
-/* global cookieEnabled, cookieExists */
+import { cookieEnabled, cookieExists, getCookie, setCookie } from './utility/cookies.js';
+import { hide, show } from './utility/general.js';
 
-$(() => {
-  processBackground();
-  setScrobbleMode();
-  processLocation();
-  processUnits();
-  processDatetime();
-});
+processBackground();
+processScrobbleMode();
+processLocation();
+processUnits();
+processDatetime();
 
-function processBackground() {
-  let selected = Cookies.get('background') || 'artist';
-  $(`#bg-${selected}`).addClass('selected');
+// A row of mutually exclusive options, each with an ID ending in its value,
+// like #bg-artist, saved to one cookie
+function processChoice(group, name, fallback) {
+  let options = document.querySelectorAll(`.selectGroup.${group}`);
+  let selected = getCookie(name) || fallback;
 
-  $('.selectGroup.groupBg').on('click', function() {
-    $('.selectGroup.groupBg.selected').each(function() { $(this).removeClass('selected'); });
-    $(this).addClass('selected');
-    Cookies.set('background', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
-  });
+  for (let option of options) {
+    let value = option.id.substring(option.id.lastIndexOf('-') + 1);
 
-  selected = !cookieExists('blur') || cookieEnabled('blur');
-  $('#bgopt-blur').toggleClass('selected', selected).on('click', function() {
-    selected = !selected;
-    $(this).toggleClass('selected');
-    Cookies.set('blur', selected, { expires: 3650, secure: true });
-  });
+    option.classList.toggle('selected', value === selected);
+    option.addEventListener('click', () => {
+      for (let other of options)
+        other.classList.toggle('selected', other === option);
 
-  $('#bgopt-default').val(Cookies.get('defaultBackground'));
-  $('#bgopt-default').on('input propertychange paste', () => {
-    $('.backgroundInputSave').show();
-  });
+      setCookie(name, value);
+    });
+  }
+}
 
-  $('a.backgroundInputSave').on('click', function() {
-    $(this).hide();
-
-    Cookies.set('defaultBackground', $('#bgopt-default').val(), { expires: 3650, secure: true });
+// A single on/off option saved to its own cookie
+function processToggle(element, name, enabled) {
+  element.classList.toggle('selected', enabled);
+  element.addEventListener('click', () => {
+    enabled = !enabled;
+    element.classList.toggle('selected', enabled);
+    setCookie(name, enabled);
   });
 }
 
-function setScrobbleMode() {
-  let selected = Cookies.get('scrobbleMode') || 'currentlyPlaying';
-  $(`#scrobbleMode-${selected}`).addClass('selected');
+function processBackground() {
+  processChoice('groupBg', 'background', 'artist');
+  processToggle(document.querySelector('#bgopt-blur'), 'blur', !cookieExists('blur') || cookieEnabled('blur'));
 
-  $('.selectGroup.groupScrobbleMode').on('click', function() {
-    $('.selectGroup.groupScrobbleMode.selected').each(function() { $(this).removeClass('selected'); });
-    $(this).addClass('selected');
-    Cookies.set('scrobbleMode', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
+  let input = document.querySelector('#bgopt-default');
+  input.value = getCookie('defaultBackground') || '';
+  input.addEventListener('input', () => show('.backgroundInputSave'));
+
+  document.querySelector('.backgroundInputSave').addEventListener('click', event => {
+    event.preventDefault();
+    hide('.backgroundInputSave');
+    setCookie('defaultBackground', input.value);
   });
+}
 
+function processScrobbleMode() {
+  processChoice('groupScrobbleMode', 'scrobbleMode', 'currentlyPlaying');
 }
 
 function validateCoordinate(coordinate) {
   return /^(-?\d+\.\d+)?$/.test(coordinate);
 }
 
-function showHideLocationSave() {
-  let latitude = $('#loc-latitude').val();
-  let longitude = $('#loc-longitude').val();
-
-  if (!latitude == !longitude &&
-      validateCoordinate(latitude) && validateCoordinate(longitude)) {
-    $('a.locationInputSave').show();
-  } else {
-    $('a.locationInputSave').hide();
-  }
-}
-
 function processLocation() {
-  $('#loc-latitude').val(Cookies.get('latitude'));
-  $('#loc-longitude').val(Cookies.get('longitude'));
+  let latitude = document.querySelector('#loc-latitude');
+  let longitude = document.querySelector('#loc-longitude');
 
-  $('#loc-latitude').on('input propertychange paste', () => {
-    showHideLocationSave();
-  });
+  latitude.value = getCookie('latitude') || '';
+  longitude.value = getCookie('longitude') || '';
 
-  $('#loc-longitude').on('input propertychange paste', () => {
-    showHideLocationSave();
-  });
+  // Only offer to save a pair that's either both set and valid, or both empty
+  let updateSave = () => {
+    let valid = !latitude.value === !longitude.value &&
+      validateCoordinate(latitude.value) && validateCoordinate(longitude.value);
 
-  $('a.locationInputSave').on('click', function() {
-    $(this).hide();
+    show('.locationInputSave', valid);
+  };
 
-    Cookies.set('latitude', $('#loc-latitude').val(), { expires: 3650, secure: true });
-    Cookies.set('longitude', $('#loc-longitude').val(), { expires: 3650, secure: true });
+  latitude.addEventListener('input', updateSave);
+  longitude.addEventListener('input', updateSave);
+
+  document.querySelector('.locationInputSave').addEventListener('click', event => {
+    event.preventDefault();
+    hide('.locationInputSave');
+    setCookie('latitude', latitude.value);
+    setCookie('longitude', longitude.value);
   });
 }
 
 function processUnits() {
-  let selected = Cookies.get('units') || 'imperial';
-  $(`#units-${selected}`).addClass('selected');
-
-  $('.selectGroup.groupUnits').on('click', function() {
-    $('.selectGroup.groupUnits.selected').each(function() { $(this).removeClass('selected'); });
-    $(this).addClass('selected');
-    Cookies.set('units', this.id.substring(this.id.lastIndexOf('-') + 1), { expires: 3650, secure: true });
-  });
+  processChoice('groupUnits', 'units', 'imperial');
 }
 
 function processDatetime() {
-  let options = ['24hr', 'weekday', 'seconds'];
-  options.forEach(option => {
-    let selected = cookieEnabled(option);
-    $(`#datetime-${option}`).toggleClass('selected', selected);
-
-    $(`#datetime-${option}`).on('click', function() {
-      selected = !selected;
-      $(this).toggleClass('selected');
-      Cookies.set(option, selected, { expires: 3650, secure: true });
-    });
-  });
+  for (let option of ['24hr', 'weekday', 'seconds'])
+    processToggle(document.querySelector(`#datetime-${option}`), option, cookieEnabled(option));
 }

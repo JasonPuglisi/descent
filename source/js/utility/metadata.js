@@ -1,8 +1,10 @@
-/* global resources, Cookies */
-/* global cacheImages, checkLoadStatus, clearImages, cookieEnabled, cookieExists, toggleDisplay, updateHue */
+import { cookieEnabled, getCookie } from './cookies.js';
+import { toggleDisplay } from './general.js';
+import { updateHue } from './hue.js';
+import { cacheImages, clearImages } from './images.js';
+import { getJson } from './request.js';
+import { lastfmKey, resources, user } from './state.js';
 
-let user = $('.music .user').text();
-let key = $('.lastfmKey').text() || 'c1797de6bf0b7e401b623118120cd9e1';
 let baseInterval = 10000;
 let pollInterval = 10000;
 let intervalId;
@@ -15,9 +17,14 @@ let backoffMax = 8;
 let backoffRecoveryPolls = 20;
 let consecutiveSuccesses = 0;
 
-function initMetadata() {
+// Bumped on every track change. Image and scrobble lookups for a track that
+// has since been replaced check it and drop their results, rather than
+// painting the old track's art and counts over the new one.
+let generation = 0;
+
+export function initMetadata() {
   // Start state update loop
-  refreshState();
+  fetchMetadata();
   applyPollInterval();
 
   // Start interval update loop
@@ -25,21 +32,20 @@ function initMetadata() {
   setInterval(updatePollInterval, 60000);
 }
 
-function updatePollInterval() {
-  $.ajax({
-    url: '/app/poll/interval',
-    timeout: 2000,
-    success: data => {
-      let lastfm = parseInt(data.lastfm, 10);
+async function updatePollInterval() {
+  let data = await getJson('/app/poll/interval');
 
-      if (!Number.isFinite(lastfm) || lastfm <= 0 || lastfm === baseInterval)
-        return;
+  if (!data)
+    return;
 
-      console.info(`Adjusting Last.fm poll interval to ${lastfm}`);
-      baseInterval = lastfm;
-      applyPollInterval();
-    }
-  });
+  let lastfm = parseInt(data.lastfm, 10);
+
+  if (!Number.isFinite(lastfm) || lastfm <= 0 || lastfm === baseInterval)
+    return;
+
+  console.info(`Adjusting Last.fm poll interval to ${lastfm}`);
+  baseInterval = lastfm;
+  applyPollInterval();
 }
 
 // Re-arm the poll timer, but only when the effective delay actually moved
@@ -51,7 +57,7 @@ function applyPollInterval() {
 
   pollInterval = effective;
   clearInterval(intervalId);
-  intervalId = setInterval(refreshState, pollInterval);
+  intervalId = setInterval(fetchMetadata, pollInterval);
 }
 
 // Back off on rate limiting, then walk it back down once responses recover
@@ -81,94 +87,67 @@ function handlePollSuccess() {
   applyPollInterval();
 }
 
-function refreshState() {
-  // Query Last.fm for recent track information
-  fetchMetadata();
+function lastfmUrl(method, params) {
+  let query = new URLSearchParams({ method, ...params, 'api_key': lastfmKey, 'format': 'json' });
+
+  return `https://ws.audioscrobbler.com/2.0/?${query}`;
 }
 
-function fetchMetadata() {
-  // Query Last.fm for recent track information
-  let urlUser = encodeURIComponent(user);
-  let url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${urlUser}&api_key=${key}&limit=1&format=json`;
-  $.ajax({
-    url: url,
-    timeout: 2000,
-    success: data => {
-      // Handle successful response
-      updateState(data);
-    },
-    error: () => {
-      // Handle errored response
-      updateState();
-    }
-  });
+async function fetchMetadata() {
+  updateState(await getJson(lastfmUrl('user.getrecenttracks', { user, 'limit': 1 })));
 }
 
-function cacheScrobbles() {
-  let artist = resources.track.current.artist;
-  let title = resources.track.current.title;
-  let urlUser = encodeURIComponent(user);
-  let urlArtist = encodeURIComponent(artist);
-  let urlTitle = encodeURIComponent(title);
+async function cacheScrobbles(current) {
+  let { artist, title } = resources.track.current;
 
-  if (artist && title) {
-    // Get scrobble count for current artist
-    let url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${urlArtist}&username=${urlUser}&api_key=${key}&limit=1&format=json`;
-    $.ajax({
-      url: url,
-      timeout: 2000,
-      success: data => {
-        // Handle successful response
-        resources.track.current.artistScrobbles = data.artist.stats.userplaycount;
-        checkLoadStatus();
-      }
-    });
+  if (!artist || !title)
+    return;
 
-    // Get scrobble count for current track
-    url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${urlArtist}&track=${urlTitle}&username=${urlUser}&api_key=${key}&limit=1&format=json`;
-    $.ajax({
-      url: url,
-      timeout: 2000,
-      success: data => {
-        // Handle successful response
-        resources.track.current.trackScrobbles = data.track.userplaycount;
+  let [artistInfo, trackInfo] = await Promise.all([
+    getJson(lastfmUrl('artist.getInfo', { artist, 'username': user })),
+    getJson(lastfmUrl('track.getInfo', { artist, 'track': title, 'username': user }))
+  ]);
 
-        // Last.fm reports this as a "0" or "1" string on the same call
-        resources.track.current.trackLoved = data.track.userloved === '1';
-        checkLoadStatus();
-      }
-    });
+  if (!current())
+    return;
+
+  let track = resources.track.current;
+
+  if (artistInfo && artistInfo.artist)
+    track.artistScrobbles = artistInfo.artist.stats.userplaycount;
+
+  if (trackInfo && trackInfo.track) {
+    track.trackScrobbles = trackInfo.track.userplaycount;
+
+    // Last.fm reports this as a "0" or "1" string on the same call
+    track.trackLoved = trackInfo.track.userloved === '1';
   }
+
+  // Images haven't landed yet, so leave it to them to update the text
+  if (track.albumImageLoaded && track.artistImageLoaded)
+    updateMetadata();
 }
 
 function updateState(data) {
-  let scrobbleMode = cookieExists('scrobbleMode') ? Cookies.get('scrobbleMode') : false;
-  let ignoreCurrent = (scrobbleMode === 'lastScrobbled');
+  let ignoreCurrent = getCookie('scrobbleMode') === 'lastScrobbled';
 
-  // Update current state
   let playing = false;
   let error = false;
   let metadata = {};
+
   if (!data || data.error) {
-    // Invalid or error response
     error = true;
 
     // 29 is Last.fm's rate limit code
     if (data && data.error === 29)
       handleRateLimit();
-  } else if (!data.recenttracks || !data.recenttracks.track || !data.recenttracks.track[0]) {
-    // Valid response but missing recent track data
   } else {
-    // Valid response with recent track data
-    let track = data.recenttracks.track[0];
+    let track = data.recenttracks?.track?.[0];
+    let nowPlaying = track?.['@attr']?.nowplaying;
 
-    if (!ignoreCurrent && (!track['@attr'] || !track['@attr'].nowplaying)) {
-      // No currently playing track
-    } else {
-      // Currently playing track present
+    if (track && (ignoreCurrent || nowPlaying)) {
       playing = true;
 
-      // Set track metadata
       metadata = {
         artist: track.artist['#text'],
         artistId: track.artist.mbid,
@@ -184,76 +163,71 @@ function updateState(data) {
   if (!error)
     handlePollSuccess();
 
-  // Update global state and metadata
-  setMetadata(playing, error, metadata);
+  // A failed poll says nothing about what's playing, so keep showing the last
+  // good answer. Treating it as idle is what turned rate limiting into
+  // "Nothing in the air" for everyone sharing the key. The first poll still
+  // falls through, so a page that never loads shows idle rather than nothing.
+  if (error && resources.track.previous.playing !== undefined)
+    return;
 
-  // Determine if state changed and take appropriate action
+  setMetadata(playing, error, metadata);
   handleStateChange();
 }
 
 function setMetadata(playing, error, metadata) {
-  // Set global state
-  resources.track.current.playing = playing; // True if track is *currently* playing
-  resources.track.current.error = error;
+  Object.assign(resources.track.current, {
+    playing, // True if track is *currently* playing
+    error,
+    artist: metadata.artist ?? '',
+    artistId: metadata.artistId || '',
+    album: metadata.album || '',
+    title: metadata.title ?? '',
+    link: metadata.link || '',
+    cover: metadata.cover || '',
+    scrobbles: metadata.scrobbles || ''
+  });
+}
 
-  // Set global track metadata
-  resources.track.current.artist = metadata.artist !== undefined ? metadata.artist : '';
-  resources.track.current.artistId = metadata.artistId ? metadata.artistId : '';
-  resources.track.current.album = metadata.album ? metadata.album : '';
-  resources.track.current.title = metadata.title !== undefined ? metadata.title : '';
-  resources.track.current.link = metadata.link ? metadata.link : '';
-  resources.track.current.cover = metadata.cover ? metadata.cover : '';
-  resources.track.current.scrobbles = metadata.scrobbles ? metadata.scrobbles : '';
-  resources.track.current.artistScrobbles = '';
-  resources.track.current.trackScrobbles = '';
-  resources.track.current.trackLoved = false;
+// Detailed counts belong to a track rather than a poll, so they're only
+// cleared when the track changes. Clearing them on every poll blanked them out
+// whenever the artwork took longer to load than the poll interval.
+function clearScrobbles() {
+  Object.assign(resources.track.current, {
+    artistScrobbles: '',
+    trackScrobbles: '',
+    trackLoved: false
+  });
 }
 
 function handleStateChange() {
-  // Get current and previous state
   let current = resources.track.current;
   let previous = resources.track.previous;
 
-  if (previous.playing === undefined) {
-    if (!current.playing) {
-      // State changed from unloaded to idle (clear colors, lights, text)
-      clearColors();
-      updateHue();
-      clearImages();
-      updateMetadata();
-    } else {
-      // State changed from unloaded to playing (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
-      cacheImages();
-      cacheScrobbles();
-    }
-  } else if (!previous.playing) {
-    if (current.playing) {
-      // State changed from idle to playing (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
-      cacheImages();
-      cacheScrobbles();
-    } else {
-      // State unchanged from idle (check idle timeout)
-      if (checkIdleTimeout()) {
-        clearColors();
-        updateHue();
-        clearImages();
-        updateMetadata();
-      }
-    }
-  } else {
-    if (current.playing) {
-      if (current.artist !== previous.artist || current.title !== previous.title) {
-        // State changed from playing to playing new song (fetch images; fetch detailed scrobbles; update colors, lights, images, text)
-        cacheImages();
-        cacheScrobbles();
-      }
-    } else {
-      // State changed from playing to idle (start idle timeout)
+  let changedTrack = current.playing && (!previous.playing ||
+    current.artist !== previous.artist || current.title !== previous.title);
+
+  if (changedTrack) {
+    // Fetch images and detailed scrobbles, which then update colors, lights,
+    // images and text
+    let token = ++generation;
+    let isCurrent = () => token === generation;
+
+    clearScrobbles();
+    cacheImages(isCurrent);
+    cacheScrobbles(isCurrent);
+  } else if (!current.playing) {
+    if (previous.playing === undefined) {
+      // Unloaded to idle
+      showIdle();
+    } else if (previous.playing) {
+      // Playing to idle, which waits out a short timeout in case the next
+      // track is about to start
       startIdleTimeout();
+    } else if (checkIdleTimeout()) {
+      showIdle();
     }
   }
 
-  // Set previous state to current
   resources.track.previous = {
     playing: current.playing,
     artist: current.artist,
@@ -261,57 +235,50 @@ function handleStateChange() {
   };
 }
 
+function showIdle() {
+  // Anything still loading for the last track is no longer wanted
+  generation++;
+
+  clearScrobbles();
+  clearColors();
+  updateHue();
+  clearImages();
+  updateMetadata();
+}
+
 function startIdleTimeout() {
-  // Start new idle timeout of 10 seconds
   resources.track.current.idleTimeout = Date.now() + 10 * 1000;
 }
 
 function checkIdleTimeout() {
-  // Check if timeout has been met before changing to idle state
   return resources.track.current.idleTimeout && Date.now() > resources.track.current.idleTimeout;
 }
 
-function clearColors() {
-  // Set default colors
-  let hexColors = [ '#f6f5f7', '#f6f5f7' ];
-  let hueColors = [ { x: 0.3127, y: 0.3290 } ];
+export function clearColors() {
+  resources.colors.hex = ['#f6f5f7', '#f6f5f7'];
+  resources.colors.hue = [{ x: 0.3127, y: 0.3290 }];
 
-  resources.colors.hex = hexColors;
-  resources.colors.hue = hueColors;
-
-  // Update text
   updateTextColors();
 }
 
-function updateTextColors() {
-  // Update text based on current colors
-  $('.music .title').css('color', resources.colors.hex[0]);
-  $('.music .artist').css('color', resources.colors.hex[1]);
+export function updateTextColors() {
+  document.querySelector('.music .title').style.color = resources.colors.hex[0];
+  document.querySelector('.music .artist').style.color = resources.colors.hex[1];
 }
 
-function updateMetadata() {
-  // Clear idle timeout
-  delete resources.track.current.idleTimeout;
+export function updateMetadata() {
+  let track = resources.track.current;
+  delete track.idleTimeout;
 
-  // Get current track metadata
-  let playing = resources.track.current.playing;
-  let artist = resources.track.current.artist;
-  let title = resources.track.current.title;
-  let link = resources.track.current.link;
-  let scrobbles = resources.track.current.scrobbles;
-  let artistScrobbles = resources.track.current.artistScrobbles;
-  let trackScrobbles = resources.track.current.trackScrobbles;
-  let trackLoved = resources.track.current.trackLoved;
+  let { playing, artist, title, link, scrobbles, artistScrobbles, trackScrobbles, trackLoved } = track;
 
-  // Update track metadata text
-  $('.music .artist').text(artist || 'Nothing in the air...');
-  $('.music .title').text(title);
-  $('.music .songLink').attr('href', link);
+  document.querySelector('.music .artist').textContent = artist || 'Nothing in the air...';
+  document.querySelector('.music .title').textContent = title;
+  document.querySelector('.music .songLink').setAttribute('href', link);
 
-  // Update scrobbles
-  $('.scrobbles .scrobbleCount').text(scrobbles ? scrobbles : '');
-  $('.detailedScrobbles .artistScrobbleCount').text(artistScrobbles ? artistScrobbles : '');
-  $('.detailedScrobbles .trackScrobbleCount').text(trackScrobbles ? trackScrobbles : '');
+  document.querySelector('.scrobbles .scrobbleCount').textContent = scrobbles || '';
+  document.querySelector('.detailedScrobbles .artistScrobbleCount').textContent = artistScrobbles || '';
+  document.querySelector('.detailedScrobbles .trackScrobbleCount').textContent = trackScrobbles || '';
   toggleDisplay('.scrobbles', scrobbles);
   toggleDisplay('.detailedScrobbles', artistScrobbles && trackScrobbles);
   toggleDisplay('.detailedScrobbles .loved', trackLoved);
@@ -319,6 +286,7 @@ function updateMetadata() {
   // Update document title and show/hide extended info as necessary
   if (playing) {
     document.title = `"${title}" by ${artist}`;
+
     if (cookieEnabled('extendedOn'))
       toggleDisplay('.userLine', true);
   } else {

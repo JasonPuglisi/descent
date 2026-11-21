@@ -1,14 +1,12 @@
 extends template/layout
 
 block otherStylesheets
-  link(href=`/app/static/stylesheets/config.css?v=${version}`, rel='stylesheet')
+  link(href=`${assets}/stylesheets/config.css`, rel='stylesheet')
 
 block content
   .container
     h1= title
-    div
-      span.hide.hueClientId= hueClientId
-      span.hide.hueAppId= hueAppId
+    div(data-hue-client-id=hueClientId)
       ol
         li.hueStep#loading
           h2
@@ -41,5 +39,4 @@ block content
         i.fas.fa-sliders-h.fa-sm
 
 block otherJavascripts
-  script(src=`/app/static/javascripts/utility/general.js?v=${version}`)
-  script(src=`/app/static/javascripts/hue.js?v=${version}`)
+  script(type='module', src=`${assets}/javascripts/hue.js`)

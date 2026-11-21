@@ -30,16 +30,16 @@ export default [
     }
   },
   {
-    // Browser bundles, which are plain scripts sharing globals rather than modules
+    // Browser modules. Color Thief and chroma.js still load as classic scripts
+    // from the CDN, so the files that use them declare those globals.
     files: ['source/js/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'script',
-      globals: { ...globals.browser, ...globals.jquery }
+      sourceType: 'module',
+      globals: globals.browser
     },
     rules: {
-      ...sharedRules,
-      'no-unused-vars': 'off'
+      ...sharedRules
     }
   }
 ];

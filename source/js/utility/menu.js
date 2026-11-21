@@ -1,52 +1,62 @@
-/* global resources, Cookies */
-/* global cookieEnabled, cookieExists, getBackgroundType, nowPlaying, toggleCookie, updateHue */
+import { cookieEnabled, cookieExists, setCookie, toggleCookie } from './cookies.js';
+import { show, toggleDisplay } from './general.js';
+import { refreshHueToken, updateHue } from './hue.js';
+import { getBackgroundType } from './images.js';
+import { resources, user } from './state.js';
 
-function initMenu() {
-  // Update globals
-  resources.features.hue = cookieExists('hueAccessToken') &&
-    cookieExists('hueUsername') && cookieExists('hueRooms');
-  if (!resources.features.hue && cookieExists('hueRefreshToken')) {
-    let refreshToken = Cookies.get('hueRefreshToken');
-    let url = `/app/hue/authorize?refreshToken=${refreshToken}`;
-    $.get(url, () => {
-      resources.features.hue = true;
-      enableHue();
-      updateHue();
+export async function initMenu() {
+  window.addEventListener('keydown', processKey);
+
+  // The help menu links stand in for their keys
+  for (let link of document.querySelectorAll('[data-key]')) {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      handleKey(link.dataset.key);
     });
   }
-
-  // Set function for key presses
-  window.onkeydown = processKey;
-
-  // Update Hue state
-  enableHue();
 
   // Fade menu after initial pause
   setTimeout(() => { toggleDisplay('.help', false); }, 3600);
 
   // Save current user to populate index input
-  Cookies.set('lastUser', $('.music .user').text(), { expires: 3650, secure: true });
+  setCookie('lastUser', user);
 
   // Apply transparent background if required
   if (getBackgroundType() === 'transparent')
-    $('body').css('background-color', 'transparent');
+    document.body.style.backgroundColor = 'transparent';
+
+  resources.features.hue = hueConfigured();
+  enableHue();
+
+  // The access token cookie expires well before the refresh token, so get a
+  // new one if that's all that's missing
+  if (!resources.features.hue && cookieExists('hueRefreshToken') && await refreshHueToken()) {
+    resources.features.hue = hueConfigured();
+    enableHue();
+    updateHue();
+  }
+}
+
+function hueConfigured() {
+  return cookieExists('hueAccessToken') && cookieExists('hueUsername') && cookieExists('hueRooms');
 }
 
 function processKey(event) {
-  // Return if modifier key is held down
-  if (event.ctrlKey || event.metaKey)
+  if (event.ctrlKey || event.metaKey || event.altKey)
     return;
 
-  // Get key pressed
-  let key = event.keyCode;
+  handleKey(event.key.toLowerCase());
+}
+
+function handleKey(key) {
   switch (key) {
-    // Handle H to toggle help menu
-    case 72: {
+    // Toggle help menu
+    case 'h': {
       toggleDisplay('.help');
       break;
     }
-    // Handle E to toggle extended info
-    case 69: {
+    // Toggle extended info
+    case 'e': {
       let showE = false;
       if (resources.track.current.playing) {
         toggleCookie('extendedOn');
@@ -55,8 +65,8 @@ function processKey(event) {
       toggleDisplay('.userLine', showE);
       break;
     }
-    // Handle L to toggle Hue lights
-    case 76: {
+    // Toggle Hue lights
+    case 'l': {
       let on = false;
       if (resources.features.hue) {
         toggleCookie('hueEnabled');
@@ -65,66 +75,50 @@ function processKey(event) {
       toggleHue(on);
       break;
     }
-    // Handle T to toggle date and time
-    case 84: {
+    // Toggle date and time
+    case 't': {
       toggleCookie('datetimeOn');
       toggleDisplay('.datetime');
       break;
     }
-    // Handle W to toggle weather
-    case 87: {
+    // Toggle weather
+    case 'w': {
+      // Weather is on until turned off, unlike the other toggles, so flipping
+      // the cookie blindly saved "on" the first time it was hidden
       let showW = false;
       if (resources.features.weather) {
-        toggleCookie('weatherOn');
-        showW = undefined;
+        showW = !(!cookieExists('weatherOn') || cookieEnabled('weatherOn'));
+        setCookie('weatherOn', showW);
       }
       toggleDisplay('.weather', showW);
       break;
     }
-    // Handle S to show settings page
-    case 83: {
+    // Show settings page
+    case 's': {
       window.location.href = '/app/config';
       break;
     }
   }
 }
 
-function toggleDisplay(element, show) {
-  // Call function with each element if array of elements is passed
-  if (element.constructor === Array) {
-    element.forEach(element => { toggleDisplay(element, show); });
-
-    return;
-  }
-
-  // Determine whether or not to show element
-  if (show === undefined)
-    show = !$(element).is(':visible');
-
-  // Show/hide element
-  if (show)
-    $(element).fadeIn(750, 'linear');
-  else
-    $(element).fadeOut(750, 'linear');
-}
-
 function enableHue() {
-  if (resources.features.hue) {
-    if (cookieEnabled('hueEnabled'))
-      $('.hueIndicator').text('on');
-    $('.hueHelp').show();
-  }
+  if (!resources.features.hue)
+    return;
+
+  if (cookieEnabled('hueEnabled'))
+    document.querySelector('.hueIndicator').textContent = 'on';
+
+  show('.hueHelp');
 }
 
 function toggleHue(on) {
-  // Determine whether or not to turn Hue on
-  if (on === undefined)
-    on = $('.hueIndicator').text() === 'off';
+  let indicator = document.querySelector('.hueIndicator');
 
-  // Turn Hue on/off
-  if (on) {
-    $('.hueIndicator').text('on');
+  if (on === undefined)
+    on = indicator.textContent === 'off';
+
+  indicator.textContent = on ? 'on' : 'off';
+
+  if (on)
     updateHue();
-  } else
-    $('.hueIndicator').text('off');
 }

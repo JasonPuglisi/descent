@@ -1,63 +1,60 @@
-/* global resources, Cookies */
-/* global cookieEnabled, cookieExists, toggleDisplay */
+import { cookieEnabled, cookieExists, getCookie } from './cookies.js';
+import { toggleDisplay } from './general.js';
+import { postForm } from './request.js';
+import { resources } from './state.js';
 
-// Initialize weather display
-function initWeather() {
-  getCoordinates((coords) => {
-    // Update weather display immediately
-    updateWeather(coords);
+let refreshMinutes = 5;
 
-    // Update weather display at regular intervals
-    let minutes = 5; // Refresh rate in minutes
-    setInterval(() => { updateWeather(coords); }, minutes * 60000);
+export async function initWeather() {
+  let coords = await getCoordinates();
+
+  if (!coords)
+    return;
+
+  updateWeather(coords);
+  setInterval(() => { updateWeather(coords); }, refreshMinutes * 60000);
+}
+
+// Coordinates saved on the settings page win over asking the browser
+function getCoordinates() {
+  let latitude = getCookie('latitude');
+  let longitude = getCookie('longitude');
+
+  if (latitude && longitude)
+    return Promise.resolve({ latitude, longitude });
+
+  if (!navigator.geolocation)
+    return Promise.resolve(undefined);
+
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+      () => resolve(undefined));
   });
 }
 
-// Get coordinates from cookies or HTML5 geolocation API
-function getCoordinates(callback) {
-  // Try to get coordinates from cookies
-  let coords = {
-    'latitude': Cookies.get('latitude'),
-    'longitude': Cookies.get('longitude')
-  };
+async function updateWeather(coords) {
+  let units = cookieExists('units') ? getCookie('units') : 'imperial';
+  let data = await postForm('/app/weather', { ...coords, units }, 5000);
 
-  if (coords.latitude && coords.longitude) {
-    callback(coords);
-  } else if (navigator.geolocation) {
-    // Ensure HTML5 geolocation API is present and get coordinates
-    navigator.geolocation.getCurrentPosition(position => {
-      coords.latitude = position.coords.latitude;
-      coords.longitude = position.coords.longitude;
+  if (!data || !data.success)
+    return;
 
-      callback(coords);
-    });
-  }
-}
+  resources.features.weather = true;
 
-// Update weather display
-function updateWeather(coords) {
-  let url = '/app/weather';
-  let units = cookieExists('units') ? Cookies.get('units') : 'imperial';
-  let urlUnits = encodeURIComponent(units);
-  let body = `latitude=${coords.latitude}&longitude=${coords.longitude}&units=${urlUnits}`;
+  let weather = document.querySelector('.weather');
+  weather.querySelector('.summary').textContent = data.summary;
+  weather.querySelector('.conditions .temperature').textContent = data.temperature;
+  weather.querySelector('.conditions .apparentTemperature').textContent = data.apparentTemperature;
 
-  $.post(url, body, data => {
-    // Perform no action if unsuccessful
-    if (!data.success)
-      return;
+  for (let unit of weather.querySelectorAll('.conditions .unit'))
+    unit.textContent = data.unit;
 
-    // Enable weather display
-    resources.features.weather = true;
+  // Replace the icon classes outright. This used to remove the classes of
+  // `this`, which inside an arrow function was never the icon, so every
+  // condition seen since the page loaded stayed on the element.
+  weather.querySelector('.conditions .icon').className = `icon ${data.icon}`;
 
-    // Update weather data
-    $('.weather .summary').text(data.summary);
-    $('.weather .conditions .temperature').text(data.temperature);
-    $('.weather .conditions .apparentTemperature').text(data.apparentTemperature);
-    $('.weather .conditions .unit').text(data.unit);
-    $('.weather .conditions .icon').removeClass($(this).attr('class')).addClass(data.icon);
-
-    // Display weather text as appropriate
-    if (cookieEnabled('weatherOn') || !cookieExists('weatherOn'))
-      toggleDisplay('.weather', true);
-  });
+  if (cookieEnabled('weatherOn') || !cookieExists('weatherOn'))
+    toggleDisplay('.weather', true);
 }

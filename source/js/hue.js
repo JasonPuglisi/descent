@@ -1,111 +1,102 @@
-/* global Cookies */
-/* global cookieEnabled */
+import { cookieEnabled, getCookie, removeCookie, setCookie } from './utility/cookies.js';
+import { hide, show } from './utility/general.js';
+import { refreshHueToken } from './utility/hue.js';
+import { postForm } from './utility/request.js';
 
-$(() => {
-  loadAuthorization();
-  processOptions();
-});
+let roomPrefix = 'select-group-rooms-';
 
-function loadAuthorization() {
-  let accessToken = Cookies.get('hueAccessToken');
-  let refreshToken = Cookies.get('hueRefreshToken');
-  let username = Cookies.get('hueUsername');
-  if (accessToken) {
-    $('#loading').hide();
-    $('#hue-step-rooms').show();
-    $('#hue-options').show();
-    getRooms(accessToken, username);
-  } else if (refreshToken) {
-    refreshAccessToken(refreshToken, username, loadAuthorization);
+loadAuthorization();
+processOptions();
+
+async function loadAuthorization() {
+  // A failed refresh leaves no access token behind, and trying again would
+  // just fail again, so fall through to connecting from scratch. This used to
+  // retry with no limit, which left the page loading forever.
+  if (!getCookie('hueAccessToken') && getCookie('hueRefreshToken'))
+    await refreshHueToken();
+
+  hide('#loading');
+
+  if (getCookie('hueAccessToken')) {
+    show('#hue-step-rooms');
+    show('#hue-options');
+    getRooms();
   } else {
-    $('#loading').hide();
-    $('#connect').show();
+    show('#connect');
     authorizeApplication();
   }
 }
 
-function refreshAccessToken(refreshToken, username, callback) {
-  let url = `/app/hue/authorize?refreshToken=${encodeURIComponent(refreshToken)}`;
-
-  // Only send a username when we actually have one, or the server stores the
-  // string "undefined" as the Hue username and skips allowlisting
-  if (username)
-    url += `&username=${encodeURIComponent(username)}`;
-
-  $.get(url, () => {
-    callback();
-  });
-}
-
 function authorizeApplication() {
-  let hueClientId = encodeURIComponent($('.hueClientId').text());
-  $('.appAuth').attr('href', `https://api.meethue.com/v2/oauth2/authorize?client_id=${hueClientId}&response_type=code`);
+  let clientId = document.querySelector('[data-hue-client-id]').dataset.hueClientId;
+  let params = new URLSearchParams({ 'client_id': clientId, 'response_type': 'code' });
+
+  document.querySelector('.appAuth').setAttribute('href', `https://api.meethue.com/v2/oauth2/authorize?${params}`);
 }
 
-function getRooms(accessToken, username) {
-  let url = '/app/hue/api/rooms';
-  $.post(url, { accessToken, username }, data => {
-    $('.groupRooms').each(function() {
-      $(this).remove();
+async function getRooms() {
+  let accessToken = getCookie('hueAccessToken');
+  let username = getCookie('hueUsername');
+  let rooms = await postForm('/app/hue/api/rooms', { accessToken, username }, 10000);
+
+  hide('#select-groups-loading-rooms');
+
+  let container = document.querySelector('#select-groups-rooms');
+
+  for (let existing of container.querySelectorAll('.groupRooms'))
+    existing.remove();
+
+  for (let room of rooms || []) {
+    // Room names come from the user's Hue account, so they go in as text
+    let element = document.createElement('div');
+    element.className = 'selectGroup groupRooms';
+    element.id = `${roomPrefix}${room.id}`;
+    element.textContent = room.name;
+    element.addEventListener('click', () => {
+      element.classList.toggle('selected');
+      saveRooms();
     });
-    $('#select-groups-loading-rooms').hide();
-    for (let room of data) {
-      $('#select-groups-rooms').append('<div class="selectGroup ' +
-        'groupRooms" id="select-group-rooms-' + room.id + '">' + room.name + '</div>');
-    }
 
-    restoreRooms();
+    container.append(element);
+  }
 
-    $('.groupRooms').click(function() {
-      let e = $(this);
-      if (!e.hasClass('selected')) {
-        e.addClass('selected');
-      } else {
-        e.removeClass('selected');
-      }
-
-      let selectedRooms = [];
-      $('.groupRooms.selected').each(function() {
-        selectedRooms.push(this.id.substring('select-group-rooms-'.length));
-      });
-
-      if (selectedRooms.length > 0) {
-        $('#hue-step-done').show();
-        Cookies.set('hueRooms', selectedRooms.join(','), { expires: 3650, secure: true });
-      } else {
-        $('#hue-step-done').hide();
-        Cookies.remove('hueRooms');
-        Cookies.remove('hueEnabled');
-      }
-    });
-  });
+  restoreRooms();
 }
 
-function restoreRooms() {
-  let rooms = Cookies.get('hueRooms');
+function saveRooms() {
+  let selected = [...document.querySelectorAll('.groupRooms.selected')]
+    .map(room => room.id.substring(roomPrefix.length));
 
-  if (rooms !== undefined) {
-    rooms = rooms.split(',');
-    if (rooms.length > 0) {
-      for (let i in rooms) {
-        let room = rooms[i];
-        $('#select-group-rooms-' + rooms[i]).addClass('selected');
-      }
-      $('#hue-step-done').show();
-    }
+  if (selected.length) {
+    show('#hue-step-done');
+    setCookie('hueRooms', selected.join(','));
+  } else {
+    hide('#hue-step-done');
+    removeCookie('hueRooms');
+    removeCookie('hueEnabled');
   }
 }
 
-function processOptions() {
-  let options = ['shuffle'];
-  options.forEach(option => {
-    let selected = cookieEnabled(option);
-    $(`#hue-${option}`).toggleClass('selected', selected);
+function restoreRooms() {
+  let rooms = (getCookie('hueRooms') || '').split(',').filter(room => room);
 
-    $(`#hue-${option}`).on('click', function() {
+  for (let room of rooms)
+    document.getElementById(`${roomPrefix}${room}`)?.classList.add('selected');
+
+  if (rooms.length)
+    show('#hue-step-done');
+}
+
+function processOptions() {
+  for (let option of ['shuffle']) {
+    let element = document.querySelector(`#hue-${option}`);
+    let selected = cookieEnabled(option);
+
+    element.classList.toggle('selected', selected);
+    element.addEventListener('click', () => {
       selected = !selected;
-      $(this).toggleClass('selected');
-      Cookies.set(option, selected, { expires: 3650, secure: true });
+      element.classList.toggle('selected', selected);
+      setCookie(option, selected);
     });
-  });
+  }
 }

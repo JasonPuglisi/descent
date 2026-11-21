@@ -1,27 +1,24 @@
-/* global resources, chroma, Cookies */
-/* global cookieEnabled, fetchHexColors, hasCover */
+/* global chroma */
+
+import { cookieEnabled, cookieExists, getCookie } from './cookies.js';
+import { postForm } from './request.js';
+import { resources } from './state.js';
 
 // CIE xy corners of the Hue Gamut C triangle, which covers every current color
 // bulb. Values come from the v2 API reference rather than the color conversion
-// page, which transposes the red y coordinate. Lights report their own gamut in
-// v1 as capabilities.control.colorgamut, which would beat assuming this one.
+// page, which transposes the red y coordinate. Each light reports its own gamut
+// and that wins when present, so this is only the fallback.
 let hueGamut = {
   red: { x: 0.6915, y: 0.3083 },
   green: { x: 0.1700, y: 0.7000 },
   blue: { x: 0.1532, y: 0.0475 }
 };
 
-function getHueColors() {
-  // Get regular colors
-  let colors = resources.colors.regular;
-  let hueColors = [];
-
+export function getHueColors() {
   // Convert each color to a point the lights can actually reproduce
-  for (let i in colors)
-    hueColors.push(getHuePoint(colors[i]));
+  let colors = resources.colors.regular;
 
-  // Return hue colors
-  return hueColors;
+  return colors.map(getHuePoint);
 }
 
 // Philips' documented RGB to xy conversion: undo sRGB gamma, convert with the
@@ -148,7 +145,7 @@ function getMirek(point, range) {
 }
 
 function colorsChanged(last, current) {
-  if (last == undefined)
+  if (last === undefined)
     return true;
 
   if (last.length !== current.length)
@@ -157,54 +154,77 @@ function colorsChanged(last, current) {
   return last.some((color, i) => color.x !== current[i].x || color.y !== current[i].y);
 }
 
-function updateHue() {
-  // Stop if Hue functionality not enabled
+export async function updateHue() {
   if (!cookieEnabled('hueEnabled'))
     return;
 
-  // Stop if colors have not changed, or prepare and shuffle colors
   let colors = resources.colors.hue;
-  let lastColors = resources.colors.last;
-  if (!colorsChanged(lastColors, colors)) {
+
+  if (!colorsChanged(resources.colors.last, colors))
     return;
-  } else {
-    resources.colors.last = colors;
-    if (cookieEnabled('shuffle')) {
-      colors = colors
-        .map(value => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
-    }
+
+  resources.colors.last = colors;
+
+  if (cookieEnabled('shuffle')) {
+    colors = colors
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
   }
 
-  // Set Hue credentials
-  let accessToken = Cookies.get('hueAccessToken');
-  let username = Cookies.get('hueUsername');
-  let rooms = (Cookies.get('hueRooms') || '').split(',').filter(room => room);
+  let accessToken = getCookie('hueAccessToken');
+  let username = getCookie('hueUsername');
+  let rooms = (getCookie('hueRooms') || '').split(',').filter(room => room);
 
   if (!rooms.length)
     return;
 
   // Get the color-capable lights in the selected rooms, each with its own gamut
-  let url = '/app/hue/api/lights';
-  $.post(url, { accessToken, username, rooms: rooms.join(',') }, lights => {
-    let colorIteration = 0;
+  let lights = await postForm('/app/hue/api/lights', { accessToken, username, rooms: rooms.join(',') }, 5000);
 
-    for (let light of lights) {
-      let color = colors[colorIteration % colors.length];
-      colorIteration++;
+  if (!Array.isArray(lights))
+    return;
 
-      let url = '/app/hue/api/light';
+  lights.forEach((light, i) => {
+    let color = colors[i % colors.length];
+    let url = '/app/hue/api/light';
 
-      if (light.gamut) {
-        // Clamp against this light's gamut rather than one assumed for all of them
-        let point = clampToGamut(color, light.gamut);
+    if (light.gamut) {
+      // Clamp against this light's gamut rather than one assumed for all of them
+      let point = clampToGamut(color, light.gamut);
 
-        $.post(url, { accessToken, username, id: light.id, colorX: point.x, colorY: point.y });
-      } else if (light.mirek) {
-        // White-only bulbs can still follow the warmth of the artwork
-        $.post(url, { accessToken, username, id: light.id, mirek: getMirek(color, light.mirek) });
-      }
+      postForm(url, { accessToken, username, id: light.id, colorX: point.x, colorY: point.y }, 5000);
+    } else if (light.mirek) {
+      // White-only bulbs can still follow the warmth of the artwork
+      postForm(url, { accessToken, username, id: light.id, mirek: getMirek(color, light.mirek) }, 5000);
     }
   });
+}
+
+// Trade the refresh token for a new access token. The server answers with
+// cookies and a redirect to the setup page, so the redirect isn't followed;
+// whether it worked is down to whether an access token cookie came back.
+//
+// The username has to go along whenever there is one. Without it the server
+// treats this as a first connection and registers another application key on
+// the bridge, which the now playing page used to do on every refresh.
+export async function refreshHueToken() {
+  let refreshToken = getCookie('hueRefreshToken');
+  let username = getCookie('hueUsername');
+
+  if (!refreshToken)
+    return false;
+
+  let params = new URLSearchParams({ refreshToken });
+
+  if (username)
+    params.set('username', username);
+
+  try {
+    await fetch(`/app/hue/authorize?${params}`, { 'redirect': 'manual' });
+  } catch {
+    return false;
+  }
+
+  return cookieExists('hueAccessToken');
 }

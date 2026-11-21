@@ -23,13 +23,13 @@ gulp.task('build-css', function() {
 
 gulp.task('build-js', function() {
   return gulp.src('source/js/*.js')
-    .pipe(uglify())
+    .pipe(uglify({ module: true }))
     .pipe(gulp.dest('public/javascripts'));
 });
 
 gulp.task('build-js-utility', function() {
   return gulp.src('source/js/utility/*.js')
-    .pipe(uglify())
+    .pipe(uglify({ module: true }))
     .pipe(gulp.dest('public/javascripts/utility'));
 });
 
