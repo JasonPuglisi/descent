@@ -306,7 +306,7 @@ app.get('/app/hue', (req, res) => {
 });
 
 // Hue sends people back here with an authorization code after they approve
-// Descent. Pages from before 2.13.0 also refresh tokens through this route,
+// Descent. Pages from before 2.12.1 also refresh tokens through this route,
 // with the refresh token in the query string, so that still works until they
 // reload.
 app.get('/app/hue/authorize', async (req, res) => {
