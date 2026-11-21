@@ -46,6 +46,9 @@ The default is `10000` (10 seconds), but a more reasonable value could be
 `5000` (5 seconds). If API calls in the browser start failing, and playing data
 isn't loading, increase the interval.
 
+Thank you to [djryan](https://github.com/djryan) for donating an API key used
+on the official hosted site!
+
 ### Weather
 
 Weather is powered by the

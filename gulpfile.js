@@ -12,29 +12,25 @@ const browserSync = browserSyncBase.create();
 const sass = gulpSass(dartSass);
 const uglify = uglifyBase.default;
 
-gulp.task('build-css', function(done) {
-  gulp.src('source/scss/*.scss')
+// Returning the stream lets gulp wait for the files to be written, so a
+// dependent task or the build itself can't finish ahead of its output
+gulp.task('build-css', function() {
+  return gulp.src('source/scss/*.scss')
     .pipe(sass({ outputStyle: 'compressed' }).on('error', sass.logError))
     .pipe(autoprefixer())
     .pipe(gulp.dest('public/stylesheets'));
-
-  done();
 });
 
-gulp.task('build-js', function(done) {
-  gulp.src('source/js/*.js')
+gulp.task('build-js', function() {
+  return gulp.src('source/js/*.js')
     .pipe(uglify())
     .pipe(gulp.dest('public/javascripts'));
-
-  done();
 });
 
-gulp.task('build-js-utility', function(done) {
-  gulp.src('source/js/utility/*.js')
+gulp.task('build-js-utility', function() {
+  return gulp.src('source/js/utility/*.js')
     .pipe(uglify())
     .pipe(gulp.dest('public/javascripts/utility'));
-
-  done();
 });
 
 gulp.task('sync-css', gulp.series('build-css', function(done) {
