@@ -5,50 +5,44 @@ import { cacheImages, clearImages } from './images.js';
 import { getJson } from './request.js';
 import { pageVersion, resources, user } from './state.js';
 
-// The server sends the real interval within a second or two of loading
-let baseInterval = 3000;
-let pollInterval = 3000;
-let intervalId;
-
-// Last.fm rate limits per API key rather than per IP, so every display sharing
-// this key draws on one budget. A client that backs off when it gets throttled
-// frees capacity for all the others, which is why this is worth doing at all.
-let backoff = 1;
-let backoffMax = 8;
-let backoffRecoveryPolls = 20;
-let consecutiveSuccesses = 0;
-
 // Bumped on every track change. Image and scrobble lookups for a track that
 // has since been replaced check it and drop their results, rather than
 // painting the old track's art and counts over the new one.
 let generation = 0;
 
 export function initMetadata() {
-  // Start state update loop
-  fetchMetadata();
-  applyPollInterval();
+  watchRecentTracks();
 
-  // Start interval update loop
-  updatePollInterval();
-  setInterval(updatePollInterval, 60000);
+  checkVersion();
+  setInterval(checkVersion, 60000);
 }
 
-async function updatePollInterval() {
-  let data = await getJson('/app/poll/interval');
+// Ask for the latest track and wait. The server holds the request until the
+// answer changes or about 50 seconds pass, so a new track shows up as soon as
+// the server sees it, with no polling timer here. The browser sends the ETag
+// of what it already has, and an unchanged answer comes back as an empty 304
+// that fetch turns back into the same data.
+let holdTimeout = 65000;
 
-  if (!data)
-    return;
+// After a failure, wait before asking again, doubling up to a minute
+let retryDelay = 0;
+let retryMin = 3000;
+let retryMax = 60000;
 
-  checkVersion(data.version);
+async function watchRecentTracks() {
+  for (;;) {
+    let data = await getJson(`/app/lastfm/recent?${new URLSearchParams({ user, 'wait': 1 })}`, holdTimeout);
+    let failed = !data || data.error;
 
-  let lastfm = parseInt(data.lastfm, 10);
+    updateState(data);
 
-  if (!Number.isFinite(lastfm) || lastfm <= 0 || lastfm === baseInterval)
-    return;
-
-  console.info(`Adjusting Last.fm poll interval to ${lastfm}`);
-  baseInterval = lastfm;
-  applyPollInterval();
+    if (failed) {
+      retryDelay = Math.min(retryMax, Math.max(retryMin, retryDelay * 2));
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    } else {
+      retryDelay = 0;
+    }
+  }
 }
 
 // Kiosks leave this page open for weeks, so without this they'd keep running
@@ -58,7 +52,10 @@ async function updatePollInterval() {
 let reloadScheduled = false;
 let reloadSpread = 30000;
 
-function checkVersion(version) {
+async function checkVersion() {
+  let data = await getJson('/app/poll/interval');
+  let version = data && data.version;
+
   if (!version || !pageVersion || version === pageVersion || reloadScheduled)
     return;
 
@@ -67,55 +64,12 @@ function checkVersion(version) {
   setTimeout(() => window.location.reload(), Math.random() * reloadSpread);
 }
 
-// Re-arm the poll timer, but only when the effective delay actually moved
-function applyPollInterval() {
-  let effective = baseInterval * backoff;
-
-  if (effective === pollInterval && intervalId)
-    return;
-
-  pollInterval = effective;
-  clearInterval(intervalId);
-  intervalId = setInterval(fetchMetadata, pollInterval);
-}
-
-// Back off on rate limiting, then walk it back down once responses recover
-function handleRateLimit() {
-  consecutiveSuccesses = 0;
-
-  if (backoff >= backoffMax)
-    return;
-
-  backoff *= 2;
-  console.warn(`Last.fm rate limited, backing off to ${baseInterval * backoff}ms`);
-  applyPollInterval();
-}
-
-function handlePollSuccess() {
-  if (backoff === 1)
-    return;
-
-  consecutiveSuccesses++;
-
-  if (consecutiveSuccesses < backoffRecoveryPolls)
-    return;
-
-  consecutiveSuccesses = 0;
-  backoff /= 2;
-  console.info(`Last.fm recovered, easing poll interval to ${baseInterval * backoff}ms`);
-  applyPollInterval();
-}
-
 // Last.fm goes through the server, which holds the API key. The timeout gives
 // the server's own upstream timeout room to answer first with a proper error.
 let lastfmTimeout = 5000;
 
 function getLastfm(path, params) {
   return getJson(`/app/lastfm/${path}?${new URLSearchParams(params)}`, lastfmTimeout);
-}
-
-async function fetchMetadata() {
-  updateState(await getLastfm('recent', { user }));
 }
 
 async function cacheScrobbles(current) {
@@ -156,10 +110,6 @@ function updateState(data) {
 
   if (!data || data.error) {
     error = true;
-
-    // 29 is Last.fm's rate limit code
-    if (data && data.error === 29)
-      handleRateLimit();
   } else {
     // The server trims Last.fm's answer down to the latest track and total
     let track = data.track;
@@ -176,9 +126,6 @@ function updateState(data) {
       };
     }
   }
-
-  if (!error)
-    handlePollSuccess();
 
   // A failed poll says nothing about what's playing, so keep showing the last
   // good answer. Treating it as idle is what turned rate limiting into
@@ -261,8 +208,17 @@ function showIdle() {
   updateMetadata();
 }
 
+// Answers only arrive when something changes now, so the switch to idle can't
+// wait for the next one to notice the timeout passed
+let idleDelay = 10 * 1000;
+
 function startIdleTimeout() {
-  resources.track.current.idleTimeout = Date.now() + 10 * 1000;
+  resources.track.current.idleTimeout = Date.now() + idleDelay;
+
+  setTimeout(() => {
+    if (!resources.track.current.playing && checkIdleTimeout())
+      showIdle();
+  }, idleDelay + 100);
 }
 
 function checkIdleTimeout() {

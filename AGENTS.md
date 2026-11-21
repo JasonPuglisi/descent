@@ -23,22 +23,22 @@ Cloudflare.
 The browser never talks to Last.fm, Spotify, Hue, or the weather provider
 directly. Those all proxy through `server.js` so the keys stay server side.
 Last.fm used to be the exception, with its key handed to the page, which is how
-it got copied into other projects and rate limited (#203). The proxy in
-`lib/lastfm.js` trims Last.fm's answers to the fields the page reads, shares
-each user's latest answer for just under one poll interval, and holds every
-upstream call to one budget, serving the last known answer when it runs dry.
-`/app/poll/interval` stretches the browsers' poll rate when there are more
-people being watched than the budget covers. Successful responses are
-`no-cache` with an ETag, so an unchanged poll is an empty 304. Keep it that way
-rather than adding a longer cache, because track changes need to show up within
-one poll.
+it got copied into other projects and rate limited (#203). The now playing
+page doesn't poll on a timer. It asks `/app/lastfm/recent?wait=1` with the
+ETag of what it already shows, and `lib/lastfm.js` holds that request until
+the answer changes or 50 seconds pass. While anyone is waiting on a user, one
+server loop polls Last.fm for them and answers every waiting page at once.
+Upstream calls share one budget, the loop slows down evenly when more people
+are watched than it covers, and it backs off further if Last.fm rate limits.
+Held requests count toward App Engine's concurrency limit, which is why
+`app.yaml` raises `max_concurrent_requests`.
 
 ## Environment
 
 | Variable | Used for | Required |
 |---|---|---|
 | `LASTFM_API_KEY` | Server side Last.fm calls | yes |
-| `LASTFM_POLL_INTERVAL` | Fastest browsers poll for track changes, in milliseconds, default 3000. The server stretches it under load. | no |
+| `LASTFM_POLL_INTERVAL` | Fastest the server polls Last.fm for each watched user, in milliseconds, default 3000. It stretches under load. | no |
 | `OPENWEATHERMAP_KEY` | Weather | no, weather degrades |
 | `SPOTIFY_CLIENT` / `SPOTIFY_SECRET` | Album and artist art | no, art degrades |
 | `HUE_CLIENT` / `HUE_SECRET` | Hue OAuth and remote API | no, lights degrade |
@@ -160,6 +160,11 @@ App Engine firewall rules.
 Deploys authenticate to GCP with GitHub's OIDC token. The provider only accepts
 tokens from this repo's `main` branch, which is the only place the deploy job
 runs.
+
+Every response carries a Content-Security-Policy with a fresh nonce. Cloudflare
+reads that nonce to tag the bot detection script it injects into pages, so
+keep the nonce if the policy changes, and add any new script, style or font
+host to it.
 
 Open now playing pages check the server's version every minute and reload
 themselves, at a random point within 30 seconds, when a deploy changes it.

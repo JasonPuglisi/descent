@@ -271,3 +271,175 @@ describe('pollInterval', () => {
     assert.equal(lastfm.pollInterval(), 3000);
   });
 });
+
+// Timers driven by the test, so holds and poll loops run on a fake clock
+function fakeScheduler(clock) {
+  let timers = [];
+  let nextId = 0;
+  let flush = () => new Promise(resolve => setImmediate(resolve));
+
+  return {
+    setTimeout: (fn, ms) => {
+      let timer = { id: ++nextId, at: clock.time + ms, fn };
+      timers.push(timer);
+      return timer.id;
+    },
+    clearTimeout: id => {
+      timers = timers.filter(timer => timer.id !== id);
+    },
+    async advance(ms) {
+      let end = clock.time + ms;
+
+      for (;;) {
+        timers.sort((a, b) => a.at - b.at);
+
+        if (!timers.length || timers[0].at > end)
+          break;
+
+        let timer = timers.shift();
+        clock.time = timer.at;
+        timer.fn();
+        await flush();
+      }
+
+      clock.time = end;
+      await flush();
+    },
+    flush
+  };
+}
+
+// Last.fm answering straight away with whatever track is set
+function liveLastfm(options = {}) {
+  let clock = { time: 1000000 };
+  let scheduler = fakeScheduler(clock);
+  let state = { title: 'Higher', calls: 0, status: 200 };
+
+  let fetch = async () => {
+    state.calls++;
+    let body = state.status === 200 ? recentBody(state.title) : { error: 29, message: 'Rate Limit Exceeded' };
+    return { status: state.status, json: async () => body };
+  };
+
+  let lastfm = createLastfm({
+    key, userAgent: 'Descent/test', fetch, now: () => clock.time,
+    setTimeout: scheduler.setTimeout, clearTimeout: scheduler.clearTimeout, ...options
+  });
+
+  return { lastfm, state, scheduler, clock };
+}
+
+describe('held requests', () => {
+  it('tags answers with an ETag that only changes with the content', async () => {
+    let { lastfm, state, clock } = liveLastfm();
+
+    let first = await lastfm.recentTracks('djryan');
+    clock.time += 5000;
+    let same = await lastfm.recentTracks('djryan');
+    state.title = 'Something New';
+    clock.time += 5000;
+    let changed = await lastfm.recentTracks('djryan');
+
+    assert.match(first.etag, /^W\/"/);
+    assert.equal(same.etag, first.etag);
+    assert.notEqual(changed.etag, first.etag);
+  });
+
+  it('answers straight away when the caller is behind or not waiting', async () => {
+    let { lastfm, scheduler } = liveLastfm();
+    let { etag } = await lastfm.recentTracks('djryan');
+
+    let settled = false;
+    lastfm.recentTracks('djryan', { etag: 'W/"old"', wait: true }).then(() => { settled = true; });
+    await scheduler.flush();
+    assert.equal(settled, true);
+
+    assert.equal((await lastfm.recentTracks('djryan', { etag })).etag, etag);
+  });
+
+  it('holds a caller that is up to date until the track changes', async () => {
+    let { lastfm, state, scheduler } = liveLastfm({ baseInterval: 3000 });
+    let { etag } = await lastfm.recentTracks('djryan');
+
+    let answer;
+    lastfm.recentTracks('djryan', { etag, wait: true }).then(result => { answer = result; });
+
+    // Nothing new on the next poll, so it keeps waiting
+    await scheduler.advance(3000);
+    assert.equal(answer, undefined);
+    assert.equal(state.calls, 2);
+
+    // The next poll after a change answers it
+    state.title = 'Something New';
+    await scheduler.advance(3000);
+    assert.equal(answer.body.track.title, 'Something New');
+    assert.notEqual(answer.etag, etag);
+  });
+
+  it('lets a hold run out with the same answer', async () => {
+    let { lastfm, scheduler } = liveLastfm({ holdFor: 50000 });
+    let { etag } = await lastfm.recentTracks('djryan');
+
+    let answer;
+    lastfm.recentTracks('djryan', { etag, wait: true }).then(result => { answer = result; });
+
+    await scheduler.advance(49000);
+    assert.equal(answer, undefined);
+
+    await scheduler.advance(1000);
+    assert.equal(answer.etag, etag);
+  });
+
+  it('polls once for everyone waiting on the same user', async () => {
+    let { lastfm, state, scheduler } = liveLastfm({ baseInterval: 3000 });
+    let { etag } = await lastfm.recentTracks('djryan');
+
+    let answers = [];
+    for (let i = 0; i < 10; i++)
+      lastfm.recentTracks('djryan', { etag, wait: true }).then(result => answers.push(result));
+
+    let before = state.calls;
+    state.title = 'Something New';
+    await scheduler.advance(3000);
+
+    assert.equal(state.calls - before, 1);
+    assert.equal(answers.length, 10);
+    assert.equal(lastfm.waiting(), 0);
+  });
+
+  it('stops polling once nobody is waiting', async () => {
+    let { lastfm, state, scheduler } = liveLastfm({ baseInterval: 3000 });
+    let { etag } = await lastfm.recentTracks('djryan');
+
+    let controller = new AbortController();
+    let answer;
+    lastfm.recentTracks('djryan', { etag, wait: true, signal: controller.signal }).then(result => { answer = result; });
+    await scheduler.flush();
+
+    controller.abort();
+    await scheduler.flush();
+    assert.equal(answer.etag, etag);
+
+    let before = state.calls;
+    await scheduler.advance(30000);
+    assert.equal(state.calls, before);
+  });
+
+  it('slows the poll down when Last.fm rate limits, and recovers', async () => {
+    // A hold long enough to cover the recovery, standing in for a page that
+    // asks again each time its hold runs out
+    let { lastfm, state, scheduler } = liveLastfm({ baseInterval: 3000, holdFor: 10 * 60 * 1000 });
+    let { etag } = await lastfm.recentTracks('djryan');
+    lastfm.recentTracks('djryan', { etag, wait: true, signal: new AbortController().signal });
+
+    state.status = 429;
+    await scheduler.advance(3000);
+    assert.equal(lastfm.pollInterval(), 6000);
+
+    state.status = 200;
+    for (let i = 0; i < 20; i++)
+      await scheduler.advance(6000);
+
+    assert.equal(lastfm.pollInterval(), 3000);
+  });
+});

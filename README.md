@@ -39,7 +39,8 @@ Get an API key from [Last.fm API](https://www.last.fm/api) and set it as the
 `LASTFM_API_KEY` environment variable. Descent makes its Last.fm calls from the
 server, so the key never reaches the browser.
 
-Browsers check for track changes every 3 seconds by default. Set the
+The server checks Last.fm for track changes every 3 seconds for each person
+being watched, and passes changes straight to open pages. Set the
 `LASTFM_POLL_INTERVAL` environment variable to a different number of
 milliseconds to change that. The server keeps its Last.fm calls under a fixed
 budget, and if more people are being watched than that budget can refresh at
