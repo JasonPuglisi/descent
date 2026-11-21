@@ -176,6 +176,12 @@ Turning off Cloudflare's proxy for the domain would take the site down, and if
 Cloudflare ever adds ranges (listed at cloudflare.com/ips), they need adding as
 App Engine firewall rules.
 
+Artifact Registry's cleanup policy on the `gae-standard` repository keeps only
+the newest image, but deleting an image leaves its layers behind. After each
+deploy, `scripts/clean-registry.js` deletes layers no image refers to that are
+over a day old. Without it they piled up to 7 GB, against a free tier of
+0.5 GB. Run it with `DRY_RUN=1` to see what it would delete.
+
 Deploys authenticate to GCP with GitHub's OIDC token. The provider only accepts
 tokens from this repo's `main` branch, which is the only place the deploy job
 runs.
