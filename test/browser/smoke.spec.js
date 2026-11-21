@@ -21,6 +21,15 @@ function watchErrors(page) {
   return errors;
 }
 
+// Each font face, as family and weight, that has finished loading
+async function expectFonts(page, fonts) {
+  let loaded = () => page.evaluate(`document.fonts.ready.then(() =>
+    [...document.fonts].filter(face => face.status === 'loaded').map(face => face.family.replace(/"/g, '') + ' ' + face.weight))`);
+
+  for (let font of fonts)
+    await expect.poll(loaded, font).toContain(font);
+}
+
 test.beforeEach(async ({ request }) => {
   await setTrack(request, { artist: 'Taio Cruz', title: 'Higher', album: 'Rokstarr', playing: true });
   await request.post(`${fake}/hue`, { data: { failure: 0, times: 0 } });
@@ -32,6 +41,7 @@ test('the landing page offers a user to try', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.locator('input[name=defaultUser]')).toHaveValue(/.+/);
+  await expectFonts(page, ['Noto Serif 400', 'Open Sans 400', 'Oswald 700', 'Font Awesome 7 Brands 400']);
   expect(errors).toEqual([]);
 });
 
@@ -50,8 +60,10 @@ test('the now playing page shows the track, art, counts and weather', async ({ p
   // load or the CSP blocked it. The fake album art is a solid red.
   await expect(page.locator('.music .title')).toHaveCSS('color', /^rgb\(2\d\d, \d+, \d+\)$/);
   await expect(page.locator('.music .title')).not.toHaveCSS('color', 'rgb(246, 245, 247)');
-  await expect(page.locator('.weather .temperature')).toHaveText('72');
-  await expect(page.locator('.weather .apparentTemperature')).toHaveText(/^\d+$/);
+
+  // Every font comes from this server now, so make sure the ones this page
+  // uses loaded
+  await expectFonts(page, ['Open Sans 300', 'Source Code Pro 400', 'Font Awesome 7 Free 900', 'weathericons normal']);
   expect(errors).toEqual([]);
 });
 

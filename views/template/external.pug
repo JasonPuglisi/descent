@@ -1,10 +1,10 @@
-mixin googleFonts
-  link(href='https://fonts.googleapis.com' rel='preconnect')
-  link(href='https://fonts.gstatic.com' rel='preconnect' crossorigin)
-  link(href='https://fonts.googleapis.com/css2?family=Noto+Serif&family=Open+Sans:wght@300..400&family=Oswald:wght@700&family=Source+Code+Pro&display=swap', rel='stylesheet')
+//- Fonts and icon fonts, all served from here. gulp's build-fonts task puts
+//- them in public/vendor.
+mixin fonts
+  link(href=`${assets}/vendor/fonts/fonts.css`, rel='stylesheet')
 
 mixin fontAwesome
-  link(href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css', rel='stylesheet', integrity='sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==', crossorigin='anonymous', referrerpolicy='no-referrer')
+  link(href=`${assets}/vendor/fontawesome/css/all.min.css`, rel='stylesheet')
 
 mixin weatherIcons
-  link(href='https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.12/css/weather-icons.min.css', rel='stylesheet', integrity='sha512-r/Gan7PMSRovDus++vDS2Ayutc/cSdl268u047n4z+k7GYuR7Hiw71FsT3QQxdKJBVHYttOJ6IGLnlM9IoMToQ==', crossorigin='anonymous', referrerpolicy='no-referrer')
+  link(href=`${assets}/vendor/weather-icons/css/weather-icons.min.css`, rel='stylesheet')

@@ -3,3 +3,4 @@ public/javascripts
 public/stylesheets
 test-results/
 playwright-report/
+public/vendor
