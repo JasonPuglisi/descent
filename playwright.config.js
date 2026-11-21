@@ -1,0 +1,33 @@
+import { defineConfig, devices } from '@playwright/test';
+
+// Browser smoke tests against the real server, with every upstream API faked
+// by test/browser/upstreams.js. They catch what unit tests can't: a module that
+// fails to import, a template that doesn't render, or the CSP blocking
+// something. Run `yarn gulp build` first, since the server serves public/.
+let port = 3124;
+let fakePort = 3998;
+
+export default defineConfig({
+  testDir: 'test/browser',
+  timeout: 30000,
+  expect: { timeout: 10000 },
+  // One fake Last.fm is shared by every test, so they take turns with it
+  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? 'github' : 'list',
+  use: {
+    baseURL: `http://localhost:${port}`,
+    // Weather needs a location, and a fixed one keeps the page from asking
+    geolocation: { latitude: 40.7128, longitude: -74.006 },
+    permissions: ['geolocation']
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  webServer: {
+    command: 'node --import ./test/browser/upstreams.js server.js',
+    url: `http://localhost:${port}/`,
+    env: { DESCENT_PORT: String(port), DESCENT_FAKE_PORT: String(fakePort) },
+    reuseExistingServer: !process.env.CI
+  }
+});
+
+export { fakePort };
