@@ -18,8 +18,8 @@ Ensure you have recent versions of [Node.js](https://nodejs.org/en/) and
 [npm](https://www.npmjs.com/) installed.
 
 Run `npm i -g yarn` to install [yarn](https://yarnpkg.com/en/), then `yarn`
-to install Descent's dependencies. Finally, run `yarn build` to build Descent's
-static files, and `yarn start` to start Descent's server.
+to install Descent's dependencies. Finally, run `yarn gulp build` to build
+Descent's static files, and `yarn start` to start Descent's server.
 
 For development, `yarn dev` builds, watches for changes, and serves Descent
 through BrowserSync on port 3333 with live reloading. `yarn test` builds, lints
