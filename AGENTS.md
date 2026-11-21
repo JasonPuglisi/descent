@@ -30,6 +30,9 @@ the answer changes or 50 seconds pass. While anyone is waiting on a user, one
 server loop polls Last.fm for them and answers every waiting page at once.
 Upstream calls share one budget, the loop slows down evenly when more people
 are watched than it covers, and it backs off further if Last.fm rate limits.
+When the track changes, the server also looks up its Spotify art and the
+user's play counts once and sends them in the same answer as `details`, so the
+page makes no lookups of its own. `lib/spotify.js` caches art per track.
 Held requests count toward App Engine's concurrency limit, which is why
 `app.yaml` raises `max_concurrent_requests`.
 

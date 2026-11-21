@@ -1,12 +1,12 @@
 import { cookieEnabled, getCookie } from './cookies.js';
 import { toggleDisplay } from './general.js';
 import { updateHue } from './hue.js';
-import { cacheImages, clearImages } from './images.js';
+import { clearImages, loadImages, showImages } from './images.js';
 import { getJson } from './request.js';
 import { pageVersion, resources, user } from './state.js';
 
-// Bumped on every track change. Image and scrobble lookups for a track that
-// has since been replaced check it and drop their results, rather than
+// Bumped whenever new details start loading. Images still loading for a track
+// that has since been replaced check it and drop their results, rather than
 // painting the old track's art and counts over the new one.
 let generation = 0;
 
@@ -64,43 +64,6 @@ async function checkVersion() {
   setTimeout(() => window.location.reload(), Math.random() * reloadSpread);
 }
 
-// Last.fm goes through the server, which holds the API key. The timeout gives
-// the server's own upstream timeout room to answer first with a proper error.
-let lastfmTimeout = 5000;
-
-function getLastfm(path, params) {
-  return getJson(`/app/lastfm/${path}?${new URLSearchParams(params)}`, lastfmTimeout);
-}
-
-async function cacheScrobbles(current) {
-  let { artist, title } = resources.track.current;
-
-  if (!artist || !title)
-    return;
-
-  let [artistInfo, trackInfo] = await Promise.all([
-    getLastfm('artist', { artist, user }),
-    getLastfm('track', { artist, 'track': title, user })
-  ]);
-
-  if (!current())
-    return;
-
-  let track = resources.track.current;
-
-  if (artistInfo && !artistInfo.error)
-    track.artistScrobbles = artistInfo.playcount;
-
-  if (trackInfo && !trackInfo.error) {
-    track.trackScrobbles = trackInfo.playcount;
-    track.trackLoved = trackInfo.loved;
-  }
-
-  // Images haven't landed yet, so leave it to them to update the text
-  if (track.albumImageLoaded && track.artistImageLoaded)
-    updateMetadata();
-}
-
 function updateState(data) {
   let ignoreCurrent = getCookie('scrobbleMode') === 'lastScrobbled';
 
@@ -122,7 +85,8 @@ function updateState(data) {
         album: track.album,
         title: track.title,
         link: track.url,
-        scrobbles: data.total
+        scrobbles: data.total,
+        details: data.details
       };
     }
   }
@@ -146,13 +110,13 @@ function setMetadata(playing, error, metadata) {
     album: metadata.album || '',
     title: metadata.title ?? '',
     link: metadata.link || '',
-    scrobbles: metadata.scrobbles || ''
+    scrobbles: metadata.scrobbles || '',
+    // The server looks up art and play counts when the track changes and sends
+    // them along with it. Null means they're still coming.
+    details: metadata.details || null
   });
 }
 
-// Detailed counts belong to a track rather than a poll, so they're only
-// cleared when the track changes. Clearing them on every poll blanked them out
-// whenever the artwork took longer to load than the poll interval.
 function clearScrobbles() {
   Object.assign(resources.track.current, {
     artistScrobbles: '',
@@ -169,14 +133,10 @@ function handleStateChange() {
     current.artist !== previous.artist || current.title !== previous.title);
 
   if (changedTrack) {
-    // Fetch images and detailed scrobbles, which then update colors, lights,
-    // images and text
-    let token = ++generation;
-    let isCurrent = () => token === generation;
-
-    clearScrobbles();
-    cacheImages(isCurrent);
-    cacheScrobbles(isCurrent);
+    showDetails(current.details);
+  } else if (current.playing && JSON.stringify(current.details) !== current.detailsShown) {
+    // Details that took the server a while arrive in an answer of their own
+    showDetails(current.details);
   } else if (!current.playing) {
     if (previous.playing === undefined) {
       // Unloaded to idle
@@ -197,9 +157,43 @@ function handleStateChange() {
   };
 }
 
+// Images are loaded before anything changes, so the new track's title, art
+// and colors all appear together
+async function showDetails(details) {
+  let token = ++generation;
+  let isCurrent = () => token === generation;
+  let track = resources.track.current;
+
+  track.detailsShown = JSON.stringify(details);
+
+  if (!details) {
+    clearScrobbles();
+    clearImages();
+    clearColors();
+    updateHue();
+    updateMetadata();
+    return;
+  }
+
+  let images = await loadImages(details);
+
+  if (!isCurrent())
+    return;
+
+  Object.assign(track, images, {
+    artistScrobbles: details.artistScrobbles,
+    trackScrobbles: details.trackScrobbles,
+    trackLoved: details.loved
+  });
+
+  showImages(isCurrent);
+  updateMetadata();
+}
+
 function showIdle() {
   // Anything still loading for the last track is no longer wanted
   generation++;
+  delete resources.track.current.detailsShown;
 
   clearScrobbles();
   clearColors();

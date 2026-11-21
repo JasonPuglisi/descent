@@ -443,3 +443,148 @@ describe('held requests', () => {
     assert.equal(lastfm.pollInterval(), 3000);
   });
 });
+
+// Last.fm answering each method the way it would for a playing track, with
+// art from a stand-in for Spotify
+function detailedLastfm({ artwork, ...options } = {}) {
+  let clock = { time: 1000000 };
+  let scheduler = fakeScheduler(clock);
+  let state = { title: 'Higher', album: 'Rokstarr', methods: [] };
+
+  let fetch = async url => {
+    let method = new URL(url).searchParams.get('method');
+    state.methods.push(method);
+
+    let body = {
+      'user.getrecenttracks': () => {
+        let recent = recentBody(state.title);
+        recent.recenttracks.track[0].album['#text'] = state.album;
+        return recent;
+      },
+      'artist.getInfo': () => ({ artist: { stats: { userplaycount: '120' } } }),
+      'track.getInfo': () => ({ track: { userplaycount: '7', userloved: '1' } })
+    }[method]();
+
+    return { status: 200, json: async () => body };
+  };
+
+  let art = artwork || (async track => ({ album: `https://i.scdn.co/${track.album}`, artist: 'https://i.scdn.co/taio' }));
+  let lastfm = createLastfm({
+    key, userAgent: 'Descent/test', fetch, now: () => clock.time, details: true, artwork: art,
+    setTimeout: scheduler.setTimeout, clearTimeout: scheduler.clearTimeout, ...options
+  });
+
+  return { lastfm, state, scheduler, clock };
+}
+
+describe('track details', () => {
+  it('sends art and play counts with a new track', async () => {
+    let { lastfm } = detailedLastfm();
+
+    let { body } = await lastfm.recentTracks('djryan');
+
+    assert.deepEqual(body.details, {
+      albumImage: 'https://i.scdn.co/Rokstarr',
+      artistImage: 'https://i.scdn.co/taio',
+      artistScrobbles: '120',
+      trackScrobbles: '7',
+      loved: true
+    });
+  });
+
+  it('looks them up once per track, not once per poll', async () => {
+    let looked = 0;
+    let { lastfm, state, clock } = detailedLastfm({ artwork: async () => { looked++; return {}; } });
+
+    await lastfm.recentTracks('djryan');
+    clock.time += 5000;
+    await lastfm.recentTracks('djryan');
+
+    assert.equal(looked, 1);
+    assert.equal(state.methods.filter(method => method === 'track.getInfo').length, 1);
+
+    // The same song from another album has other art
+    state.album = 'Deluxe';
+    clock.time += 5000;
+    await lastfm.recentTracks('djryan');
+    assert.equal(looked, 2);
+  });
+
+  it('sends a slow track without them, then follows up once they arrive', async () => {
+    let finish;
+    let artwork = () => new Promise(resolve => { finish = () => resolve({ album: 'https://i.scdn.co/late', artist: '' }); });
+    let { lastfm, scheduler } = detailedLastfm({ artwork, detailsWait: 2000 });
+
+    let first;
+    lastfm.recentTracks('djryan').then(result => { first = result; });
+    await scheduler.flush();
+    await scheduler.advance(2000);
+    assert.equal(first.body.details, null);
+    assert.equal(first.body.track.title, 'Higher');
+
+    let second;
+    lastfm.recentTracks('djryan', { etag: first.etag, wait: true }).then(result => { second = result; });
+    await scheduler.flush();
+    assert.equal(second, undefined);
+
+    finish();
+    await scheduler.flush();
+    assert.equal(second.body.details.albumImage, 'https://i.scdn.co/late');
+    assert.notEqual(second.etag, first.etag);
+  });
+
+  it('drops details that arrive after the track moved on', async () => {
+    let finishes = [];
+    let artwork = track => new Promise(resolve => finishes.push(() => resolve({ album: track.title, artist: '' })));
+    let { lastfm, state, scheduler, clock } = detailedLastfm({ artwork, detailsWait: 100 });
+
+    lastfm.recentTracks('djryan');
+    await scheduler.flush();
+    await scheduler.advance(100);
+
+    state.title = 'Next One';
+    clock.time += 5000;
+    lastfm.recentTracks('djryan');
+    await scheduler.flush();
+    await scheduler.advance(100);
+
+    finishes[1]();
+    finishes[0]();
+    await scheduler.flush();
+
+    let { body } = await lastfm.recentTracks('djryan');
+    assert.equal(body.track.title, 'Next One');
+    assert.equal(body.details.albumImage, 'Next One');
+  });
+
+  it('keeps the play counts when the art fails', async () => {
+    let { lastfm } = detailedLastfm({ artwork: async () => { throw new Error('Spotify is down'); } });
+
+    let { body } = await lastfm.recentTracks('djryan');
+
+    assert.equal(body.details.albumImage, '');
+    assert.equal(body.details.trackScrobbles, '7');
+  });
+
+  it('works without an artwork lookup at all', async () => {
+    let lastfm = createLastfm({ key, fetch: async url => {
+      let method = new URL(url).searchParams.get('method');
+      let body = method === 'user.getrecenttracks' ? recentBody() : method === 'artist.getInfo' ?
+        { artist: { stats: { userplaycount: '1' } } } : { track: { userplaycount: '1', userloved: '0' } };
+      return { status: 200, json: async () => body };
+    }, details: true });
+
+    let { body } = await lastfm.recentTracks('djryan');
+
+    assert.equal(body.details.artistImage, '');
+    assert.equal(body.details.loved, false);
+  });
+
+  it('leaves details off entirely unless asked for', async () => {
+    let { lastfm } = liveLastfm();
+
+    let { body } = await lastfm.recentTracks('djryan');
+
+    assert.equal('details' in body, false);
+  });
+});
