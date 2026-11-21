@@ -35,16 +35,15 @@ Navigate to [`/`](https://descent.live/) to use Descent.
 
 ### Last.fm
 
-The default Last.fm API key for this project has been copied to many other
-codebases, so i mostly unusable due to rate limiting. You get a new one from
-[Last.fm API](https://www.last.fm/api) and set it to environment variable
-`LASTFM_API_KEY`.
+Get an API key from [Last.fm API](https://www.last.fm/api) and set it as the
+`LASTFM_API_KEY` environment variable. Descent makes its Last.fm calls from the
+server, so the key never reaches the browser.
 
 To avoid Last.fm rate limiting, you can adjust the API polling interval. Set
 the `LASTFM_POLL_INTERVAL` environment variable to an integer in milliseconds.
 The default is `10000` (10 seconds), but a more reasonable value could be
-`5000` (5 seconds). If API calls in the browser start failing, and playing data
-isn't loading, increase the interval.
+`5000` (5 seconds). If Last.fm calls start failing, and playing data isn't
+loading, increase the interval.
 
 Thank you to [djryan](https://github.com/djryan) for donating an API key used
 on the official hosted site!

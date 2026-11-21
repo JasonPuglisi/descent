@@ -18,4 +18,3 @@ export let resources = {
 let pageData = document.querySelector('.pageData');
 
 export let user = pageData ? pageData.dataset.user : '';
-export let lastfmKey = pageData ? pageData.dataset.lastfmKey : '';
