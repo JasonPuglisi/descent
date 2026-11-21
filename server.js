@@ -353,14 +353,13 @@ async function authorizeHue(res, code, refreshToken, username) {
   // a current access token and whether one can be refreshed, which the two
   // flags tell it. Lax keeps another site from posting to the Hue routes with
   // these cookies attached.
-  let secret = { secure: true, httpOnly: true, sameSite: 'lax' };
-  let flag = { secure: true, sameSite: 'lax' };
+  let forever = 315360000000;
 
-  res.cookie('hueAccessToken', auth.accessToken, { ...secret, maxAge: auth.expiry });
-  res.cookie('hueRefreshToken', auth.refreshTokenNew, { ...secret, maxAge: 315360000000 });
-  res.cookie('hueUsername', auth.usernameNew, { ...secret, maxAge: 315360000000 });
-  res.cookie('hueAccess', 'true', { ...flag, maxAge: auth.expiry });
-  res.cookie('hueLinked', 'true', { ...flag, maxAge: 315360000000 });
+  res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true, httpOnly: true, sameSite: 'lax' });
+  res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: forever, secure: true, httpOnly: true, sameSite: 'lax' });
+  res.cookie('hueUsername', auth.usernameNew, { maxAge: forever, secure: true, httpOnly: true, sameSite: 'lax' });
+  res.cookie('hueAccess', 'true', { maxAge: auth.expiry, secure: true, sameSite: 'lax' });
+  res.cookie('hueLinked', 'true', { maxAge: forever, secure: true, sameSite: 'lax' });
 
   return true;
 }
