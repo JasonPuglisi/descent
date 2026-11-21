@@ -2,7 +2,7 @@ import express from 'express';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { createLastfm } from './lib/lastfm.js';
-import { searchSpotifyTrack } from './lib/spotify.js';
+import { createSpotify } from './lib/spotify.js';
 
 /* Base application functionality */
 
@@ -61,16 +61,20 @@ loadPollIntervals();
 if (!process.env.LASTFM_API_KEY)
   console.warn('No Last.fm API key set, so the now playing page will not load any tracks');
 
+let spotify = createSpotify({ client: process.env.SPOTIFY_CLIENT, secret: process.env.SPOTIFY_SECRET });
+
+if (!spotify.available())
+  console.warn('No Spotify credentials set, so album and artist art will not show');
+
 // Every request comes from this one server now, so identify it in case
 // Last.fm ever needs to know whose traffic it is
 let lastfm = createLastfm({
   key: process.env.LASTFM_API_KEY,
   userAgent: `Descent/${app.locals.version} (+https://descent.live)`,
-  baseInterval: pollIntervals.lastfm
+  baseInterval: pollIntervals.lastfm,
+  details: true,
+  artwork: spotify.artwork
 });
-
-let spotifyKey;
-authenticateSpotify(process.env.SPOTIFY_CLIENT, process.env.SPOTIFY_SECRET);
 
 app.get('/now{*splat}', (req, res) => {
   let path = req.originalUrl.substring(4);
@@ -527,123 +531,20 @@ app.post('/app/hue/api/light', async (req, res) => {
 
 /* Spotify functionality */
 
-class Track {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
-
-class Artist {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
-
-async function authenticateSpotify(client, secret) {
-  if (!client || !secret) {
-    console.warn('Error getting Spotify authorization: No API credentials');
-    return;
-  }
-
-  let authorization = Buffer.from(`${client}:${secret}`).toString('base64');
-  let url = 'https://accounts.spotify.com/api/token';
-  let body = 'grant_type=client_credentials';
-  let headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Authorization': `Basic ${authorization}`
-  };
-
-  const response = await fetch(url, {
-    'method': 'post',
-    'body': body,
-    'headers': headers
-  });
-
-  if (!response.ok) {
-    console.warn(`Error getting Spotify authorization: ${response.statusText}`);
-    spotifyKey = null;
-    setTimeout(() => { authenticateSpotify(client, secret); }, 1800000);
-    return;
-  }
-
-  const data = await response.json();
-
-  spotifyKey = data.access_token;
-  setTimeout(() => { authenticateSpotify(client, secret); }, data.expires_in * 1000);
-}
-
+// Art now arrives with the track from the Last.fm proxy. These two are what
+// pages from before 2.13.0 still ask, until they reload.
 app.post('/app/spotify/track', async (req, res) => {
-  if (!spotifyKey) {
-    console.warn('Error getting Spotify track: No API key');
-    res.json(new Track());
-    return;
-  }
+  let track = await spotify.searchTrack(String(req.body.artist || ''), String(req.body.title || ''),
+    String(req.body.album || ''));
 
-  let track = await searchSpotifyTrack(req.body.artist || '', req.body.title || '',
-    req.body.album || '', searchSpotifyTracks);
-
-  if (!track) {
-    console.warn('Error getting Spotify track: No matching results');
-    res.json(new Track());
-    return;
-  }
-
-  track.success = true;
-
-  res.json(track);
+  res.json(track ? { ...track, success: true } : { success: false });
 });
 
-// Spotify ranks differently at limit=1 than at higher limits, returning a worse
-// top result, so always request a page and pick from it
-async function searchSpotifyTracks(query) {
-  let url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`;
-  let headers = {
-    'Authorization': `Bearer ${spotifyKey}`
-  };
-
-  const response = await fetch(url, {
-    'headers': headers
-  });
-
-  if (!response.ok) {
-    console.warn(`Error getting Spotify track: ${response.status} ${await response.text()}`);
-    return null;
-  }
-
-  const data = await response.json();
-
-  return data.tracks.items;
-}
-
 app.post('/app/spotify/artist', async (req, res) => {
-  if (!spotifyKey) {
-    console.warn('Error getting Spotify artist: No API key');
-    res.json(new Artist());
-    return;
-  }
+  let id = queryString(req.body.artist, 64);
+  let artist = id ? await spotify.getArtist(id) : null;
 
-  let artist = encodeURIComponent(decodeURIComponent(req.body.artist));
-  let query = artist;
-  let url = `https://api.spotify.com/v1/artists/${query}`;
-  let headers = {
-    'Authorization': `Bearer ${spotifyKey}`
-  };
-
-  const response = await fetch(url, {
-    'headers': headers
-  });
-
-  if (!response.ok) {
-    console.warn(`Error getting Spotify artist: ${response.status} ${await response.text()}`);
-    res.json(new Artist());
-    return;
-  }
-
-  let data = await response.json();
-
-  data.success = true;
-
-  res.json(data);
+  res.json(artist ? { ...artist, success: true } : { success: false });
 });
 
 /* Weather (OpenWeatherMap) functionality */
