@@ -1,17 +1,22 @@
-/* global Cookies */
+import { getCookie } from './utility/cookies.js';
 
-$(() => {
-  $('.userInput').focus();
+let form = document.querySelector('.userInputForm');
+let input = form.querySelector('.userInput');
+let defaultUser = form.querySelector('[name="defaultUser"]');
 
-  let user = Cookies.get('lastUser');
-  if (user !== undefined)
-    $('[name="defaultUser"]').val(user);
-  else
-    user = $('[name="defaultUser"]').val();
+input.focus();
 
-  $('.userInput').attr('placeholder', user);
+// Prefer whoever was last viewed here over the random sample user
+let user = getCookie('lastUser');
+
+if (user !== undefined)
+  defaultUser.value = user;
+else
+  user = defaultUser.value;
+
+input.setAttribute('placeholder', user);
+
+form.querySelector('.userSubmit').addEventListener('click', event => {
+  event.preventDefault();
+  form.submit();
 });
-
-function submitUser() {
-  $('.userInputForm').submit();
-}

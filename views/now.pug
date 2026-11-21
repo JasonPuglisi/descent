@@ -2,10 +2,11 @@ extends template/layout
 
 block otherStylesheets
   +weatherIcons
-  link(href=`/app/static/stylesheets/now.css?v=${version}`, rel='stylesheet')
+  link(href=`${assets}/stylesheets/now.css`, rel='stylesheet')
 
 block content
   .background.blur
+  .pageData.hide(data-user=user, data-lastfm-key=lastfmKey)
   .container
     .row.top
       .corner.left
@@ -38,26 +39,26 @@ block content
               | source 
               i.fab.fa-github.fa-sm
           .menuItem
-            a(href='#' onclick='processKey({ keyCode: 87 }); return false;')
+            a(href='#' data-key='w')
               i.fas.fa-sun.fa-sm.fa-fw
               |  [w]eather
           .menuItem
-            a(href='#' onclick='processKey({ keyCode: 84 }); return false;')
+            a(href='#' data-key='t')
               i.fas.fa-clock.fa-sm.fa-fw
               |  [t]ime and date
           .menuItem
-            a(href='#' onclick='processKey({ keyCode: 69 }); return false;')
+            a(href='#' data-key='e')
               i.fas.fa-sticky-note.fa-sm.fa-fw
               |  [e]xtended info
           .menuItem
             span.hueHelp.hide
-              a(href='#' onclick='processKey({ keyCode: 76 }); return false;')
+              a(href='#' data-key='l')
                 i.fas.fa-lightbulb.fa-sm.fa-fw
                 |  [l]ights (
                 span.hueIndicator off
                 | )
           .menuItem
-            a(href='#' onclick='processKey({ keyCode: 72 }); return false;')
+            a(href='#' data-key='h')
               i.fas.fa-question.fa-sm.fa-fw
               |  [h]elp
       .corner.right
@@ -85,16 +86,8 @@ block content
             img.cover
           h1.title
           h2.artist
-  span.lastfmKey.hide= lastfmKey
 
 block otherJavascripts
   +colorThief
   +chroma
-  script(src=`/app/static/javascripts/utility/general.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/hue.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/images.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/menu.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/metadata.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/time.js?v=${version}`)
-  script(src=`/app/static/javascripts/utility/weather.js?v=${version}`)
-  script(src=`/app/static/javascripts/now.js?v=${version}`)
+  script(type='module', src=`${assets}/javascripts/now.js`)

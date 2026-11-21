@@ -1,7 +1,7 @@
 extends template/layout
 
 block otherStylesheets
-  link(href=`/app/static/stylesheets/landing.css?v=${version}`, rel='stylesheet')
+  link(href=`${assets}/stylesheets/landing.css`, rel='stylesheet')
 
 block content
   .outer-container
@@ -15,7 +15,7 @@ block content
             input.userInput(name='user', type='text', size='15', maxlength='20')
             input(name='defaultUser', type='hidden', value=`${user}`)
             | &nbsp;
-            a(href='#' onclick='submitUser(); return false;')
+            a.userSubmit(href='#')
               i.fas.fa-chevron-down
       .links
         a(href='/app/config')
@@ -26,4 +26,4 @@ block content
           i.fab.fa-github.fa-sm
 
 block otherJavascripts
-  script(src=`/app/static/javascripts/landing.js?v=${version}`)
+  script(type='module', src=`${assets}/javascripts/landing.js`)

@@ -68,7 +68,6 @@ jobs:
           version: main
           env_vars: |-
             HUE_CLIENT=${{ vars.HUE_CLIENT }}
-            HUE_ID=${{ vars.HUE_ID }}
             HUE_SECRET=${{ secrets.HUE_SECRET }}
             LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}
             LASTFM_POLL_INTERVAL=${{ vars.LASTFM_POLL_INTERVAL }}

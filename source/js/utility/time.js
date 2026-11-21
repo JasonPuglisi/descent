@@ -1,6 +1,7 @@
-/* global cookieEnabled, toggleDisplay */
+import { cookieEnabled } from './cookies.js';
+import { toggleDisplay } from './general.js';
 
-function initDatetime() {
+export function initDatetime() {
   // Update immediately and sync with system clock for next update
   let nextUpdate = 1000 - new Date().getMilliseconds();
   setTimeout(() => { updateDatetime(); setInterval(updateDatetime, 1000); }, nextUpdate);
@@ -13,8 +14,8 @@ function initDatetime() {
 function updateDatetime() {
   let date = new Date();
 
-  $('.datetime .date').text(getCurrentDate(date));
-  $('.datetime .time').text(getCurrentTime(date));
+  document.querySelector('.datetime .date').textContent = getCurrentDate(date);
+  document.querySelector('.datetime .time').textContent = getCurrentTime(date);
 }
 
 function getCurrentDate(date) {

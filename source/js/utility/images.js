@@ -1,166 +1,131 @@
-/* global resources, chroma, ColorThief, Cookies */
-/* global clearColors, cookieEnabled, cookieExists, getHueColors, newTrack, nowPlaying, updateHue, updateMetadata, updateTextColors */
+/* global chroma, ColorThief */
 
-function cacheImages() {
-  // Set blank images as default
-  resources.track.current.albumImage = getBlankImageData();
-  resources.track.current.artistImage = getBlankImageData();
+import { cookieEnabled, cookieExists, getCookie } from './cookies.js';
+import { hide, show } from './general.js';
+import { getHueColors, updateHue } from './hue.js';
+import { clearColors, updateMetadata, updateTextColors } from './metadata.js';
+import { postForm } from './request.js';
+import { resources } from './state.js';
 
-  // Set load status to false
-  resources.track.current.albumImageLoaded = false;
-  resources.track.current.artistImageLoaded = false;
+let blankImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
-  // Query Spotify for track info
-  let url = '/app/spotify/track';
-  let urlArtist = encodeURIComponent(resources.track.current.artist);
-  let urlTitle = encodeURIComponent(resources.track.current.title);
-  let urlAlbum = encodeURIComponent(resources.track.current.album);
-  let body = `artist=${urlArtist}&title=${urlTitle}&album=${urlAlbum}`;
+function loadImage(src, crossOrigin) {
+  return new Promise((resolve, reject) => {
+    let image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
 
-  $.ajax({
-    method: 'POST',
-    url: url,
-    data: body,
-    timeout: 5000,
-    success: data => {
-      if (data && data.success && data.album && data.album.images && data.album.images[0]) {
-        // Track info found - set and cache album image
-        let albumUrl = data.album.images[0].url;
+    if (crossOrigin)
+      image.crossOrigin = crossOrigin;
 
-        let albumCache = new Image();
-        albumCache.onload = () => {
-          // Album image successfully loaded - update URL
-          resources.track.current.albumImage = albumUrl;
-          resources.track.current.albumImageLoaded = true;
-          checkLoadStatus();
-        };
-        albumCache.onerror = () => {
-          // Album image failed to load - leave default image
-          resources.track.current.albumImageLoaded = true;
-          checkLoadStatus();
-        };
-        albumCache.src = albumUrl;
-
-        // Query Spotify for artist image
-        let artistUrl = '/app/spotify/artist';
-        let urlArtistId = encodeURIComponent(data.artists[0].id);
-        let artistBody = `artist=${urlArtistId}`;
-
-        $.ajax({
-          method: 'POST',
-          url: artistUrl,
-          data: artistBody,
-          timeout: 5000,
-          success: data => {
-            if (data && data.success && data.images && data.images[0]) {
-              // Artist image found - set and cache
-              let artistUrl = data.images[0].url;
-
-              let artistCache = new Image();
-              artistCache.onload = () => {
-                // Artist image successfully loaded - update URL
-                resources.track.current.artistImage = artistUrl;
-                resources.track.current.artistImageLoaded = true;
-                checkLoadStatus();
-              };
-              artistCache.onerror = () => {
-                // Artist image failed to load - leave default image
-                resources.track.current.artistImageLoaded = true;
-                checkLoadStatus();
-              };
-              artistCache.src = artistUrl;
-            } else {
-              // Artist image not found - leave default
-              resources.track.current.artistImageLoaded = true;
-              checkLoadStatus();
-            }
-          },
-          error: () => {
-            // API request failed - leave default artist image
-            resources.track.current.artistImageLoaded = true;
-            checkLoadStatus();
-          }
-        });
-      } else {
-        // Track info not found - leave default album and artist images
-        resources.track.current.albumImageLoaded = true;
-        resources.track.current.artistImageLoaded = true;
-        checkLoadStatus();
-      }
-    },
-    error: () => {
-      // API request failed - leave default album and artist images
-      resources.track.current.albumImageLoaded = true;
-      resources.track.current.artistImageLoaded = true;
-      checkLoadStatus();
-    }
+    image.src = src;
   });
 }
 
-function clearImages() {
-  // Clear cover and background images
-  resources.track.current.artistImage = getBlankImageData();
-  resources.track.current.albumImage = getBlankImageData();
+// Resolves to the URL once the image has loaded, so it's in the cache before
+// it's shown, or to the blank image if it can't be found or won't load
+async function preloadImage(url) {
+  if (!url)
+    return blankImage;
+
+  try {
+    await loadImage(url);
+    return url;
+  } catch {
+    return blankImage;
+  }
+}
+
+async function findAlbumImage() {
+  let { artist, title, album } = resources.track.current;
+  let track = await postForm('/app/spotify/track', { artist, title, album }, 5000);
+
+  if (!track || !track.success)
+    return {};
+
+  return { albumUrl: track.album?.images?.[0]?.url, artistId: track.artists?.[0]?.id };
+}
+
+async function findArtistImage(artistId) {
+  if (!artistId)
+    return undefined;
+
+  let artist = await postForm('/app/spotify/artist', { 'artist': artistId }, 5000);
+
+  return artist && artist.success ? artist.images?.[0]?.url : undefined;
+}
+
+export async function cacheImages(current) {
+  let track = resources.track.current;
+
+  track.albumImage = blankImage;
+  track.artistImage = blankImage;
+  track.albumImageLoaded = false;
+  track.artistImageLoaded = false;
+
+  // The artist lookup needs the ID from the track lookup, but the album image
+  // can start loading as soon as its URL is known
+  let { albumUrl, artistId } = await findAlbumImage();
+  let [albumImage, artistImage] = await Promise.all([
+    preloadImage(albumUrl),
+    findArtistImage(artistId).then(preloadImage)
+  ]);
+
+  if (!current())
+    return;
+
+  Object.assign(track, { albumImage, artistImage, albumImageLoaded: true, artistImageLoaded: true });
+
+  updateColors(current);
+  updateCover();
+  updateBackground();
+  updateMetadata();
+}
+
+export function clearImages() {
+  resources.track.current.artistImage = blankImage;
+  resources.track.current.albumImage = blankImage;
 
   updateCover();
   updateBackground();
 }
 
-function getBlankImageData() {
-  // Return data for a blank
-  return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-}
+async function updateColors(current) {
+  let { albumImage, artistImage } = resources.track.current;
+  let url = albumImage !== blankImage ? albumImage : artistImage;
 
-function checkLoadStatus() {
-  // Process images once loaded - update colors, lights, images, text
-  if (resources.track.current.albumImageLoaded && resources.track.current.artistImageLoaded) {
-    updateColors();
-    updateCover();
-    updateBackground();
-    updateMetadata();
-  }
-}
-
-function updateColors() {
-  // Determine which image to use for colors
-  let url;
-  let albumImage = resources.track.current.albumImage;
-  let artistImage = resources.track.current.artistImage;
-  if (albumImage && albumImage !== getBlankImageData())
-    url = albumImage;
-  else if (artistImage && artistImage !== getBlankImageData())
-    url = artistImage;
-
-  if (url) {
-    // Create image to get colors
-    let img = new Image();
-    img.onload = () => {
-      maskBackground(img, source => {
-        // Get colors from Color Thief
-        let colorThief = new ColorThief();
-        let colors = colorThief.getPalette(source, 3);
-
-        // Set colors from Color Thief
-        resources.colors.regular = colors;
-        resources.colors.hex = getHexColors();
-        resources.colors.hue = getHueColors();
-
-        // Update text and lights
-        updateTextColors();
-        updateHue();
-      });
-    };
-    img.onerror = () => {
-      clearColors();
-      updateHue();
-    };
-    img.crossOrigin = 'Anonymous';
-    img.src = url;
-  } else {
-    // Clear colors
+  if (url === blankImage) {
     clearColors();
     updateHue();
+    return;
   }
+
+  let image;
+
+  try {
+    image = await loadImage(url, 'anonymous');
+  } catch {
+    if (current()) {
+      clearColors();
+      updateHue();
+    }
+
+    return;
+  }
+
+  let source = await maskBackground(image);
+
+  if (!current())
+    return;
+
+  let colors = new ColorThief().getPalette(source, 3);
+
+  resources.colors.regular = colors;
+  resources.colors.hex = getHexColors();
+  resources.colors.hue = getHueColors();
+
+  updateTextColors();
+  updateHue();
 }
 
 // Album art usually sits on a white or black field, and those pixels drag the
@@ -173,14 +138,12 @@ let maskLuminanceFloor = 40;
 let maskSaturatedChannelGap = 30;
 let maskMinimumFraction = 0.01;
 
-function maskBackground(image, callback) {
+async function maskBackground(image) {
   let width = image.naturalWidth;
   let height = image.naturalHeight;
 
-  if (!width || !height) {
-    callback(image);
-    return;
-  }
+  if (!width || !height)
+    return image;
 
   let canvas = document.createElement('canvas');
   canvas.width = width;
@@ -193,10 +156,9 @@ function maskBackground(image, callback) {
 
   try {
     pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-  } catch (e) {
+  } catch {
     // Cross-origin art without CORS headers taints the canvas
-    callback(image);
-    return;
+    return image;
   }
 
   let data = pixels.data;
@@ -223,94 +185,63 @@ function maskBackground(image, callback) {
 
   // Very dark or very pale covers can lose almost everything, and clustering a
   // handful of survivors is worse than clustering the whole image
-  if (kept < (data.length / 4) * maskMinimumFraction) {
-    callback(image);
-    return;
-  }
+  if (kept < (data.length / 4) * maskMinimumFraction)
+    return image;
 
   context.putImageData(pixels, 0, 0);
 
-  let masked = new Image();
-  masked.onload = () => callback(masked);
-  masked.onerror = () => callback(image);
-  masked.src = canvas.toDataURL();
+  return loadImage(canvas.toDataURL()).catch(() => image);
 }
 
 function getHexColors() {
-  // Get regular colors
-  let colors = resources.colors.regular;
-  let hexColors = [];
-
-  // Loop through regular colors
-  for (let i = 0; i < colors.length; i++) {
-    // Brighten and get hex values
-    let color = colors[i];
+  return resources.colors.regular.map(color => {
     let brightenFactor = 3 * (1 - chroma(color).luminance());
-    let hex = chroma(color).brighten(brightenFactor).hex();
 
-    // Add retreived value to hex color array
-    hexColors.push(hex);
-  }
-
-  // Return hex colors
-  return hexColors;
+    return chroma(color).brighten(brightenFactor).hex();
+  });
 }
 
 function updateCover() {
-  // Determine cover image url
-  let url = getBlankImageData();
   let albumImage = resources.track.current.albumImage;
-  if (albumImage && albumImage !== getBlankImageData())
-    url = albumImage;
+  let url = albumImage && albumImage !== blankImage ? albumImage : blankImage;
 
-  // Apply cover image to preview if it exists
-  if (url !== getBlankImageData())
-    $('.music .cover').show();
+  if (url !== blankImage)
+    show('.music .cover');
   else
-    $('.music .cover').hide();
-  $('.music .cover').attr('src', url);
+    hide('.music .cover');
+
+  document.querySelector('.music .cover').setAttribute('src', url);
 }
 
 function updateBackground() {
-  // Enable or disable blur
   let blur = !cookieExists('blur') || cookieEnabled('blur');
-  $('.background').toggleClass('blur', blur);
+  document.querySelector('.background').classList.toggle('blur', blur);
 
   let backgroundType = getBackgroundType();
-  let albumImage = resources.track.current.albumImage;
-  let artistImage = resources.track.current.artistImage;
-  if (backgroundType == 'artist') {
-    if (artistImage !== getBlankImageData()) {
-      setBackground(artistImage);
-    } else if (albumImage !== getBlankImageData()) {
-      setBackground(albumImage);
-    } else {
-      setBackground(getDefaultBackground());
-    }
-  } else if (backgroundType == 'album') {
-    if (albumImage !== getBlankImageData()) {
-      setBackground(albumImage);
-    } else if (artistImage !== getBlankImageData()) {
-      setBackground(artistImage);
-    } else {
-      setBackground(getDefaultBackground());
-    }
-  } else if (backgroundType == 'transparent') {
-    setBackground(getBlankImageData());
-  } else {
+  let { albumImage, artistImage } = resources.track.current;
+
+  // Each type falls back through the other image before the default
+  let order = {
+    'artist': [artistImage, albumImage],
+    'album': [albumImage, artistImage]
+  }[backgroundType];
+
+  if (backgroundType === 'transparent')
+    setBackground(blankImage);
+  else if (order)
+    setBackground(order.find(image => image && image !== blankImage) || getDefaultBackground());
+  else
     setBackground(getDefaultBackground());
-  }
 }
 
-function getBackgroundType() {
-  return cookieExists('background') ? Cookies.get('background') : 'artist';
+export function getBackgroundType() {
+  return getCookie('background') || 'artist';
 }
 
 function setBackground(background) {
-  // Set background image
-  $('.background').css('background-image', `url(${background})`);
+  document.querySelector('.background').style.backgroundImage = `url("${background}")`;
 }
 
 function getDefaultBackground() {
-  return Cookies.get('defaultBackground') || getBlankImageData();
+  return getCookie('defaultBackground') || blankImage;
 }

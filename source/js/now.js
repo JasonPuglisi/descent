@@ -1,34 +1,13 @@
-/* global initCursor, initDatetime, initMenu, initMetadata, initWakeLock, initWeather*/
+import { initCursor, initWakeLock } from './utility/general.js';
+import { initMenu } from './utility/menu.js';
+import { initMetadata } from './utility/metadata.js';
+import { initDatetime } from './utility/time.js';
+import { initWeather } from './utility/weather.js';
 
-$(() => {
-  // Set globals
-  window.resources = {
-    features: {
-      weather: false,
-      hue: false
-    },
-    cover: new Image(),
-    cursorTimeout: 3,
-    track: {
-      current: {},
-      previous: {}
-    },
-    colors: {
-      regular: [],
-      hex: [],
-      hue: []
-    }
-  };
-
-  // Initialize features
-  init();
-});
-
-function init() {
-  initWakeLock();
-  initCursor();
-  initMenu();
-  initMetadata();
-  initWeather();
-  initDatetime();
-}
+// Modules run once the document is parsed, so there's no ready event to wait on
+initWakeLock();
+initCursor();
+initMenu();
+initMetadata();
+initWeather();
+initDatetime();

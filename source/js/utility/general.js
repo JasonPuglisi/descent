@@ -1,11 +1,9 @@
-/* global resources, Cookies, */
-
 let wakeLock;
 
 // Kiosks running this full screen shouldn't let the display sleep. The browser
 // drops the lock whenever the page is hidden and never restores it on its own,
 // so it has to be taken again on the way back rather than just once at startup.
-function initWakeLock() {
+export function initWakeLock() {
   if (!('wakeLock' in navigator))
     return;
 
@@ -33,51 +31,86 @@ async function requestWakeLock() {
   }
 }
 
-function initCursor() {
-  // Show cursor on any mouse activity
-  $('body').on('ready click contextmenu mousemove', showCursor);
+let cursorDelay = 3;
+let cursorTimeout = cursorDelay;
 
-  // Start timeout check loop
+// Hide the cursor after a few idle seconds so it doesn't sit over the display
+export function initCursor() {
+  for (let event of ['click', 'contextmenu', 'mousemove'])
+    document.body.addEventListener(event, showCursor);
+
   checkCursor();
   setInterval(checkCursor, 1000);
 }
 
 function checkCursor() {
-  // Decrement timeout or hide cursor
-  if (resources.cursorTimeout > 0)
-    resources.cursorTimeout--;
+  if (cursorTimeout > 0)
+    cursorTimeout--;
   else
-    hideCursor();
+    document.body.style.cursor = 'none';
 }
 
 function showCursor() {
-  // Reset timeout
-  resources.cursorTimeout = 3;
-
-  // Show cursor
-  $('body').css('cursor', 'auto');
+  cursorTimeout = cursorDelay;
+  document.body.style.cursor = 'auto';
 }
 
-function hideCursor() {
-  // Hide cursor
-  $('body').css('cursor', 'none');
+export function show(selector, visible = true) {
+  for (let element of document.querySelectorAll(selector))
+    element.classList.toggle('hide', !visible);
 }
 
-function cookieExists(name) {
-  // Determine whether or not a cookie exists
-  return Cookies.get(name) !== undefined;
+export function hide(selector) {
+  show(selector, false);
 }
 
-function cookieEnabled(name) {
-  // Determine whether or not a cookie is enabled
-  return Cookies.get(name) === 'true';
-}
+let fadeDuration = 750;
+let fades = new WeakMap();
 
-function toggleCookie(name) {
-  // Enable/disable a cookie
-  if (cookieEnabled(name)) {
-    Cookies.set(name, 'false', { expires: 3650, secure: true });
-  } else {
-    Cookies.set(name, 'true', { expires: 3650, secure: true });
+// Fade elements in or out, or flip them when show is left undefined. Each
+// element remembers where its last fade was headed, so toggling mid-fade
+// reverses it from wherever the opacity has got to rather than reading the
+// element as still visible and fading it out a second time.
+export function toggleDisplay(selector, show) {
+  for (let element of document.querySelectorAll(selector)) {
+    let fade = fades.get(element);
+    // Only the element's own display counts, as with jQuery. Going by layout
+    // would read a child of a hidden parent as already hidden and leave it
+    // showing for whenever the parent comes back.
+    let visible = fade ? fade.visible : getComputedStyle(element).display !== 'none';
+    let target = show === undefined ? !visible : Boolean(show);
+
+    if (fade && fade.visible === target)
+      continue;
+
+    if (!fade && visible === target)
+      continue;
+
+    fadeElement(element, target);
   }
+}
+
+function fadeElement(element, visible) {
+  let fade = fades.get(element);
+  let from = visible ? 0 : 1;
+
+  if (fade) {
+    from = parseFloat(getComputedStyle(element).opacity);
+    fade.animation.cancel();
+  }
+
+  element.classList.remove('hide');
+
+  let animation = element.animate([{ 'opacity': from }, { 'opacity': visible ? 1 : 0 }],
+    { 'duration': fadeDuration * Math.abs((visible ? 1 : 0) - from), 'easing': 'linear', 'fill': 'forwards' });
+
+  fades.set(element, { animation, visible });
+
+  // Hold the final opacity until the class has flipped, then let go of it so
+  // the stylesheet is back in charge
+  animation.finished.then(() => {
+    fades.delete(element);
+    element.classList.toggle('hide', !visible);
+    animation.cancel();
+  }, () => {});
 }
