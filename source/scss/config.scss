@@ -56,8 +56,10 @@ i.fas.fa-circle-notch {
   border-style: solid;
   border-width: 0.1em;
   box-shadow: 0.2em 0.3em color.adjust(variables.$black, $lightness: -10%);
+  color: inherit;
   cursor: pointer;
   display: inline-block;
+  font: inherit;
   margin: 0.7em 1.4em 0.7em 0;
   padding: 0.7em 1.7em;
   user-select: none;
