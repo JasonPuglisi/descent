@@ -150,6 +150,20 @@ imports, which resolve relative to the importing file, inherit it. That means a 
 purge, but it also means a source change shipped *without* a version bump will
 keep serving the cached asset until the day is up.
 
+App Engine only accepts requests from Cloudflare. Its firewall allows
+Cloudflare's published IP ranges and denies everything else, so the
+`appspot.com` address returns 403 and nothing can skip the Cloudflare layer.
+Turning off Cloudflare's proxy for the domain would take the site down, and if
+Cloudflare ever adds ranges (listed at cloudflare.com/ips), they need adding as
+App Engine firewall rules.
+
+Deploys authenticate to GCP with GitHub's OIDC token. The provider only accepts
+tokens from this repo's `main` branch, which is the only place the deploy job
+runs.
+
+Open now playing pages check the server's version every minute and reload
+themselves, at a random point within 30 seconds, when a deploy changes it.
+
 ## Gotchas
 
 - `public/javascripts` and `public/stylesheets` are gitignored, so a stale local
