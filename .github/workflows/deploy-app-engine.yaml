@@ -52,8 +52,8 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: yarn --frozen-lockfile
-      - name: Install Chromium
-        run: yarn playwright install --with-deps chromium
+      - name: Install Chromium and WebKit
+        run: yarn playwright install --with-deps chromium webkit
       - name: Build
         run: yarn gulp build
       - name: Smoke test

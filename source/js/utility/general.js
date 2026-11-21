@@ -76,8 +76,12 @@ export function toggleDisplay(selector, show) {
     let fade = fades.get(element);
     // Only the element's own display counts, as with jQuery. Going by layout
     // would read a child of a hidden parent as already hidden and leave it
-    // showing for whenever the parent comes back.
-    let visible = fade ? fade.visible : getComputedStyle(element).display !== 'none';
+    // showing for whenever the parent comes back. The hide class counts even
+    // before the stylesheet that defines it applies, which Safari doesn't wait
+    // for before running modules, or a fast first answer read as already
+    // showing and never faded in.
+    let visible = fade ? fade.visible :
+      !element.classList.contains('hide') && getComputedStyle(element).display !== 'none';
     let target = show === undefined ? !visible : Boolean(show);
 
     if (fade && fade.visible === target)

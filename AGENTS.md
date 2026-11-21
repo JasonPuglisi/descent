@@ -79,7 +79,7 @@ into its own module, the way `lib/spotify.js` and `utility/color.js` are.
 server, started with `test/browser/upstreams.js` preloaded. That file replaces
 `fetch` for Last.fm, Spotify and OpenWeatherMap with canned answers, and opens
 a control port the tests use to change what's playing. It needs a build first
-and Chromium installed once with `yarn playwright install chromium`. CI runs it
+and the browsers installed once with `yarn playwright install chromium webkit`. Every test runs in both Chromium and WebKit. CI runs it
 as its own `smoke` job, and deploys wait for it as well as `build`.
 
 Don't add a `build` or `gcp-build` script to `package.json`. App Engine runs

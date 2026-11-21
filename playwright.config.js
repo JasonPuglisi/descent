@@ -21,7 +21,12 @@ export default defineConfig({
     geolocation: { latitude: 40.7128, longitude: -74.006 },
     permissions: ['geolocation']
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Safari has caught things Chromium didn't, like the CSP blocking Cloudflare's
+  // iframe script, and kiosks are often iPads
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } }
+  ],
   webServer: {
     command: 'node --import ./test/browser/upstreams.js server.js',
     url: `http://localhost:${port}/`,
