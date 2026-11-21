@@ -1,5 +1,5 @@
 import { cookieEnabled, cookieExists, getCookie, setCookie } from './utility/cookies.js';
-import { hide, show } from './utility/general.js';
+import { hide, setPressed, show } from './utility/general.js';
 
 processBackground();
 processScrobbleMode();
@@ -16,10 +16,10 @@ function processChoice(group, name, fallback) {
   for (let option of options) {
     let value = option.id.substring(option.id.lastIndexOf('-') + 1);
 
-    option.classList.toggle('selected', value === selected);
+    setPressed(option, value === selected);
     option.addEventListener('click', () => {
       for (let other of options)
-        other.classList.toggle('selected', other === option);
+        setPressed(other, other === option);
 
       setCookie(name, value);
     });
@@ -28,10 +28,10 @@ function processChoice(group, name, fallback) {
 
 // A single on/off option saved to its own cookie
 function processToggle(element, name, enabled) {
-  element.classList.toggle('selected', enabled);
+  setPressed(element, enabled);
   element.addEventListener('click', () => {
     enabled = !enabled;
-    element.classList.toggle('selected', enabled);
+    setPressed(element, enabled);
     setCookie(name, enabled);
   });
 }
@@ -44,8 +44,7 @@ function processBackground() {
   input.value = getCookie('defaultBackground') || '';
   input.addEventListener('input', () => show('.backgroundInputSave'));
 
-  document.querySelector('.backgroundInputSave').addEventListener('click', event => {
-    event.preventDefault();
+  document.querySelector('.backgroundInputSave').addEventListener('click', () => {
     hide('.backgroundInputSave');
     setCookie('defaultBackground', input.value);
   });
@@ -77,8 +76,7 @@ function processLocation() {
   latitude.addEventListener('input', updateSave);
   longitude.addEventListener('input', updateSave);
 
-  document.querySelector('.locationInputSave').addEventListener('click', event => {
-    event.preventDefault();
+  document.querySelector('.locationInputSave').addEventListener('click', () => {
     hide('.locationInputSave');
     setCookie('latitude', latitude.value);
     setCookie('longitude', longitude.value);

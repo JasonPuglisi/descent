@@ -28,16 +28,34 @@
 
 /* Links */
 
-a {
+a, .linkButton {
   color: variables.$primary-color-text;
   opacity: .8;
   text-decoration: none;
   transition: opacity .2s linear;
 }
 
-a:hover {
+a:hover, .linkButton:hover {
   opacity: 1;
   text-decoration: none;
+}
+
+// Actions that sit among links, like saving or the now playing shortcuts, are
+// buttons so keyboards and screen readers treat them as actions, but they
+// keep looking like the links around them
+.linkButton {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+// Only for keyboard focus, so clicking doesn't leave a ring behind
+a:focus-visible, button:focus-visible, input:focus-visible {
+  opacity: 1;
+  outline: 0.1em solid variables.$primary-color-text;
+  outline-offset: 0.2em;
 }
 
 .links {

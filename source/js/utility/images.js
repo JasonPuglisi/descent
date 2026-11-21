@@ -3,8 +3,7 @@
 import { cookieEnabled, cookieExists, getCookie } from './cookies.js';
 import { hide, show } from './general.js';
 import { getHueColors, updateHue } from './hue.js';
-import { clearColors, updateMetadata, updateTextColors } from './metadata.js';
-import { postForm } from './request.js';
+import { clearColors, updateTextColors } from './metadata.js';
 import { resources } from './state.js';
 
 let blankImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -36,50 +35,18 @@ async function preloadImage(url) {
   }
 }
 
-async function findAlbumImage() {
-  let { artist, title, album } = resources.track.current;
-  let track = await postForm('/app/spotify/track', { artist, title, album }, 5000);
+// Both images in the cache before either is shown, with the blank image
+// standing in for any that's missing or won't load
+export async function loadImages({ albumImage, artistImage }) {
+  let [album, artist] = await Promise.all([preloadImage(albumImage), preloadImage(artistImage)]);
 
-  if (!track || !track.success)
-    return {};
-
-  return { albumUrl: track.album?.images?.[0]?.url, artistId: track.artists?.[0]?.id };
+  return { albumImage: album, artistImage: artist };
 }
 
-async function findArtistImage(artistId) {
-  if (!artistId)
-    return undefined;
-
-  let artist = await postForm('/app/spotify/artist', { 'artist': artistId }, 5000);
-
-  return artist && artist.success ? artist.images?.[0]?.url : undefined;
-}
-
-export async function cacheImages(current) {
-  let track = resources.track.current;
-
-  track.albumImage = blankImage;
-  track.artistImage = blankImage;
-  track.albumImageLoaded = false;
-  track.artistImageLoaded = false;
-
-  // The artist lookup needs the ID from the track lookup, but the album image
-  // can start loading as soon as its URL is known
-  let { albumUrl, artistId } = await findAlbumImage();
-  let [albumImage, artistImage] = await Promise.all([
-    preloadImage(albumUrl),
-    findArtistImage(artistId).then(preloadImage)
-  ]);
-
-  if (!current())
-    return;
-
-  Object.assign(track, { albumImage, artistImage, albumImageLoaded: true, artistImageLoaded: true });
-
+export function showImages(current) {
   updateColors(current);
   updateCover();
   updateBackground();
-  updateMetadata();
 }
 
 export function clearImages() {
