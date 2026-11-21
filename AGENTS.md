@@ -76,7 +76,9 @@ credentials. Pass dependencies like a search function in, or split the logic
 into its own module, the way `lib/spotify.js` and `utility/color.js` are.
 
 `yarn smoke` runs `test/browser/*.spec.js` in Playwright against the real
-server, started with `test/browser/upstreams.js` preloaded. That file replaces
+server, started with `test/browser/upstreams.js` preloaded and reached through
+`test/browser/https.js`, a TLS front with a throwaway certificate, because
+WebKit on Linux drops the page's Secure cookies over plain HTTP. That file replaces
 `fetch` for Last.fm, Spotify and OpenWeatherMap with canned answers, and opens
 a control port the tests use to change what's playing. It needs a build first
 and the browsers installed once with `yarn playwright install chromium webkit`. Every test runs in both Chromium and WebKit. CI runs it
