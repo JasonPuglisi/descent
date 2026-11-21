@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { createLastfm } from './lib/lastfm.js';
 import { createSpotify } from './lib/spotify.js';
+import { createWeather } from './lib/weather.js';
 
 /* Base application functionality */
 
@@ -309,25 +310,51 @@ app.get('/app/hue', (req, res) => {
   res.render('hue', { title, hueClientId: process.env.HUE_CLIENT });
 });
 
-app.get('/app/hue/authorize', (req, res) => {
-  let code = req.query.code;
-  let refreshToken = req.query.refreshToken;
-  let username = req.query.username;
-  authenticateHue(code, refreshToken, username, auth => {
-    if (auth) {
-      res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
-      res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
-      res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
-    }
+// Hue sends people back here with an authorization code after they approve
+// Descent. Pages from before 2.12.1 also refresh tokens through this route,
+// with the refresh token in the query string, so that still works until they
+// reload.
+app.get('/app/hue/authorize', async (req, res) => {
+  await authorizeHue(res, queryString(req.query.code, 512), queryString(req.query.refreshToken, 512),
+    queryString(req.query.username, 128));
 
-    res.redirect('/app/hue');
-  });
+  res.redirect('/app/hue');
 });
 
-async function authenticateHue(code, refreshToken, username, callback) {
+// Refreshing posts the token instead, so it stays out of the URL and with it
+// out of App Engine's and Cloudflare's request logs
+app.post('/app/hue/authorize', async (req, res) => {
+  let success = await authorizeHue(res, undefined, queryString(req.body.refreshToken, 512),
+    queryString(req.body.username, 128));
+
+  res.set('Cache-Control', 'no-store');
+  res.json({ success });
+});
+
+async function authorizeHue(res, code, refreshToken, username) {
+  let auth;
+
+  // A failure here used to reject with nobody listening, which left the
+  // request hanging until App Engine gave up on it
+  try {
+    auth = await authenticateHue(code, refreshToken, username);
+  } catch (e) {
+    console.warn(`Error authenticating with Hue: ${e}`);
+  }
+
+  if (!auth)
+    return false;
+
+  res.cookie('hueAccessToken', auth.accessToken, { maxAge: auth.expiry, secure: true });
+  res.cookie('hueRefreshToken', auth.refreshTokenNew, { maxAge: 315360000000, secure: true });
+  res.cookie('hueUsername', auth.usernameNew, { maxAge: 315360000000, secure: true });
+
+  return true;
+}
+
+async function authenticateHue(code, refreshToken, username) {
   if (!code && !refreshToken) {
     console.warn('Error authenticating with Hue: No authorization code or refresh token');
-    callback();
     return;
   }
 
@@ -335,7 +362,6 @@ async function authenticateHue(code, refreshToken, username, callback) {
   let clientSecret = process.env.HUE_SECRET;
   if (!clientId || !clientSecret) {
     console.warn('Error authenticating with Hue: Missing client ID or secret');
-    callback();
     return;
   }
 
@@ -346,8 +372,8 @@ async function authenticateHue(code, refreshToken, username, callback) {
     'Authorization': `Basic ${auth}`
   };
 
-  // Both values arrive straight from the query string, so encode them rather
-  // than let a stray & or = rewrite the token request
+  // Both values come from the browser, so encode them rather than let a stray
+  // & or = rewrite the token request
   let form = new URLSearchParams(code ?
     { 'code': code, 'grant_type': 'authorization_code' } :
     { 'refresh_token': refreshToken, 'grant_type': 'refresh_token' }).toString();
@@ -360,7 +386,6 @@ async function authenticateHue(code, refreshToken, username, callback) {
 
   if (!response.ok) {
     console.warn(`Error authenticating with Hue: Token failure: ${response.status} ${await response.text()}`);
-    callback();
     return;
   }
 
@@ -369,18 +394,14 @@ async function authenticateHue(code, refreshToken, username, callback) {
   let expiry = (parseInt(data.expires_in) - 300) * 1000;
   let refreshTokenNew = data.refresh_token;
   let tokenType = data.token_type;
+  let usernameNew = await hueWhitelistApplication(accessToken, username);
 
-  hueWhitelistApplication(accessToken, username, (usernameNew) => {
-    let auth = { accessToken, expiry, refreshTokenNew, tokenType, usernameNew };
-    callback(auth);
-  });
+  return { accessToken, expiry, refreshTokenNew, tokenType, usernameNew };
 }
 
-async function hueWhitelistApplication(accessToken, username, callback) {
-  if (username) {
-    callback(username);
-    return;
-  }
+async function hueWhitelistApplication(accessToken, username) {
+  if (username)
+    return username;
 
   let url = 'https://api.meethue.com/route/api/0/config';
   let headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
@@ -405,7 +426,8 @@ async function hueWhitelistApplication(accessToken, username, callback) {
   });
 
   let data = await response2.json();
-  callback(data[0].success.username);
+
+  return data[0].success.username;
 }
 
 // Hue API v2. The cloud gateway mirrors the local bridge under /route, so the
@@ -549,84 +571,14 @@ app.post('/app/spotify/artist', async (req, res) => {
 
 /* Weather (OpenWeatherMap) functionality */
 
-class Weather {
-  constructor(success) {
-    this.success = success === true;
-  }
-}
+if (!process.env.OPENWEATHERMAP_KEY)
+  console.warn('No OpenWeatherMap key set, so weather will not show');
 
-app.post('/app/weather', (req, res) => {
-  let lat = req.body.latitude;
-  let lon = req.body.longitude;
-  let units = decodeURIComponent(req.body.units);
+let weather = createWeather({ key: process.env.OPENWEATHERMAP_KEY });
 
-  let owmKey = process.env.OPENWEATHERMAP_KEY;
-
-  if (owmKey)
-    getWeatherOpenweathermap(owmKey, lat, lon, units, (err, weather) => {
-      if (err)
-        console.warn(`Error getting OpenWeatherMap weather: ${err}`);
-
-      res.json(weather);
-    });
-  else {
-    console.warn('Error getting weather: No API key');
-    res.json(new Weather());
-  }
+app.post('/app/weather', async (req, res) => {
+  res.json(await weather.get(req.body.latitude, req.body.longitude, req.body.units));
 });
-
-async function getWeatherOpenweathermap(key, lat, lon, units, callback) {
-  let urlLat = encodeURIComponent(lat);
-  let urlLon = encodeURIComponent(lon);
-  let urlUnits = encodeURIComponent(units);
-  let url = `https://api.openweathermap.org/data/2.5/weather?lat=${urlLat}&lon=${urlLon}&units=${urlUnits}&appid=${key}`;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    return callback(`Invalid response: ${response.status}`, new Weather());
-  }
-
-  let data = await response.json();
-
-  let icons = {
-    '01d': 'day-sunny',
-    '01n': 'night-clear',
-    '02d': 'day-cloudy',
-    '02n': 'night-cloudy',
-    '03d': 'cloud',
-    '03n': 'cloud',
-    '04d': 'cloudy',
-    '04n': 'cloudy',
-    '09d': 'rain',
-    '09n': 'rain',
-    '10d': 'day-rain',
-    '10n': 'night-rain',
-    '11d': 'thunderstorm',
-    '11n': 'thunderstorm',
-    '13d': 'snow',
-    '13n': 'snow',
-    '50d': 'windy',
-    '50n': 'windy'
-  };
-  let apparent;
-  if (units === 'imperial')
-    apparent = 35.74 + 0.6215 * data.main.temp - 35.75 * Math.pow(data.wind.speed, 0.16)
-      + 0.4275 * data.main.temp * Math.pow(data.wind.speed, 0.16);
-  else
-    apparent = 13.12 + 0.6215 * data.main.temp - 11.37 * Math.pow(data.wind.speed, 0.16)
-      + 0.3965 * data.main.temp * Math.pow(data.wind.speed, 0.16);
-
-  let weather = new Weather(true);
-  weather.summary = `${data.weather[0].description} currently`;
-  weather.summary = `${weather.summary.substring(0, 1).toUpperCase()}${weather.summary.substring(1)}`;
-  weather.temperature = Math.round(data.main.temp);
-  weather.apparentTemperature = Math.round(apparent);
-  weather.unit = units === 'imperial' ? 'F' : 'C';
-  weather.icon = `wi wi-${icons[data.weather[0].icon]}`;
-
-  callback(null, weather);
-}
 
 /* Application runtime */
 
